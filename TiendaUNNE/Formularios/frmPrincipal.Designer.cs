@@ -19,6 +19,8 @@ namespace TiendaUNNE
         {
             this.menuPrincipal = new System.Windows.Forms.MenuStrip();
             this.menuUsuarios = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuCategorias = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuProductos = new System.Windows.Forms.ToolStripMenuItem();
             this.menuSesion = new System.Windows.Forms.ToolStripMenuItem();
             this.menuCerrarSesion = new System.Windows.Forms.ToolStripMenuItem();
             this.menuSalir = new System.Windows.Forms.ToolStripMenuItem();
@@ -32,6 +34,8 @@ namespace TiendaUNNE
             //
             this.menuPrincipal.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
                 this.menuUsuarios,
+                this.menuCategorias,
+                this.menuProductos,
                 this.menuSesion});
             this.menuPrincipal.Location = new System.Drawing.Point(0, 0);
             this.menuPrincipal.Name = "menuPrincipal";
@@ -44,6 +48,20 @@ namespace TiendaUNNE
             this.menuUsuarios.Size = new System.Drawing.Size(70, 20);
             this.menuUsuarios.Text = "&Usuarios";
             this.menuUsuarios.Click += new System.EventHandler(this.menuUsuarios_Click);
+            //
+            // menuCategorias
+            //
+            this.menuCategorias.Name = "menuCategorias";
+            this.menuCategorias.Size = new System.Drawing.Size(80, 20);
+            this.menuCategorias.Text = "&Categorías";
+            this.menuCategorias.Click += new System.EventHandler(this.menuCategorias_Click);
+            //
+            // menuProductos
+            //
+            this.menuProductos.Name = "menuProductos";
+            this.menuProductos.Size = new System.Drawing.Size(76, 20);
+            this.menuProductos.Text = "&Productos";
+            this.menuProductos.Click += new System.EventHandler(this.menuProductos_Click);
             //
             // menuSesion
             //
@@ -108,6 +126,8 @@ namespace TiendaUNNE
 
         private System.Windows.Forms.MenuStrip menuPrincipal;
         private System.Windows.Forms.ToolStripMenuItem menuUsuarios;
+        private System.Windows.Forms.ToolStripMenuItem menuCategorias;
+        private System.Windows.Forms.ToolStripMenuItem menuProductos;
         private System.Windows.Forms.ToolStripMenuItem menuSesion;
         private System.Windows.Forms.ToolStripMenuItem menuCerrarSesion;
         private System.Windows.Forms.ToolStripMenuItem menuSalir;

@@ -180,32 +180,16 @@ CREATE TABLE dbo.Producto
 (
     id_producto     INT             IDENTITY(1,1) NOT NULL,
     id_categoria    INT             NOT NULL,
-    codigo          NVARCHAR(50)    NOT NULL,
-    codigo_barra    NVARCHAR(50)    NULL,
     nombre          NVARCHAR(150)   NOT NULL,
     descripcion     NVARCHAR(500)   NULL,
-    unidad_medida   NVARCHAR(15)    NOT NULL CONSTRAINT DF_Producto_unidad DEFAULT ('UNIDAD'),
-    precio_costo    DECIMAL(12,2)   NOT NULL CONSTRAINT DF_Producto_precio_costo DEFAULT (0),
     precio_venta    DECIMAL(12,2)   NOT NULL CONSTRAINT DF_Producto_precio_venta DEFAULT (0),
-    alicuota_iva    DECIMAL(5,2)    NOT NULL CONSTRAINT DF_Producto_alicuota_iva DEFAULT (21.00),
-    stock_actual    DECIMAL(12,3)   NOT NULL CONSTRAINT DF_Producto_stock_actual DEFAULT (0),
-    stock_minimo    DECIMAL(12,3)   NOT NULL CONSTRAINT DF_Producto_stock_minimo DEFAULT (0),
-    fecha_alta      DATETIME2(0)    NOT NULL CONSTRAINT DF_Producto_fecha_alta DEFAULT (SYSDATETIME()),
+    stock           DECIMAL(12,3)   NOT NULL CONSTRAINT DF_Producto_stock DEFAULT (0),
     activo          BIT             NOT NULL CONSTRAINT DF_Producto_activo DEFAULT (1),
 
     CONSTRAINT PK_Producto PRIMARY KEY (id_producto),
-    CONSTRAINT UQ_Producto_codigo UNIQUE (codigo),
     CONSTRAINT FK_Producto_Categoria FOREIGN KEY (id_categoria) REFERENCES dbo.Categoria (id_categoria),
-    CONSTRAINT CK_Producto_precio_costo CHECK (precio_costo >= 0),
-    CONSTRAINT CK_Producto_precio_venta CHECK (precio_venta >= 0),
-    CONSTRAINT CK_Producto_alicuota_iva CHECK (alicuota_iva >= 0 AND alicuota_iva <= 100)
+    CONSTRAINT CK_Producto_precio_venta CHECK (precio_venta >= 0)
 );
-GO
-
--- UNIQUE que admite varios NULL en codigo_barra (índice filtrado)
-CREATE UNIQUE INDEX UQ_Producto_codigo_barra
-    ON dbo.Producto (codigo_barra)
-    WHERE codigo_barra IS NOT NULL;
 GO
 
 -------------------------------------------------------------------------------

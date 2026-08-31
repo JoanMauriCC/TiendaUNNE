@@ -52,8 +52,12 @@
     <Compile Include="Datos\ReglaNegocioException.cs" />
     <Compile Include="Datos\ServicioAuditoria.cs" />
     <Compile Include="Datos\ServicioAutenticacion.cs" />
+    <Compile Include="Datos\ServicioCategoria.cs" />
     <Compile Include="Datos\ServicioPerfil.cs" />
+    <Compile Include="Datos\ServicioProducto.cs" />
     <Compile Include="Datos\ServicioUsuario.cs" />
+    <Compile Include="Modelo\ModelosCategoria.cs" />
+    <Compile Include="Modelo\ModelosProducto.cs" />
     <Compile Include="Modelo\ModelosUsuario.cs" />
     <Compile Include="Formularios\frmLogin.cs">
       <SubType>Form</SubType>
@@ -78,6 +82,30 @@
     </Compile>
     <Compile Include="Formularios\frmUsuarioEditor.Designer.cs">
       <DependentUpon>frmUsuarioEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\frmCategorias.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\frmCategorias.Designer.cs">
+      <DependentUpon>frmCategorias.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\frmCategoriaEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\frmCategoriaEditor.Designer.cs">
+      <DependentUpon>frmCategoriaEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\frmProductos.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\frmProductos.Designer.cs">
+      <DependentUpon>frmProductos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\frmProductoEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\frmProductoEditor.Designer.cs">
+      <DependentUpon>frmProductoEditor.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

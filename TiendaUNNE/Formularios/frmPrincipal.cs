@@ -18,22 +18,44 @@ namespace TiendaUNNE
                     SesionActual.Usuario.NombreCompleto, SesionActual.Usuario.Rol);
             }
 
-            // El CRUD de Usuarios solo es visible/accesible para el rol Administrador.
+            // Los CRUD de administración solo son visibles/accesibles para el rol Administrador.
             menuUsuarios.Visible = SesionActual.EsAdministrador;
+            menuCategorias.Visible = SesionActual.EsAdministrador;
+            menuProductos.Visible = SesionActual.EsAdministrador;
         }
 
         private void menuUsuarios_Click(object sender, EventArgs e)
         {
-            // Segunda barrera: aunque el menú esté oculto, se vuelve a validar el rol.
-            if (!SesionActual.EsAdministrador)
-            {
-                MessageBox.Show("No tiene permisos para acceder a esta opción.",
-                    "Acceso denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+            if (!ValidarAccesoAdministrador()) return;
 
             using (var f = new frmUsuarios())
                 f.ShowDialog(this);
+        }
+
+        private void menuCategorias_Click(object sender, EventArgs e)
+        {
+            if (!ValidarAccesoAdministrador()) return;
+
+            using (var f = new frmCategorias())
+                f.ShowDialog(this);
+        }
+
+        private void menuProductos_Click(object sender, EventArgs e)
+        {
+            if (!ValidarAccesoAdministrador()) return;
+
+            using (var f = new frmProductos())
+                f.ShowDialog(this);
+        }
+
+        // Segunda barrera: aunque el menú esté oculto, se vuelve a validar el rol.
+        private bool ValidarAccesoAdministrador()
+        {
+            if (SesionActual.EsAdministrador) return true;
+
+            MessageBox.Show("No tiene permisos para acceder a esta opción.",
+                "Acceso denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return false;
         }
 
         private void menuCerrarSesion_Click(object sender, EventArgs e)
