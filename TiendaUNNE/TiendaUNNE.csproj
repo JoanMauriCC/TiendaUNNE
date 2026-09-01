@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Arranque\Bootstrap.cs" />
+    <Compile Include="Controles\TarjetaMenu.cs" />
     <Compile Include="Datos\Db.cs" />
     <Compile Include="Datos\ReglaNegocioException.cs" />
     <Compile Include="Datos\ServicioAuditoria.cs" />
@@ -106,6 +107,18 @@
     </Compile>
     <Compile Include="Formularios\frmProductoEditor.Designer.cs">
       <DependentUpon>frmProductoEditor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\frmProductosMenu.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\frmProductosMenu.Designer.cs">
+      <DependentUpon>frmProductosMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Formularios\frmAuditoria.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Formularios\frmAuditoria.Designer.cs">
+      <DependentUpon>frmAuditoria.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -17,121 +17,93 @@ namespace TiendaUNNE
 
         private void InitializeComponent()
         {
-            this.menuPrincipal = new System.Windows.Forms.MenuStrip();
-            this.menuUsuarios = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuCategorias = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuProductos = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuSesion = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuCerrarSesion = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuSalir = new System.Windows.Forms.ToolStripMenuItem();
-            this.statusPrincipal = new System.Windows.Forms.StatusStrip();
-            this.lblSesion = new System.Windows.Forms.ToolStripStatusLabel();
-            this.menuPrincipal.SuspendLayout();
-            this.statusPrincipal.SuspendLayout();
+            this.panelHeader = new System.Windows.Forms.Panel();
+            this.lblMarca = new System.Windows.Forms.Label();
+            this.lblUsuario = new System.Windows.Forms.Label();
+            this.btnCerrarSesion = new System.Windows.Forms.Button();
+            this.panelTarjetas = new System.Windows.Forms.FlowLayoutPanel();
+            this.panelHeader.SuspendLayout();
             this.SuspendLayout();
             //
-            // menuPrincipal
+            // panelHeader
             //
-            this.menuPrincipal.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                this.menuUsuarios,
-                this.menuCategorias,
-                this.menuProductos,
-                this.menuSesion});
-            this.menuPrincipal.Location = new System.Drawing.Point(0, 0);
-            this.menuPrincipal.Name = "menuPrincipal";
-            this.menuPrincipal.Size = new System.Drawing.Size(704, 24);
-            this.menuPrincipal.TabIndex = 0;
+            this.panelHeader.BackColor = System.Drawing.Color.White;
+            this.panelHeader.Controls.Add(this.lblMarca);
+            this.panelHeader.Controls.Add(this.lblUsuario);
+            this.panelHeader.Controls.Add(this.btnCerrarSesion);
+            this.panelHeader.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelHeader.Location = new System.Drawing.Point(0, 0);
+            this.panelHeader.Name = "panelHeader";
+            this.panelHeader.Size = new System.Drawing.Size(474, 84);
+            this.panelHeader.TabIndex = 0;
             //
-            // menuUsuarios
+            // lblMarca
             //
-            this.menuUsuarios.Name = "menuUsuarios";
-            this.menuUsuarios.Size = new System.Drawing.Size(70, 20);
-            this.menuUsuarios.Text = "&Usuarios";
-            this.menuUsuarios.Click += new System.EventHandler(this.menuUsuarios_Click);
+            this.lblMarca.AutoSize = true;
+            this.lblMarca.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
+            this.lblMarca.Location = new System.Drawing.Point(18, 12);
+            this.lblMarca.Name = "lblMarca";
+            this.lblMarca.Size = new System.Drawing.Size(152, 32);
+            this.lblMarca.TabIndex = 0;
+            this.lblMarca.Text = "TiendaUNNE";
             //
-            // menuCategorias
+            // lblUsuario
             //
-            this.menuCategorias.Name = "menuCategorias";
-            this.menuCategorias.Size = new System.Drawing.Size(80, 20);
-            this.menuCategorias.Text = "&Categorías";
-            this.menuCategorias.Click += new System.EventHandler(this.menuCategorias_Click);
+            this.lblUsuario.AutoSize = true;
+            this.lblUsuario.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.lblUsuario.ForeColor = System.Drawing.Color.Gray;
+            this.lblUsuario.Location = new System.Drawing.Point(20, 50);
+            this.lblUsuario.Name = "lblUsuario";
+            this.lblUsuario.Size = new System.Drawing.Size(53, 15);
+            this.lblUsuario.TabIndex = 1;
+            this.lblUsuario.Text = "Sin sesión";
             //
-            // menuProductos
+            // btnCerrarSesion
             //
-            this.menuProductos.Name = "menuProductos";
-            this.menuProductos.Size = new System.Drawing.Size(76, 20);
-            this.menuProductos.Text = "&Productos";
-            this.menuProductos.Click += new System.EventHandler(this.menuProductos_Click);
+            this.btnCerrarSesion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCerrarSesion.Location = new System.Drawing.Point(338, 26);
+            this.btnCerrarSesion.Name = "btnCerrarSesion";
+            this.btnCerrarSesion.Size = new System.Drawing.Size(120, 32);
+            this.btnCerrarSesion.TabIndex = 2;
+            this.btnCerrarSesion.Text = "Cerrar sesión";
+            this.btnCerrarSesion.UseVisualStyleBackColor = true;
+            this.btnCerrarSesion.Click += new System.EventHandler(this.btnCerrarSesion_Click);
             //
-            // menuSesion
+            // panelTarjetas
             //
-            this.menuSesion.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                this.menuCerrarSesion,
-                this.menuSalir});
-            this.menuSesion.Name = "menuSesion";
-            this.menuSesion.Size = new System.Drawing.Size(58, 20);
-            this.menuSesion.Text = "&Sesión";
-            //
-            // menuCerrarSesion
-            //
-            this.menuCerrarSesion.Name = "menuCerrarSesion";
-            this.menuCerrarSesion.Size = new System.Drawing.Size(180, 22);
-            this.menuCerrarSesion.Text = "Cerrar sesión";
-            this.menuCerrarSesion.Click += new System.EventHandler(this.menuCerrarSesion_Click);
-            //
-            // menuSalir
-            //
-            this.menuSalir.Name = "menuSalir";
-            this.menuSalir.Size = new System.Drawing.Size(180, 22);
-            this.menuSalir.Text = "Salir";
-            this.menuSalir.Click += new System.EventHandler(this.menuSalir_Click);
-            //
-            // statusPrincipal
-            //
-            this.statusPrincipal.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                this.lblSesion});
-            this.statusPrincipal.Location = new System.Drawing.Point(0, 439);
-            this.statusPrincipal.Name = "statusPrincipal";
-            this.statusPrincipal.Size = new System.Drawing.Size(704, 22);
-            this.statusPrincipal.TabIndex = 1;
-            //
-            // lblSesion
-            //
-            this.lblSesion.Name = "lblSesion";
-            this.lblSesion.Size = new System.Drawing.Size(59, 17);
-            this.lblSesion.Text = "Sin sesión";
+            this.panelTarjetas.AutoScroll = true;
+            this.panelTarjetas.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(246)))), ((int)(((byte)(248)))));
+            this.panelTarjetas.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelTarjetas.Location = new System.Drawing.Point(0, 84);
+            this.panelTarjetas.Name = "panelTarjetas";
+            this.panelTarjetas.Padding = new System.Windows.Forms.Padding(28, 22, 22, 22);
+            this.panelTarjetas.Size = new System.Drawing.Size(474, 402);
+            this.panelTarjetas.TabIndex = 1;
             //
             // frmPrincipal
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(704, 461);
-            this.Controls.Add(this.statusPrincipal);
-            this.Controls.Add(this.menuPrincipal);
-            this.IsMdiContainer = true;
-            this.MainMenuStrip = this.menuPrincipal;
+            this.ClientSize = new System.Drawing.Size(474, 486);
+            this.Controls.Add(this.panelTarjetas);
+            this.Controls.Add(this.panelHeader);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
             this.Name = "frmPrincipal";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "TiendaUNNE - Menú principal";
+            this.Text = "TiendaUNNE";
             this.Load += new System.EventHandler(this.frmPrincipal_Load);
-            this.menuPrincipal.ResumeLayout(false);
-            this.menuPrincipal.PerformLayout();
-            this.statusPrincipal.ResumeLayout(false);
-            this.statusPrincipal.PerformLayout();
+            this.panelHeader.ResumeLayout(false);
+            this.panelHeader.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
         }
 
         #endregion
 
-        private System.Windows.Forms.MenuStrip menuPrincipal;
-        private System.Windows.Forms.ToolStripMenuItem menuUsuarios;
-        private System.Windows.Forms.ToolStripMenuItem menuCategorias;
-        private System.Windows.Forms.ToolStripMenuItem menuProductos;
-        private System.Windows.Forms.ToolStripMenuItem menuSesion;
-        private System.Windows.Forms.ToolStripMenuItem menuCerrarSesion;
-        private System.Windows.Forms.ToolStripMenuItem menuSalir;
-        private System.Windows.Forms.StatusStrip statusPrincipal;
-        private System.Windows.Forms.ToolStripStatusLabel lblSesion;
+        private System.Windows.Forms.Panel panelHeader;
+        private System.Windows.Forms.Label lblMarca;
+        private System.Windows.Forms.Label lblUsuario;
+        private System.Windows.Forms.Button btnCerrarSesion;
+        private System.Windows.Forms.FlowLayoutPanel panelTarjetas;
     }
 }
