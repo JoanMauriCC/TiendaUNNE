@@ -140,7 +140,15 @@ namespace TiendaUNNE
             using (var pathPlaca = RectRedondeado(placa, RadioPlaca))
             using (var b = new SolidBrush(Tinte(acento, _habilitada ? 0.85f : 0.9f)))
                 g.FillPath(b, pathPlaca);
-            DibujarIcono(g, placa, acento);
+
+            // El ícono se dibuja centrado en el origen y escalado hacia abajo para que
+            // entre cómodo dentro de la placa de 40x40 (los trazos GDI+ a mano fueron
+            // pensados sueltos sobre la tarjeta, no encerrados en un cuadrado chico).
+            GraphicsState estado = g.Save();
+            g.TranslateTransform(placa.X + placa.Width / 2f, placa.Y + placa.Height / 2f);
+            g.ScaleTransform(0.62f, 0.62f);
+            DibujarIcono(g, new Rectangle(-20, -20, 40, 40), acento);
+            g.Restore(estado);
 
             using (var fTitulo = new Font("Segoe UI", 11f, FontStyle.Bold))
             using (var fDesc = new Font("Segoe UI", 8.5f))
