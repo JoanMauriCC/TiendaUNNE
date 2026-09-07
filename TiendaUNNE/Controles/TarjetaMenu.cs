@@ -17,21 +17,27 @@ namespace TiendaUNNE
     }
 
     /// <summary>
-    /// Tarjeta clickeable estilo dashboard: ícono GDI+, título en negrita y descripción en gris.
-    /// El evento Click del Panel se dispara al hacer clic en cualquier parte de la tarjeta.
+    /// Tarjeta clickeable estilo dashboard: tarjeta blanca con esquinas redondeadas,
+    /// franja de color a la izquierda, ícono dentro de una placa de color e
+    /// "Ingresar →" al pie. El evento Click se dispara al hacer clic en cualquier
+    /// parte de la tarjeta.
     /// </summary>
     public class TarjetaMenu : Panel
     {
+        private const int Radio = 14;
+        private const int RadioPlaca = 10;
+
         private bool _habilitada = true;
         private bool _hover;
 
         public TarjetaMenu()
         {
             DoubleBuffered = true;
-            Size = new Size(160, 140);
-            Margin = new Padding(12);
+            Size = new Size(266, 168);
+            Margin = new Padding(14);
             Cursor = Cursors.Hand;
-            SetStyle(ControlStyles.ResizeRedraw | ControlStyles.OptimizedDoubleBuffer, true);
+            SetStyle(ControlStyles.ResizeRedraw | ControlStyles.OptimizedDoubleBuffer | ControlStyles.SupportsTransparentBackColor, true);
+            BackColor = Color.Transparent;
         }
 
         public IconoTarjeta Icono { get; set; }
@@ -49,6 +55,31 @@ namespace TiendaUNNE
             }
         }
 
+        /// <summary>Color de acento (franja izquierda, placa de ícono, link "Ingresar") según el tipo de tarjeta.</summary>
+        private Color ColorAcento
+        {
+            get
+            {
+                switch (Icono)
+                {
+                    case IconoTarjeta.Usuarios: return Color.FromArgb(59, 130, 246);   // azul
+                    case IconoTarjeta.Producto: return Color.FromArgb(13, 148, 136);   // verde azulado
+                    case IconoTarjeta.Auditoria: return Color.FromArgb(139, 92, 246);  // violeta
+                    case IconoTarjeta.Caja: return Color.FromArgb(234, 88, 12);        // naranja
+                    case IconoTarjeta.Etiqueta: return Color.FromArgb(220, 38, 38);    // rojo
+                    default: return Color.FromArgb(74, 130, 200);
+                }
+            }
+        }
+
+        private static Color Tinte(Color acento, float hacaBlanco)
+        {
+            int r = (int)(acento.R + (255 - acento.R) * hacaBlanco);
+            int g = (int)(acento.G + (255 - acento.G) * hacaBlanco);
+            int b = (int)(acento.B + (255 - acento.B) * hacaBlanco);
+            return Color.FromArgb(r, g, b);
+        }
+
         protected override void OnMouseEnter(EventArgs e)
         {
             _hover = _habilitada;
@@ -63,6 +94,18 @@ namespace TiendaUNNE
             base.OnMouseLeave(e);
         }
 
+        private static GraphicsPath RectRedondeado(Rectangle r, int radio)
+        {
+            int d = radio * 2;
+            var path = new GraphicsPath();
+            path.AddArc(r.X, r.Y, d, d, 180, 90);
+            path.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+            path.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+            path.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+            path.CloseFigure();
+            return path;
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -71,39 +114,49 @@ namespace TiendaUNNE
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
+            Color acento = _habilitada ? ColorAcento : Color.FromArgb(170, 174, 180);
+            Color tinta = _habilitada ? Color.FromArgb(31, 35, 45) : Color.FromArgb(150, 150, 150);
+            Color gris = Color.FromArgb(120, 125, 135);
+
             var marco = new Rectangle(0, 0, Width - 1, Height - 1);
+            using (var fondoCard = RectRedondeado(marco, Radio))
+            {
+                using (var b = new SolidBrush(Color.White))
+                    g.FillPath(b, fondoCard);
 
-            Color fondo = !_habilitada
-                ? Color.FromArgb(245, 245, 245)
-                : (_hover ? Color.FromArgb(234, 242, 251) : Color.White);
-            Color borde = (_hover && _habilitada)
-                ? Color.FromArgb(74, 130, 200)
-                : Color.FromArgb(214, 216, 220);
-            Color tinta = _habilitada ? Color.FromArgb(45, 48, 54) : Color.FromArgb(150, 150, 150);
-            Color gris = Color.FromArgb(128, 132, 140);
-            Color colorIcono = _habilitada ? Color.FromArgb(64, 108, 168) : Color.FromArgb(176, 178, 182);
+                // Franja de color a la izquierda (recortada a la forma redondeada de la tarjeta).
+                Region clipOriginal = g.Clip;
+                g.SetClip(fondoCard, CombineMode.Replace);
+                using (var b = new SolidBrush(acento))
+                    g.FillRectangle(b, 0, 0, 5, Height);
+                g.Clip = clipOriginal;
 
-            using (var b = new SolidBrush(fondo))
-                g.FillRectangle(b, marco);
-            using (var p = new Pen(borde))
-                g.DrawRectangle(p, marco);
+                using (var p = new Pen(_hover && _habilitada ? acento : Color.FromArgb(228, 230, 234)))
+                    g.DrawPath(p, fondoCard);
+            }
 
-            var areaIcono = new Rectangle(Width / 2 - 20, 16, 40, 40);
-            DibujarIcono(g, areaIcono, colorIcono);
+            // Placa del ícono.
+            var placa = new Rectangle(18, 18, 40, 40);
+            using (var pathPlaca = RectRedondeado(placa, RadioPlaca))
+            using (var b = new SolidBrush(Tinte(acento, _habilitada ? 0.85f : 0.9f)))
+                g.FillPath(b, pathPlaca);
+            DibujarIcono(g, placa, acento);
 
-            using (var fTitulo = new Font("Segoe UI", 10.5f, FontStyle.Bold))
-            using (var fDesc = new Font("Segoe UI", 8f))
+            using (var fTitulo = new Font("Segoe UI", 11f, FontStyle.Bold))
+            using (var fDesc = new Font("Segoe UI", 8.5f))
+            using (var fLink = new Font("Segoe UI", 9f, FontStyle.Bold))
             using (var brTitulo = new SolidBrush(tinta))
             using (var brDesc = new SolidBrush(gris))
+            using (var brLink = new SolidBrush(acento))
             {
-                var centro = new StringFormat
-                {
-                    Alignment = StringAlignment.Center,
-                    LineAlignment = StringAlignment.Near,
-                    Trimming = StringTrimming.EllipsisCharacter
-                };
-                g.DrawString(Titulo, fTitulo, brTitulo, new RectangleF(6, 66, Width - 12, 22), centro);
-                g.DrawString(Descripcion, fDesc, brDesc, new RectangleF(6, 90, Width - 12, 40), centro);
+                var izquierda = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Near };
+
+                g.DrawString(Titulo, fTitulo, brTitulo, new RectangleF(18, 68, Width - 36, 24), izquierda);
+                g.DrawString(Descripcion, fDesc, brDesc, new RectangleF(18, 92, Width - 36, 40), izquierda);
+
+                string pie = _habilitada ? "Ingresar  →" : "Próximamente";
+                using (var brPie = _habilitada ? brLink : new SolidBrush(Color.FromArgb(170, 174, 180)))
+                    g.DrawString(pie, fLink, brPie, new RectangleF(18, Height - 34, Width - 36, 24), izquierda);
             }
         }
 

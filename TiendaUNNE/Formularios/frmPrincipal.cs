@@ -15,7 +15,7 @@ namespace TiendaUNNE
             lblMarca.Text = "TiendaUNNE";
 
             if (SesionActual.HaySesion)
-                lblUsuario.Text = SesionActual.Usuario.NombreCompleto + "   •   " + SesionActual.Usuario.Rol;
+                lblUsuario.Text = "Bienvenido, " + SesionActual.Usuario.NombreCompleto;
 
             ConstruirTarjetas();
         }

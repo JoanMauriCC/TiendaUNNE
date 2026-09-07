@@ -21,7 +21,7 @@ namespace TiendaUNNE
             this.lblMarca = new System.Windows.Forms.Label();
             this.lblUsuario = new System.Windows.Forms.Label();
             this.btnCerrarSesion = new System.Windows.Forms.Button();
-            this.panelTarjetas = new System.Windows.Forms.FlowLayoutPanel();
+            this.panelTarjetas = new System.Windows.Forms.TableLayoutPanel();
             this.panelHeader.SuspendLayout();
             this.SuspendLayout();
             //
@@ -34,7 +34,7 @@ namespace TiendaUNNE
             this.panelHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelHeader.Location = new System.Drawing.Point(0, 0);
             this.panelHeader.Name = "panelHeader";
-            this.panelHeader.Size = new System.Drawing.Size(474, 84);
+            this.panelHeader.Size = new System.Drawing.Size(980, 84);
             this.panelHeader.TabIndex = 0;
             //
             // lblMarca
@@ -50,18 +50,18 @@ namespace TiendaUNNE
             // lblUsuario
             //
             this.lblUsuario.AutoSize = true;
-            this.lblUsuario.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.lblUsuario.ForeColor = System.Drawing.Color.Gray;
+            this.lblUsuario.Font = new System.Drawing.Font("Segoe UI", 11F);
+            this.lblUsuario.ForeColor = System.Drawing.Color.FromArgb(90, 96, 105);
             this.lblUsuario.Location = new System.Drawing.Point(20, 50);
             this.lblUsuario.Name = "lblUsuario";
-            this.lblUsuario.Size = new System.Drawing.Size(53, 15);
+            this.lblUsuario.Size = new System.Drawing.Size(90, 20);
             this.lblUsuario.TabIndex = 1;
             this.lblUsuario.Text = "Sin sesión";
             //
             // btnCerrarSesion
             //
             this.btnCerrarSesion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCerrarSesion.Location = new System.Drawing.Point(338, 26);
+            this.btnCerrarSesion.Location = new System.Drawing.Point(844, 26);
             this.btnCerrarSesion.Name = "btnCerrarSesion";
             this.btnCerrarSesion.Size = new System.Drawing.Size(120, 32);
             this.btnCerrarSesion.TabIndex = 2;
@@ -73,22 +73,27 @@ namespace TiendaUNNE
             //
             this.panelTarjetas.AutoScroll = true;
             this.panelTarjetas.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(246)))), ((int)(((byte)(248)))));
+            this.panelTarjetas.ColumnCount = 3;
+            this.panelTarjetas.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 300F));
+            this.panelTarjetas.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 300F));
+            this.panelTarjetas.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 300F));
             this.panelTarjetas.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelTarjetas.Location = new System.Drawing.Point(0, 84);
             this.panelTarjetas.Name = "panelTarjetas";
             this.panelTarjetas.Padding = new System.Windows.Forms.Padding(28, 22, 22, 22);
-            this.panelTarjetas.Size = new System.Drawing.Size(474, 402);
+            this.panelTarjetas.Size = new System.Drawing.Size(980, 666);
             this.panelTarjetas.TabIndex = 1;
             //
             // frmPrincipal
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(474, 486);
+            this.ClientSize = new System.Drawing.Size(980, 750);
             this.Controls.Add(this.panelTarjetas);
             this.Controls.Add(this.panelHeader);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
+            this.MaximizeBox = true;
+            this.MinimumSize = new System.Drawing.Size(700, 560);
             this.Name = "frmPrincipal";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "TiendaUNNE";
@@ -104,6 +109,6 @@ namespace TiendaUNNE
         private System.Windows.Forms.Label lblMarca;
         private System.Windows.Forms.Label lblUsuario;
         private System.Windows.Forms.Button btnCerrarSesion;
-        private System.Windows.Forms.FlowLayoutPanel panelTarjetas;
+        private System.Windows.Forms.TableLayoutPanel panelTarjetas;
     }
 }
