@@ -49,9 +49,11 @@
   <ItemGroup>
     <!-- ================= Capa Entidades ================= -->
     <Compile Include="Entidades\CredencialesUsuario.cs" />
+    <Compile Include="Entidades\ModelosCaja.cs" />
     <Compile Include="Entidades\ModelosCategoria.cs" />
     <Compile Include="Entidades\ModelosProducto.cs" />
     <Compile Include="Entidades\ModelosUsuario.cs" />
+    <Compile Include="Entidades\ModelosVenta.cs" />
     <Compile Include="Entidades\UsuarioLogueado.cs" />
     <!-- ================= Capa Datos ================= -->
     <Compile Include="Datos\Db.cs" />

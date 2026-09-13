@@ -410,8 +410,28 @@ INSERT INTO dbo.Perfil (nombre, descripcion) VALUES
 GO
 
 -- El usuario administrador inicial lo crea la aplicación en el primer arranque
--- (clase Arranque\Bootstrap.cs):  usuario = admin   /   contraseña = Admin.1234
+-- (clase Negocio\NegocioArranque.cs):  usuario = admin  /  contraseña = Admin.1234
 -- Cambiar esa contraseña después del primer ingreso.
+
+-- Datos que necesita el módulo de Caja para poder vender.
+-- (Si la base ya existe y tiene datos, NO correr este script: usar
+--  TiendaUNNE_DatosCaja.sql, que inserta lo mismo sin borrar nada.)
+INSERT INTO dbo.Caja (nombre, descripcion) VALUES
+    (N'Caja 1', N'Caja principal del local');
+GO
+
+INSERT INTO dbo.Tipo_comprobante (codigo, nombre, letra, signo, afecta_stock, afecta_caja) VALUES
+    (N'TKT', N'Ticket', NULL, 1, 1, 1);
+GO
+
+-- es_efectivo marca cuáles suman al efectivo del cajón (es lo único que se
+-- cuenta en el arqueo al cerrar la caja).
+INSERT INTO dbo.Medio_pago (nombre, requiere_referencia, recargo_porcentaje, es_efectivo) VALUES
+    (N'Efectivo',           0, 0, 1),
+    (N'Tarjeta de débito',  1, 0, 0),
+    (N'Tarjeta de crédito', 1, 0, 0),
+    (N'Transferencia',      1, 0, 0);
+GO
 
 PRINT 'Base de datos TiendaUNNE creada correctamente.';
 GO
