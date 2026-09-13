@@ -26,11 +26,17 @@ namespace TiendaUNNE
                 case OpcionMenu.Inicio:
                     return SesionActual.HaySesion;
 
+                // La caja la opera el cajero, el supervisor la controla y el
+                // administrador tiene acceso total: los tres perfiles pueden entrar.
+                case OpcionMenu.Caja:
+                    return SesionActual.EsCajero
+                        || SesionActual.EsSupervisor
+                        || SesionActual.EsAdministrador;
+
                 case OpcionMenu.Usuarios:
                 case OpcionMenu.Productos:
                 case OpcionMenu.Categorias:
                 case OpcionMenu.Auditoria:
-                case OpcionMenu.Caja:
                     return SesionActual.EsAdministrador;
 
                 default:

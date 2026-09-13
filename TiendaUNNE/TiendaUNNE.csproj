@@ -73,11 +73,13 @@
     <Compile Include="Negocio\NegocioArranque.cs" />
     <Compile Include="Negocio\NegocioAuditoria.cs" />
     <Compile Include="Negocio\NegocioAutenticacion.cs" />
+    <Compile Include="Negocio\NegocioCaja.cs" />
     <Compile Include="Negocio\NegocioCategoria.cs" />
     <Compile Include="Negocio\NegocioPerfil.cs" />
     <Compile Include="Negocio\NegocioProducto.cs" />
     <Compile Include="Negocio\NegocioUsuario.cs" />
     <Compile Include="Negocio\NegocioSeguridad.cs" />
+    <Compile Include="Negocio\NegocioVenta.cs" />
     <Compile Include="Negocio\PasswordHasher.cs" />
     <Compile Include="Negocio\Validaciones.cs" />
     <Compile Include="Negocio\ReglaNegocioException.cs" />
