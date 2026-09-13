@@ -4,15 +4,18 @@ using System.Windows.Forms;
 
 namespace TiendaUNNE
 {
-    /// <summary>Consulta de solo lectura de la tabla Auditoria (no se edita a mano).</summary>
-    public partial class frmAuditoria : Form
+    /// <summary>
+    /// Consulta de solo lectura de la tabla Auditoria (no se edita a mano). Es un
+    /// UserControl: se muestra dentro del panel de contenido de frmPrincipal.
+    /// </summary>
+    public partial class ucAuditoria : UserControl
     {
-        public frmAuditoria()
+        public ucAuditoria()
         {
             InitializeComponent();
         }
 
-        private void frmAuditoria_Load(object sender, EventArgs e)
+        private void ucAuditoria_Load(object sender, EventArgs e)
         {
             cboTabla.Items.AddRange(NegocioAuditoria.TablasAuditables().ToArray());
             LimpiarFiltros();          // deja los filtros en su estado inicial y carga la grilla

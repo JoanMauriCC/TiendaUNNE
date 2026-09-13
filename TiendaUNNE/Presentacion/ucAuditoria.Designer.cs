@@ -1,6 +1,6 @@
 namespace TiendaUNNE
 {
-    partial class frmAuditoria
+    partial class ucAuditoria
     {
         private System.ComponentModel.IContainer components = null;
 
@@ -151,18 +151,15 @@ namespace TiendaUNNE
             this.dgvAuditoria.Size = new System.Drawing.Size(904, 449);
             this.dgvAuditoria.TabIndex = 1;
             //
-            // frmAuditoria
+            // ucAuditoria
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(904, 521);
             this.Controls.Add(this.dgvAuditoria);
             this.Controls.Add(this.panelFiltros);
-            this.MinimumSize = new System.Drawing.Size(760, 400);
-            this.Name = "frmAuditoria";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Auditoría";
-            this.Load += new System.EventHandler(this.frmAuditoria_Load);
+            this.Name = "ucAuditoria";
+            this.Size = new System.Drawing.Size(904, 521);
+            this.Load += new System.EventHandler(this.ucAuditoria_Load);
             this.panelFiltros.ResumeLayout(false);
             this.panelFiltros.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAuditoria)).EndInit();

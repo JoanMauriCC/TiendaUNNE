@@ -4,15 +4,19 @@ using System.Windows.Forms;
 
 namespace TiendaUNNE
 {
-    /// <summary>Listado de productos activos con alta/edición/baja lógica.</summary>
-    public partial class frmProductos : Form
+    /// <summary>
+    /// Sección de usuarios activos (Persona + Usuario + Perfil) con alta/edición/baja.
+    /// Es un UserControl: se muestra dentro del panel de contenido de frmPrincipal,
+    /// no en una ventana aparte.
+    /// </summary>
+    public partial class ucUsuarios : UserControl
     {
-        public frmProductos()
+        public ucUsuarios()
         {
             InitializeComponent();
         }
 
-        private void frmProductos_Load(object sender, EventArgs e)
+        private void ucUsuarios_Load(object sender, EventArgs e)
         {
             CargarGrilla();
         }
@@ -23,16 +27,17 @@ namespace TiendaUNNE
             {
                 Cursor = Cursors.WaitCursor;
 
-                int? idSeleccionado = ProductoSeleccionadoId();
+                int? idSeleccionado = UsuarioSeleccionadoId();
 
-                DataTable dt = NegocioProducto.ListarParaGrilla();
-                dgvProductos.DataSource = dt;
+                DataTable dt = NegocioUsuario.ListarActivos();
+                dgvUsuarios.DataSource = dt;
 
-                if (dgvProductos.Columns.Contains("IdProducto"))
-                    dgvProductos.Columns["IdProducto"].Visible = false;
+                if (dgvUsuarios.Columns.Contains("IdUsuario"))
+                    dgvUsuarios.Columns["IdUsuario"].Visible = false;
 
-                AplicarFormato();
+                AplicarEncabezados();
 
+                // Reposiciona la selección en una celda VISIBLE (nunca sobre la columna oculta).
                 if (!(idSeleccionado.HasValue && SeleccionarFilaPorId(idSeleccionado.Value)))
                     SeleccionarPrimeraFila();
 
@@ -40,7 +45,7 @@ namespace TiendaUNNE
             }
             catch (Exception)
             {
-                MessageBox.Show("No se pudo leer el listado de productos.",
+                MessageBox.Show("No se pudo leer el listado de usuarios.",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -49,34 +54,27 @@ namespace TiendaUNNE
             }
         }
 
-        private void AplicarFormato()
+        private void AplicarEncabezados()
         {
+            SetHeader("DniCuit", "DNI/CUIT");
+            SetHeader("Apellido", "Apellido");
             SetHeader("Nombre", "Nombre");
-            SetHeader("Categoria", "Categoría");
-            SetHeader("PrecioVenta", "Precio venta");
-            SetHeader("Stock", "Stock");
+            SetHeader("Telefono", "Teléfono");
+            SetHeader("Email", "Email");
+            SetHeader("Usuario", "Usuario");
+            SetHeader("Perfil", "Perfil");
             SetHeader("Activo", "Activo");
-
-            SetFormatoNumerico("PrecioVenta", NegocioProducto.FormatoPrecio);
-            SetFormatoNumerico("Stock", NegocioProducto.FormatoStock);
         }
 
         private void SetHeader(string columna, string texto)
         {
-            if (dgvProductos.Columns.Contains(columna))
-                dgvProductos.Columns[columna].HeaderText = texto;
-        }
-
-        private void SetFormatoNumerico(string columna, string formato)
-        {
-            if (!dgvProductos.Columns.Contains(columna)) return;
-            dgvProductos.Columns[columna].DefaultCellStyle.Format = formato;
-            dgvProductos.Columns[columna].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            if (dgvUsuarios.Columns.Contains(columna))
+                dgvUsuarios.Columns[columna].HeaderText = texto;
         }
 
         private DataGridViewColumn PrimeraColumnaVisible()
         {
-            foreach (DataGridViewColumn col in dgvProductos.Columns)
+            foreach (DataGridViewColumn col in dgvUsuarios.Columns)
                 if (col.Visible)
                     return col;
             return null;
@@ -84,30 +82,30 @@ namespace TiendaUNNE
 
         private void SeleccionarPrimeraFila()
         {
-            if (dgvProductos.Rows.Count == 0)
+            if (dgvUsuarios.Rows.Count == 0)
             {
-                dgvProductos.ClearSelection();
+                dgvUsuarios.ClearSelection();
                 return;
             }
 
             var col = PrimeraColumnaVisible();
-            dgvProductos.ClearSelection();
-            dgvProductos.Rows[0].Selected = true;
+            dgvUsuarios.ClearSelection();
+            dgvUsuarios.Rows[0].Selected = true;
             if (col != null)
-                dgvProductos.CurrentCell = dgvProductos.Rows[0].Cells[col.Index];
+                dgvUsuarios.CurrentCell = dgvUsuarios.Rows[0].Cells[col.Index];
         }
 
-        private bool SeleccionarFilaPorId(int idProducto)
+        private bool SeleccionarFilaPorId(int idUsuario)
         {
             var col = PrimeraColumnaVisible();
-            foreach (DataGridViewRow fila in dgvProductos.Rows)
+            foreach (DataGridViewRow fila in dgvUsuarios.Rows)
             {
-                if (IdDeFila(fila) == idProducto)
+                if (IdDeFila(fila) == idUsuario)
                 {
-                    dgvProductos.ClearSelection();
+                    dgvUsuarios.ClearSelection();
                     fila.Selected = true;
                     if (col != null)
-                        dgvProductos.CurrentCell = fila.Cells[col.Index];
+                        dgvUsuarios.CurrentCell = fila.Cells[col.Index];
                     return true;
                 }
             }
@@ -120,36 +118,37 @@ namespace TiendaUNNE
 
         private DataGridViewRow FilaSeleccionada()
         {
-            if (dgvProductos.CurrentRow != null)
-                return dgvProductos.CurrentRow;
-            if (dgvProductos.SelectedRows.Count > 0)
-                return dgvProductos.SelectedRows[0];
+            if (dgvUsuarios.CurrentRow != null)
+                return dgvUsuarios.CurrentRow;
+            if (dgvUsuarios.SelectedRows.Count > 0)
+                return dgvUsuarios.SelectedRows[0];
             return null;
         }
 
+        /// <summary>Lee el id desde el DataRowView enlazado, sin depender de la columna oculta.</summary>
         private static int? IdDeFila(DataGridViewRow fila)
         {
             var drv = fila == null ? null : fila.DataBoundItem as DataRowView;
-            if (drv == null || drv["IdProducto"] == DBNull.Value)
+            if (drv == null || drv["IdUsuario"] == DBNull.Value)
                 return null;
-            return Convert.ToInt32(drv["IdProducto"]);
+            return Convert.ToInt32(drv["IdUsuario"]);
         }
 
-        private int? ProductoSeleccionadoId()
+        private int? UsuarioSeleccionadoId()
         {
             return IdDeFila(FilaSeleccionada());
         }
 
-        private string ProductoSeleccionadoDescripcion()
+        private string UsuarioSeleccionadoDescripcion()
         {
-            var fila = FilaSeleccionada();
-            var drv = fila == null ? null : fila.DataBoundItem as DataRowView;
-            return drv == null ? string.Empty : Convert.ToString(drv["Nombre"]);
+            var drv = FilaSeleccionada() == null ? null : FilaSeleccionada().DataBoundItem as DataRowView;
+            if (drv == null) return string.Empty;
+            return string.Format("{0}, {1} ({2})", drv["Apellido"], drv["Nombre"], drv["Usuario"]);
         }
 
         private void ActualizarBotones()
         {
-            bool haySeleccion = ProductoSeleccionadoId().HasValue;
+            bool haySeleccion = UsuarioSeleccionadoId().HasValue;
             btnEditar.Enabled = haySeleccion;
             btnBaja.Enabled = haySeleccion;
         }
@@ -160,7 +159,7 @@ namespace TiendaUNNE
 
         private void btnNuevo_Click(object sender, EventArgs e)
         {
-            using (var editor = new frmProductoEditor(null))
+            using (var editor = new frmUsuarioEditor(null))
             {
                 if (editor.ShowDialog(this) == DialogResult.OK)
                     CargarGrilla();
@@ -169,10 +168,10 @@ namespace TiendaUNNE
 
         private void btnEditar_Click(object sender, EventArgs e)
         {
-            int? id = ProductoSeleccionadoId();
+            int? id = UsuarioSeleccionadoId();
             if (!id.HasValue) return;
 
-            using (var editor = new frmProductoEditor(id.Value))
+            using (var editor = new frmUsuarioEditor(id.Value))
             {
                 if (editor.ShowDialog(this) == DialogResult.OK)
                     CargarGrilla();
@@ -181,11 +180,11 @@ namespace TiendaUNNE
 
         private void btnBaja_Click(object sender, EventArgs e)
         {
-            int? id = ProductoSeleccionadoId();
+            int? id = UsuarioSeleccionadoId();
             if (!id.HasValue) return;
 
             var r = MessageBox.Show(
-                "¿Seguro que querés dar de baja el producto \"" + ProductoSeleccionadoDescripcion() + "\"?",
+                "¿Seguro que querés dar de baja a " + UsuarioSeleccionadoDescripcion() + "?",
                 "Confirmar baja", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
                 MessageBoxDefaultButton.Button2);
 
@@ -194,7 +193,7 @@ namespace TiendaUNNE
             try
             {
                 Cursor = Cursors.WaitCursor;
-                NegocioProducto.DarDeBaja(id.Value, SesionActual.Usuario.IdUsuario);
+                NegocioUsuario.DarDeBaja(id.Value, SesionActual.Usuario.IdUsuario);
                 CargarGrilla();
             }
             catch (ReglaNegocioException ex)
@@ -204,7 +203,7 @@ namespace TiendaUNNE
             }
             catch (Exception)
             {
-                MessageBox.Show("No se pudo dar de baja el producto.",
+                MessageBox.Show("No se pudo dar de baja el usuario.",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -218,17 +217,19 @@ namespace TiendaUNNE
             CargarGrilla();
         }
 
-        private void dgvProductos_SelectionChanged(object sender, EventArgs e)
+        // Ambos eventos mantienen el estado de los botones: SelectionChanged cubre el
+        // cambio de fila; CellClick cubre el clic sobre la fila que ya estaba seleccionada.
+        private void dgvUsuarios_SelectionChanged(object sender, EventArgs e)
         {
             ActualizarBotones();
         }
 
-        private void dgvProductos_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void dgvUsuarios_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             ActualizarBotones();
         }
 
-        private void dgvProductos_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void dgvUsuarios_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0 && btnEditar.Enabled)
                 btnEditar_Click(sender, e);

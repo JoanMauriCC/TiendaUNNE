@@ -1,6 +1,6 @@
 namespace TiendaUNNE
 {
-    partial class frmUsuarios
+    partial class ucCategorias
     {
         private System.ComponentModel.IContainer components = null;
 
@@ -22,9 +22,9 @@ namespace TiendaUNNE
             this.btnBaja = new System.Windows.Forms.Button();
             this.btnEditar = new System.Windows.Forms.Button();
             this.btnNuevo = new System.Windows.Forms.Button();
-            this.dgvUsuarios = new System.Windows.Forms.DataGridView();
+            this.dgvCategorias = new System.Windows.Forms.DataGridView();
             this.panelBotones.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvUsuarios)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvCategorias)).BeginInit();
             this.SuspendLayout();
             //
             // panelBotones
@@ -37,7 +37,7 @@ namespace TiendaUNNE
             this.panelBotones.Location = new System.Drawing.Point(0, 0);
             this.panelBotones.Name = "panelBotones";
             this.panelBotones.Padding = new System.Windows.Forms.Padding(8);
-            this.panelBotones.Size = new System.Drawing.Size(844, 52);
+            this.panelBotones.Size = new System.Drawing.Size(664, 52);
             this.panelBotones.TabIndex = 0;
             //
             // btnActualizar
@@ -52,24 +52,24 @@ namespace TiendaUNNE
             //
             // btnBaja
             //
+            this.btnBaja.Enabled = false;
             this.btnBaja.Location = new System.Drawing.Point(276, 10);
             this.btnBaja.Name = "btnBaja";
             this.btnBaja.Size = new System.Drawing.Size(130, 32);
             this.btnBaja.TabIndex = 2;
             this.btnBaja.Text = "Dar de baja";
             this.btnBaja.UseVisualStyleBackColor = true;
-            this.btnBaja.Enabled = false;
             this.btnBaja.Click += new System.EventHandler(this.btnBaja_Click);
             //
             // btnEditar
             //
+            this.btnEditar.Enabled = false;
             this.btnEditar.Location = new System.Drawing.Point(142, 10);
             this.btnEditar.Name = "btnEditar";
             this.btnEditar.Size = new System.Drawing.Size(126, 32);
             this.btnEditar.TabIndex = 1;
             this.btnEditar.Text = "Editar";
             this.btnEditar.UseVisualStyleBackColor = true;
-            this.btnEditar.Enabled = false;
             this.btnEditar.Click += new System.EventHandler(this.btnEditar_Click);
             //
             // btnNuevo
@@ -82,40 +82,37 @@ namespace TiendaUNNE
             this.btnNuevo.UseVisualStyleBackColor = true;
             this.btnNuevo.Click += new System.EventHandler(this.btnNuevo_Click);
             //
-            // dgvUsuarios
+            // dgvCategorias
             //
-            this.dgvUsuarios.AllowUserToAddRows = false;
-            this.dgvUsuarios.AllowUserToDeleteRows = false;
-            this.dgvUsuarios.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgvUsuarios.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvUsuarios.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvUsuarios.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.dgvUsuarios.Location = new System.Drawing.Point(0, 52);
-            this.dgvUsuarios.MultiSelect = false;
-            this.dgvUsuarios.Name = "dgvUsuarios";
-            this.dgvUsuarios.ReadOnly = true;
-            this.dgvUsuarios.RowHeadersVisible = false;
-            this.dgvUsuarios.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvUsuarios.Size = new System.Drawing.Size(844, 449);
-            this.dgvUsuarios.TabIndex = 1;
-            this.dgvUsuarios.SelectionChanged += new System.EventHandler(this.dgvUsuarios_SelectionChanged);
-            this.dgvUsuarios.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvUsuarios_CellClick);
-            this.dgvUsuarios.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvUsuarios_CellDoubleClick);
+            this.dgvCategorias.AllowUserToAddRows = false;
+            this.dgvCategorias.AllowUserToDeleteRows = false;
+            this.dgvCategorias.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvCategorias.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvCategorias.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvCategorias.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
+            this.dgvCategorias.Location = new System.Drawing.Point(0, 52);
+            this.dgvCategorias.MultiSelect = false;
+            this.dgvCategorias.Name = "dgvCategorias";
+            this.dgvCategorias.ReadOnly = true;
+            this.dgvCategorias.RowHeadersVisible = false;
+            this.dgvCategorias.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvCategorias.Size = new System.Drawing.Size(664, 397);
+            this.dgvCategorias.TabIndex = 1;
+            this.dgvCategorias.SelectionChanged += new System.EventHandler(this.dgvCategorias_SelectionChanged);
+            this.dgvCategorias.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvCategorias_CellClick);
+            this.dgvCategorias.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvCategorias_CellDoubleClick);
             //
-            // frmUsuarios
+            // ucCategorias
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(844, 501);
-            this.Controls.Add(this.dgvUsuarios);
+            this.Controls.Add(this.dgvCategorias);
             this.Controls.Add(this.panelBotones);
-            this.MinimumSize = new System.Drawing.Size(700, 400);
-            this.Name = "frmUsuarios";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Usuarios";
-            this.Load += new System.EventHandler(this.frmUsuarios_Load);
+            this.Name = "ucCategorias";
+            this.Size = new System.Drawing.Size(664, 449);
+            this.Load += new System.EventHandler(this.ucCategorias_Load);
             this.panelBotones.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvUsuarios)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvCategorias)).EndInit();
             this.ResumeLayout(false);
         }
 
@@ -126,6 +123,6 @@ namespace TiendaUNNE
         private System.Windows.Forms.Button btnBaja;
         private System.Windows.Forms.Button btnEditar;
         private System.Windows.Forms.Button btnNuevo;
-        private System.Windows.Forms.DataGridView dgvUsuarios;
+        private System.Windows.Forms.DataGridView dgvCategorias;
     }
 }

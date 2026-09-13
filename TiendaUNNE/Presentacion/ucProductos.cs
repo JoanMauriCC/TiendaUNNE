@@ -4,15 +4,18 @@ using System.Windows.Forms;
 
 namespace TiendaUNNE
 {
-    /// <summary>Listado de categorías activas con alta/edición/baja lógica.</summary>
-    public partial class frmCategorias : Form
+    /// <summary>
+    /// Sección de productos activos con alta/edición/baja lógica. Es un UserControl:
+    /// se muestra dentro del panel de contenido de frmPrincipal.
+    /// </summary>
+    public partial class ucProductos : UserControl
     {
-        public frmCategorias()
+        public ucProductos()
         {
             InitializeComponent();
         }
 
-        private void frmCategorias_Load(object sender, EventArgs e)
+        private void ucProductos_Load(object sender, EventArgs e)
         {
             CargarGrilla();
         }
@@ -23,15 +26,15 @@ namespace TiendaUNNE
             {
                 Cursor = Cursors.WaitCursor;
 
-                int? idSeleccionado = CategoriaSeleccionadaId();
+                int? idSeleccionado = ProductoSeleccionadoId();
 
-                DataTable dt = NegocioCategoria.ListarParaGrilla();
-                dgvCategorias.DataSource = dt;
+                DataTable dt = NegocioProducto.ListarParaGrilla();
+                dgvProductos.DataSource = dt;
 
-                if (dgvCategorias.Columns.Contains("IdCategoria"))
-                    dgvCategorias.Columns["IdCategoria"].Visible = false;
+                if (dgvProductos.Columns.Contains("IdProducto"))
+                    dgvProductos.Columns["IdProducto"].Visible = false;
 
-                AplicarEncabezados();
+                AplicarFormato();
 
                 if (!(idSeleccionado.HasValue && SeleccionarFilaPorId(idSeleccionado.Value)))
                     SeleccionarPrimeraFila();
@@ -40,7 +43,7 @@ namespace TiendaUNNE
             }
             catch (Exception)
             {
-                MessageBox.Show("No se pudo leer el listado de categorías.",
+                MessageBox.Show("No se pudo leer el listado de productos.",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -49,22 +52,34 @@ namespace TiendaUNNE
             }
         }
 
-        private void AplicarEncabezados()
+        private void AplicarFormato()
         {
             SetHeader("Nombre", "Nombre");
-            SetHeader("Descripcion", "Descripción");
+            SetHeader("Categoria", "Categoría");
+            SetHeader("PrecioVenta", "Precio venta");
+            SetHeader("Stock", "Stock");
             SetHeader("Activo", "Activo");
+
+            SetFormatoNumerico("PrecioVenta", NegocioProducto.FormatoPrecio);
+            SetFormatoNumerico("Stock", NegocioProducto.FormatoStock);
         }
 
         private void SetHeader(string columna, string texto)
         {
-            if (dgvCategorias.Columns.Contains(columna))
-                dgvCategorias.Columns[columna].HeaderText = texto;
+            if (dgvProductos.Columns.Contains(columna))
+                dgvProductos.Columns[columna].HeaderText = texto;
+        }
+
+        private void SetFormatoNumerico(string columna, string formato)
+        {
+            if (!dgvProductos.Columns.Contains(columna)) return;
+            dgvProductos.Columns[columna].DefaultCellStyle.Format = formato;
+            dgvProductos.Columns[columna].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
         }
 
         private DataGridViewColumn PrimeraColumnaVisible()
         {
-            foreach (DataGridViewColumn col in dgvCategorias.Columns)
+            foreach (DataGridViewColumn col in dgvProductos.Columns)
                 if (col.Visible)
                     return col;
             return null;
@@ -72,30 +87,30 @@ namespace TiendaUNNE
 
         private void SeleccionarPrimeraFila()
         {
-            if (dgvCategorias.Rows.Count == 0)
+            if (dgvProductos.Rows.Count == 0)
             {
-                dgvCategorias.ClearSelection();
+                dgvProductos.ClearSelection();
                 return;
             }
 
             var col = PrimeraColumnaVisible();
-            dgvCategorias.ClearSelection();
-            dgvCategorias.Rows[0].Selected = true;
+            dgvProductos.ClearSelection();
+            dgvProductos.Rows[0].Selected = true;
             if (col != null)
-                dgvCategorias.CurrentCell = dgvCategorias.Rows[0].Cells[col.Index];
+                dgvProductos.CurrentCell = dgvProductos.Rows[0].Cells[col.Index];
         }
 
-        private bool SeleccionarFilaPorId(int idCategoria)
+        private bool SeleccionarFilaPorId(int idProducto)
         {
             var col = PrimeraColumnaVisible();
-            foreach (DataGridViewRow fila in dgvCategorias.Rows)
+            foreach (DataGridViewRow fila in dgvProductos.Rows)
             {
-                if (IdDeFila(fila) == idCategoria)
+                if (IdDeFila(fila) == idProducto)
                 {
-                    dgvCategorias.ClearSelection();
+                    dgvProductos.ClearSelection();
                     fila.Selected = true;
                     if (col != null)
-                        dgvCategorias.CurrentCell = fila.Cells[col.Index];
+                        dgvProductos.CurrentCell = fila.Cells[col.Index];
                     return true;
                 }
             }
@@ -108,27 +123,27 @@ namespace TiendaUNNE
 
         private DataGridViewRow FilaSeleccionada()
         {
-            if (dgvCategorias.CurrentRow != null)
-                return dgvCategorias.CurrentRow;
-            if (dgvCategorias.SelectedRows.Count > 0)
-                return dgvCategorias.SelectedRows[0];
+            if (dgvProductos.CurrentRow != null)
+                return dgvProductos.CurrentRow;
+            if (dgvProductos.SelectedRows.Count > 0)
+                return dgvProductos.SelectedRows[0];
             return null;
         }
 
         private static int? IdDeFila(DataGridViewRow fila)
         {
             var drv = fila == null ? null : fila.DataBoundItem as DataRowView;
-            if (drv == null || drv["IdCategoria"] == DBNull.Value)
+            if (drv == null || drv["IdProducto"] == DBNull.Value)
                 return null;
-            return Convert.ToInt32(drv["IdCategoria"]);
+            return Convert.ToInt32(drv["IdProducto"]);
         }
 
-        private int? CategoriaSeleccionadaId()
+        private int? ProductoSeleccionadoId()
         {
             return IdDeFila(FilaSeleccionada());
         }
 
-        private string CategoriaSeleccionadaDescripcion()
+        private string ProductoSeleccionadoDescripcion()
         {
             var fila = FilaSeleccionada();
             var drv = fila == null ? null : fila.DataBoundItem as DataRowView;
@@ -137,7 +152,7 @@ namespace TiendaUNNE
 
         private void ActualizarBotones()
         {
-            bool haySeleccion = CategoriaSeleccionadaId().HasValue;
+            bool haySeleccion = ProductoSeleccionadoId().HasValue;
             btnEditar.Enabled = haySeleccion;
             btnBaja.Enabled = haySeleccion;
         }
@@ -148,7 +163,7 @@ namespace TiendaUNNE
 
         private void btnNuevo_Click(object sender, EventArgs e)
         {
-            using (var editor = new frmCategoriaEditor(null))
+            using (var editor = new frmProductoEditor(null))
             {
                 if (editor.ShowDialog(this) == DialogResult.OK)
                     CargarGrilla();
@@ -157,10 +172,10 @@ namespace TiendaUNNE
 
         private void btnEditar_Click(object sender, EventArgs e)
         {
-            int? id = CategoriaSeleccionadaId();
+            int? id = ProductoSeleccionadoId();
             if (!id.HasValue) return;
 
-            using (var editor = new frmCategoriaEditor(id.Value))
+            using (var editor = new frmProductoEditor(id.Value))
             {
                 if (editor.ShowDialog(this) == DialogResult.OK)
                     CargarGrilla();
@@ -169,11 +184,11 @@ namespace TiendaUNNE
 
         private void btnBaja_Click(object sender, EventArgs e)
         {
-            int? id = CategoriaSeleccionadaId();
+            int? id = ProductoSeleccionadoId();
             if (!id.HasValue) return;
 
             var r = MessageBox.Show(
-                "¿Seguro que querés dar de baja la categoría \"" + CategoriaSeleccionadaDescripcion() + "\"?",
+                "¿Seguro que querés dar de baja el producto \"" + ProductoSeleccionadoDescripcion() + "\"?",
                 "Confirmar baja", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
                 MessageBoxDefaultButton.Button2);
 
@@ -182,7 +197,7 @@ namespace TiendaUNNE
             try
             {
                 Cursor = Cursors.WaitCursor;
-                NegocioCategoria.DarDeBaja(id.Value, SesionActual.Usuario.IdUsuario);
+                NegocioProducto.DarDeBaja(id.Value, SesionActual.Usuario.IdUsuario);
                 CargarGrilla();
             }
             catch (ReglaNegocioException ex)
@@ -192,7 +207,7 @@ namespace TiendaUNNE
             }
             catch (Exception)
             {
-                MessageBox.Show("No se pudo dar de baja la categoría.",
+                MessageBox.Show("No se pudo dar de baja el producto.",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -206,17 +221,17 @@ namespace TiendaUNNE
             CargarGrilla();
         }
 
-        private void dgvCategorias_SelectionChanged(object sender, EventArgs e)
+        private void dgvProductos_SelectionChanged(object sender, EventArgs e)
         {
             ActualizarBotones();
         }
 
-        private void dgvCategorias_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void dgvProductos_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             ActualizarBotones();
         }
 
-        private void dgvCategorias_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void dgvProductos_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0 && btnEditar.Enabled)
                 btnEditar_Click(sender, e);

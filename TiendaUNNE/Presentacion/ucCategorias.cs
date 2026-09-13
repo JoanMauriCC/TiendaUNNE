@@ -4,15 +4,18 @@ using System.Windows.Forms;
 
 namespace TiendaUNNE
 {
-    /// <summary>Listado de usuarios activos (Persona + Usuario + Perfil) con alta/edición/baja.</summary>
-    public partial class frmUsuarios : Form
+    /// <summary>
+    /// Sección de categorías activas con alta/edición/baja lógica. Es un UserControl:
+    /// se muestra dentro del panel de contenido de frmPrincipal.
+    /// </summary>
+    public partial class ucCategorias : UserControl
     {
-        public frmUsuarios()
+        public ucCategorias()
         {
             InitializeComponent();
         }
 
-        private void frmUsuarios_Load(object sender, EventArgs e)
+        private void ucCategorias_Load(object sender, EventArgs e)
         {
             CargarGrilla();
         }
@@ -23,17 +26,16 @@ namespace TiendaUNNE
             {
                 Cursor = Cursors.WaitCursor;
 
-                int? idSeleccionado = UsuarioSeleccionadoId();
+                int? idSeleccionado = CategoriaSeleccionadaId();
 
-                DataTable dt = NegocioUsuario.ListarActivos();
-                dgvUsuarios.DataSource = dt;
+                DataTable dt = NegocioCategoria.ListarParaGrilla();
+                dgvCategorias.DataSource = dt;
 
-                if (dgvUsuarios.Columns.Contains("IdUsuario"))
-                    dgvUsuarios.Columns["IdUsuario"].Visible = false;
+                if (dgvCategorias.Columns.Contains("IdCategoria"))
+                    dgvCategorias.Columns["IdCategoria"].Visible = false;
 
                 AplicarEncabezados();
 
-                // Reposiciona la selección en una celda VISIBLE (nunca sobre la columna oculta).
                 if (!(idSeleccionado.HasValue && SeleccionarFilaPorId(idSeleccionado.Value)))
                     SeleccionarPrimeraFila();
 
@@ -41,7 +43,7 @@ namespace TiendaUNNE
             }
             catch (Exception)
             {
-                MessageBox.Show("No se pudo leer el listado de usuarios.",
+                MessageBox.Show("No se pudo leer el listado de categorías.",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -52,25 +54,20 @@ namespace TiendaUNNE
 
         private void AplicarEncabezados()
         {
-            SetHeader("DniCuit", "DNI/CUIT");
-            SetHeader("Apellido", "Apellido");
             SetHeader("Nombre", "Nombre");
-            SetHeader("Telefono", "Teléfono");
-            SetHeader("Email", "Email");
-            SetHeader("Usuario", "Usuario");
-            SetHeader("Perfil", "Perfil");
+            SetHeader("Descripcion", "Descripción");
             SetHeader("Activo", "Activo");
         }
 
         private void SetHeader(string columna, string texto)
         {
-            if (dgvUsuarios.Columns.Contains(columna))
-                dgvUsuarios.Columns[columna].HeaderText = texto;
+            if (dgvCategorias.Columns.Contains(columna))
+                dgvCategorias.Columns[columna].HeaderText = texto;
         }
 
         private DataGridViewColumn PrimeraColumnaVisible()
         {
-            foreach (DataGridViewColumn col in dgvUsuarios.Columns)
+            foreach (DataGridViewColumn col in dgvCategorias.Columns)
                 if (col.Visible)
                     return col;
             return null;
@@ -78,30 +75,30 @@ namespace TiendaUNNE
 
         private void SeleccionarPrimeraFila()
         {
-            if (dgvUsuarios.Rows.Count == 0)
+            if (dgvCategorias.Rows.Count == 0)
             {
-                dgvUsuarios.ClearSelection();
+                dgvCategorias.ClearSelection();
                 return;
             }
 
             var col = PrimeraColumnaVisible();
-            dgvUsuarios.ClearSelection();
-            dgvUsuarios.Rows[0].Selected = true;
+            dgvCategorias.ClearSelection();
+            dgvCategorias.Rows[0].Selected = true;
             if (col != null)
-                dgvUsuarios.CurrentCell = dgvUsuarios.Rows[0].Cells[col.Index];
+                dgvCategorias.CurrentCell = dgvCategorias.Rows[0].Cells[col.Index];
         }
 
-        private bool SeleccionarFilaPorId(int idUsuario)
+        private bool SeleccionarFilaPorId(int idCategoria)
         {
             var col = PrimeraColumnaVisible();
-            foreach (DataGridViewRow fila in dgvUsuarios.Rows)
+            foreach (DataGridViewRow fila in dgvCategorias.Rows)
             {
-                if (IdDeFila(fila) == idUsuario)
+                if (IdDeFila(fila) == idCategoria)
                 {
-                    dgvUsuarios.ClearSelection();
+                    dgvCategorias.ClearSelection();
                     fila.Selected = true;
                     if (col != null)
-                        dgvUsuarios.CurrentCell = fila.Cells[col.Index];
+                        dgvCategorias.CurrentCell = fila.Cells[col.Index];
                     return true;
                 }
             }
@@ -114,37 +111,36 @@ namespace TiendaUNNE
 
         private DataGridViewRow FilaSeleccionada()
         {
-            if (dgvUsuarios.CurrentRow != null)
-                return dgvUsuarios.CurrentRow;
-            if (dgvUsuarios.SelectedRows.Count > 0)
-                return dgvUsuarios.SelectedRows[0];
+            if (dgvCategorias.CurrentRow != null)
+                return dgvCategorias.CurrentRow;
+            if (dgvCategorias.SelectedRows.Count > 0)
+                return dgvCategorias.SelectedRows[0];
             return null;
         }
 
-        /// <summary>Lee el id desde el DataRowView enlazado, sin depender de la columna oculta.</summary>
         private static int? IdDeFila(DataGridViewRow fila)
         {
             var drv = fila == null ? null : fila.DataBoundItem as DataRowView;
-            if (drv == null || drv["IdUsuario"] == DBNull.Value)
+            if (drv == null || drv["IdCategoria"] == DBNull.Value)
                 return null;
-            return Convert.ToInt32(drv["IdUsuario"]);
+            return Convert.ToInt32(drv["IdCategoria"]);
         }
 
-        private int? UsuarioSeleccionadoId()
+        private int? CategoriaSeleccionadaId()
         {
             return IdDeFila(FilaSeleccionada());
         }
 
-        private string UsuarioSeleccionadoDescripcion()
+        private string CategoriaSeleccionadaDescripcion()
         {
-            var drv = FilaSeleccionada() == null ? null : FilaSeleccionada().DataBoundItem as DataRowView;
-            if (drv == null) return string.Empty;
-            return string.Format("{0}, {1} ({2})", drv["Apellido"], drv["Nombre"], drv["Usuario"]);
+            var fila = FilaSeleccionada();
+            var drv = fila == null ? null : fila.DataBoundItem as DataRowView;
+            return drv == null ? string.Empty : Convert.ToString(drv["Nombre"]);
         }
 
         private void ActualizarBotones()
         {
-            bool haySeleccion = UsuarioSeleccionadoId().HasValue;
+            bool haySeleccion = CategoriaSeleccionadaId().HasValue;
             btnEditar.Enabled = haySeleccion;
             btnBaja.Enabled = haySeleccion;
         }
@@ -155,7 +151,7 @@ namespace TiendaUNNE
 
         private void btnNuevo_Click(object sender, EventArgs e)
         {
-            using (var editor = new frmUsuarioEditor(null))
+            using (var editor = new frmCategoriaEditor(null))
             {
                 if (editor.ShowDialog(this) == DialogResult.OK)
                     CargarGrilla();
@@ -164,10 +160,10 @@ namespace TiendaUNNE
 
         private void btnEditar_Click(object sender, EventArgs e)
         {
-            int? id = UsuarioSeleccionadoId();
+            int? id = CategoriaSeleccionadaId();
             if (!id.HasValue) return;
 
-            using (var editor = new frmUsuarioEditor(id.Value))
+            using (var editor = new frmCategoriaEditor(id.Value))
             {
                 if (editor.ShowDialog(this) == DialogResult.OK)
                     CargarGrilla();
@@ -176,11 +172,11 @@ namespace TiendaUNNE
 
         private void btnBaja_Click(object sender, EventArgs e)
         {
-            int? id = UsuarioSeleccionadoId();
+            int? id = CategoriaSeleccionadaId();
             if (!id.HasValue) return;
 
             var r = MessageBox.Show(
-                "¿Seguro que querés dar de baja a " + UsuarioSeleccionadoDescripcion() + "?",
+                "¿Seguro que querés dar de baja la categoría \"" + CategoriaSeleccionadaDescripcion() + "\"?",
                 "Confirmar baja", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
                 MessageBoxDefaultButton.Button2);
 
@@ -189,7 +185,7 @@ namespace TiendaUNNE
             try
             {
                 Cursor = Cursors.WaitCursor;
-                NegocioUsuario.DarDeBaja(id.Value, SesionActual.Usuario.IdUsuario);
+                NegocioCategoria.DarDeBaja(id.Value, SesionActual.Usuario.IdUsuario);
                 CargarGrilla();
             }
             catch (ReglaNegocioException ex)
@@ -199,7 +195,7 @@ namespace TiendaUNNE
             }
             catch (Exception)
             {
-                MessageBox.Show("No se pudo dar de baja el usuario.",
+                MessageBox.Show("No se pudo dar de baja la categoría.",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -213,19 +209,17 @@ namespace TiendaUNNE
             CargarGrilla();
         }
 
-        // Ambos eventos mantienen el estado de los botones: SelectionChanged cubre el
-        // cambio de fila; CellClick cubre el clic sobre la fila que ya estaba seleccionada.
-        private void dgvUsuarios_SelectionChanged(object sender, EventArgs e)
+        private void dgvCategorias_SelectionChanged(object sender, EventArgs e)
         {
             ActualizarBotones();
         }
 
-        private void dgvUsuarios_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void dgvCategorias_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             ActualizarBotones();
         }
 
-        private void dgvUsuarios_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void dgvCategorias_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0 && btnEditar.Enabled)
                 btnEditar_Click(sender, e);

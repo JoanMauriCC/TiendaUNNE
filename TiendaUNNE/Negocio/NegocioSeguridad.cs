@@ -1,10 +1,12 @@
 namespace TiendaUNNE
 {
-    /// <summary>Opciones del menú principal del sistema.</summary>
+    /// <summary>Secciones del menú lateral del sistema.</summary>
     public enum OpcionMenu
     {
+        Inicio,
         Usuarios,
         Productos,
+        Categorias,
         Auditoria,
         Caja
     }
@@ -21,8 +23,12 @@ namespace TiendaUNNE
         {
             switch (opcion)
             {
+                case OpcionMenu.Inicio:
+                    return SesionActual.HaySesion;
+
                 case OpcionMenu.Usuarios:
                 case OpcionMenu.Productos:
+                case OpcionMenu.Categorias:
                 case OpcionMenu.Auditoria:
                 case OpcionMenu.Caja:
                     return SesionActual.EsAdministrador;
@@ -30,6 +36,20 @@ namespace TiendaUNNE
                 default:
                     return false;
             }
+        }
+
+        /// <summary>Secciones del menú, en el orden en que se muestran.</summary>
+        public static OpcionMenu[] OpcionesDelMenu()
+        {
+            return new[]
+            {
+                OpcionMenu.Inicio,
+                OpcionMenu.Usuarios,
+                OpcionMenu.Productos,
+                OpcionMenu.Categorias,
+                OpcionMenu.Auditoria,
+                OpcionMenu.Caja
+            };
         }
 
         /// <summary>

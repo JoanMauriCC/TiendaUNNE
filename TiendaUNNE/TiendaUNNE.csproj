@@ -92,11 +92,11 @@
     <Compile Include="Presentacion\frmPrincipal.Designer.cs">
       <DependentUpon>frmPrincipal.cs</DependentUpon>
     </Compile>
-    <Compile Include="Presentacion\frmUsuarios.cs">
-      <SubType>Form</SubType>
+    <Compile Include="Presentacion\ucUsuarios.cs">
+      <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Presentacion\frmUsuarios.Designer.cs">
-      <DependentUpon>frmUsuarios.cs</DependentUpon>
+    <Compile Include="Presentacion\ucUsuarios.Designer.cs">
+      <DependentUpon>ucUsuarios.cs</DependentUpon>
     </Compile>
     <Compile Include="Presentacion\frmUsuarioEditor.cs">
       <SubType>Form</SubType>
@@ -104,11 +104,11 @@
     <Compile Include="Presentacion\frmUsuarioEditor.Designer.cs">
       <DependentUpon>frmUsuarioEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Presentacion\frmCategorias.cs">
-      <SubType>Form</SubType>
+    <Compile Include="Presentacion\ucCategorias.cs">
+      <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Presentacion\frmCategorias.Designer.cs">
-      <DependentUpon>frmCategorias.cs</DependentUpon>
+    <Compile Include="Presentacion\ucCategorias.Designer.cs">
+      <DependentUpon>ucCategorias.cs</DependentUpon>
     </Compile>
     <Compile Include="Presentacion\frmCategoriaEditor.cs">
       <SubType>Form</SubType>
@@ -116,11 +116,11 @@
     <Compile Include="Presentacion\frmCategoriaEditor.Designer.cs">
       <DependentUpon>frmCategoriaEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Presentacion\frmProductos.cs">
-      <SubType>Form</SubType>
+    <Compile Include="Presentacion\ucProductos.cs">
+      <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Presentacion\frmProductos.Designer.cs">
-      <DependentUpon>frmProductos.cs</DependentUpon>
+    <Compile Include="Presentacion\ucProductos.Designer.cs">
+      <DependentUpon>ucProductos.cs</DependentUpon>
     </Compile>
     <Compile Include="Presentacion\frmProductoEditor.cs">
       <SubType>Form</SubType>
@@ -128,17 +128,11 @@
     <Compile Include="Presentacion\frmProductoEditor.Designer.cs">
       <DependentUpon>frmProductoEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Presentacion\frmProductosMenu.cs">
-      <SubType>Form</SubType>
+    <Compile Include="Presentacion\ucAuditoria.cs">
+      <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Presentacion\frmProductosMenu.Designer.cs">
-      <DependentUpon>frmProductosMenu.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Presentacion\frmAuditoria.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Presentacion\frmAuditoria.Designer.cs">
-      <DependentUpon>frmAuditoria.cs</DependentUpon>
+    <Compile Include="Presentacion\ucAuditoria.Designer.cs">
+      <DependentUpon>ucAuditoria.cs</DependentUpon>
     </Compile>
     <!-- ================= Raíz / Properties ================= -->
     <Compile Include="Program.cs" />
