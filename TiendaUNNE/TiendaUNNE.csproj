@@ -47,83 +47,102 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Arranque\Bootstrap.cs" />
-    <Compile Include="Controles\TarjetaMenu.cs" />
+    <!-- ================= Capa Entidades ================= -->
+    <Compile Include="Entidades\CredencialesUsuario.cs" />
+    <Compile Include="Entidades\ModelosCategoria.cs" />
+    <Compile Include="Entidades\ModelosProducto.cs" />
+    <Compile Include="Entidades\ModelosUsuario.cs" />
+    <Compile Include="Entidades\UsuarioLogueado.cs" />
+    <!-- ================= Capa Datos ================= -->
     <Compile Include="Datos\Db.cs" />
-    <Compile Include="Datos\ReglaNegocioException.cs" />
+    <Compile Include="Datos\DuplicadoException.cs" />
+    <Compile Include="Datos\ServicioArranque.cs" />
     <Compile Include="Datos\ServicioAuditoria.cs" />
     <Compile Include="Datos\ServicioAutenticacion.cs" />
     <Compile Include="Datos\ServicioCategoria.cs" />
     <Compile Include="Datos\ServicioPerfil.cs" />
     <Compile Include="Datos\ServicioProducto.cs" />
     <Compile Include="Datos\ServicioUsuario.cs" />
-    <Compile Include="Modelo\ModelosCategoria.cs" />
-    <Compile Include="Modelo\ModelosProducto.cs" />
-    <Compile Include="Modelo\ModelosUsuario.cs" />
-    <Compile Include="Formularios\frmLogin.cs">
+    <!-- ================= Capa Negocio ================= -->
+    <Compile Include="Negocio\NegocioArranque.cs" />
+    <Compile Include="Negocio\NegocioAuditoria.cs" />
+    <Compile Include="Negocio\NegocioAutenticacion.cs" />
+    <Compile Include="Negocio\NegocioCategoria.cs" />
+    <Compile Include="Negocio\NegocioPerfil.cs" />
+    <Compile Include="Negocio\NegocioProducto.cs" />
+    <Compile Include="Negocio\NegocioUsuario.cs" />
+    <Compile Include="Negocio\NegocioSeguridad.cs" />
+    <Compile Include="Negocio\PasswordHasher.cs" />
+    <Compile Include="Negocio\Validaciones.cs" />
+    <Compile Include="Negocio\ReglaNegocioException.cs" />
+    <Compile Include="Negocio\SesionActual.cs" />
+    <!-- ================= Capa Presentacion ================= -->
+    <Compile Include="Presentacion\TarjetaMenu.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Presentacion\frmLogin.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\frmLogin.Designer.cs">
+    <Compile Include="Presentacion\frmLogin.Designer.cs">
       <DependentUpon>frmLogin.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\frmPrincipal.cs">
+    <Compile Include="Presentacion\frmPrincipal.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\frmPrincipal.Designer.cs">
+    <Compile Include="Presentacion\frmPrincipal.Designer.cs">
       <DependentUpon>frmPrincipal.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\frmUsuarios.cs">
+    <Compile Include="Presentacion\frmUsuarios.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\frmUsuarios.Designer.cs">
+    <Compile Include="Presentacion\frmUsuarios.Designer.cs">
       <DependentUpon>frmUsuarios.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\frmUsuarioEditor.cs">
+    <Compile Include="Presentacion\frmUsuarioEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\frmUsuarioEditor.Designer.cs">
+    <Compile Include="Presentacion\frmUsuarioEditor.Designer.cs">
       <DependentUpon>frmUsuarioEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\frmCategorias.cs">
+    <Compile Include="Presentacion\frmCategorias.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\frmCategorias.Designer.cs">
+    <Compile Include="Presentacion\frmCategorias.Designer.cs">
       <DependentUpon>frmCategorias.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\frmCategoriaEditor.cs">
+    <Compile Include="Presentacion\frmCategoriaEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\frmCategoriaEditor.Designer.cs">
+    <Compile Include="Presentacion\frmCategoriaEditor.Designer.cs">
       <DependentUpon>frmCategoriaEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\frmProductos.cs">
+    <Compile Include="Presentacion\frmProductos.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\frmProductos.Designer.cs">
+    <Compile Include="Presentacion\frmProductos.Designer.cs">
       <DependentUpon>frmProductos.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\frmProductoEditor.cs">
+    <Compile Include="Presentacion\frmProductoEditor.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\frmProductoEditor.Designer.cs">
+    <Compile Include="Presentacion\frmProductoEditor.Designer.cs">
       <DependentUpon>frmProductoEditor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\frmProductosMenu.cs">
+    <Compile Include="Presentacion\frmProductosMenu.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\frmProductosMenu.Designer.cs">
+    <Compile Include="Presentacion\frmProductosMenu.Designer.cs">
       <DependentUpon>frmProductosMenu.cs</DependentUpon>
     </Compile>
-    <Compile Include="Formularios\frmAuditoria.cs">
+    <Compile Include="Presentacion\frmAuditoria.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Formularios\frmAuditoria.Designer.cs">
+    <Compile Include="Presentacion\frmAuditoria.Designer.cs">
       <DependentUpon>frmAuditoria.cs</DependentUpon>
     </Compile>
+    <!-- ================= Raíz / Properties ================= -->
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Seguridad\PasswordHasher.cs" />
-    <Compile Include="Seguridad\Sesion.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -145,6 +164,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

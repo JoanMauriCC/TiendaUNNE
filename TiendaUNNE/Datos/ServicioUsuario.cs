@@ -5,8 +5,9 @@ using System.Data.SqlClient;
 namespace TiendaUNNE
 {
     /// <summary>
-    /// CRUD de Usuario combinado con Persona. Reusa PasswordHasher, ServicioAuditoria
-    /// y el patrón de transacción Persona -> SCOPE_IDENTITY() -> Usuario de Bootstrap.
+    /// Acceso a datos de Usuario + Persona: conexión, SQL y transacciones. Nada más.
+    /// El hasheo de la contraseña, las validaciones y los textos de auditoría los
+    /// resuelve NegocioUsuario y llegan acá ya listos para persistir.
     /// </summary>
     public static class ServicioUsuario
     {
@@ -40,8 +41,8 @@ ORDER BY p.apellido, p.nombre;";
             return dt;
         }
 
-        /// <summary>Trae un usuario (con su persona y perfil) para cargar el editor en modo edición.</summary>
-        public static UsuarioEditModel ObtenerParaEdicion(int idUsuario)
+        /// <summary>Trae un usuario con su persona y perfil, o null si no existe.</summary>
+        public static UsuarioEditModel Obtener(int idUsuario)
         {
             const string sql = @"
 SELECT  u.id_usuario, u.id_persona, u.nombre_usuario, u.id_perfil,
@@ -59,7 +60,7 @@ WHERE u.id_usuario = @id;";
                 using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
                 {
                     if (!dr.Read())
-                        throw new ReglaNegocioException("El usuario ya no existe.");
+                        return null;
 
                     return new UsuarioEditModel
                     {
@@ -88,13 +89,11 @@ WHERE u.id_usuario = @id;";
 
         /// <summary>
         /// Alta en una transacción: INSERT Persona -> SCOPE_IDENTITY() -> INSERT Usuario
-        /// (con hash/salt de PasswordHasher) -> INSERT Auditoria (ALTA). Devuelve el id_usuario nuevo.
+        /// -> INSERT Auditoria (ALTA). El hash y el salt ya vienen calculados desde Negocio.
         /// </summary>
-        public static int Crear(UsuarioEditModel m, int idUsuarioSesion)
+        public static int Crear(UsuarioEditModel m, int idUsuarioSesion,
+                                byte[] hash, byte[] salt, string resumenNuevo)
         {
-            byte[] hash, salt;
-            PasswordHasher.Generar(m.PasswordPlano, out hash, out salt);
-
             using (var cn = Db.AbrirConexion())
             using (var tx = cn.BeginTransaction())
             {
@@ -122,7 +121,7 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                     {
                         cmd.Parameters.Add("@id_persona", SqlDbType.Int).Value = idPersona;
                         cmd.Parameters.Add("@id_perfil", SqlDbType.Int).Value = m.IdPerfil;
-                        cmd.Parameters.Add("@usuario", SqlDbType.NVarChar, 50).Value = m.NombreUsuario.Trim();
+                        cmd.Parameters.Add("@usuario", SqlDbType.NVarChar, 50).Value = m.NombreUsuario;
                         cmd.Parameters.Add("@hash", SqlDbType.VarBinary, 256).Value = hash;
                         cmd.Parameters.Add("@salt", SqlDbType.VarBinary, 128).Value = salt;
                         idUsuario = (int)cmd.ExecuteScalar();
@@ -131,7 +130,7 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                     ServicioAuditoria.Registrar(
                         "ALTA", "Usuario", idUsuario,
                         valorAnterior: null,
-                        valorNuevo: Resumen(m),
+                        valorNuevo: resumenNuevo,
                         idUsuario: idUsuarioSesion,
                         cn: cn, tx: tx);
 
@@ -141,7 +140,7 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                 catch (SqlException ex)
                 {
                     tx.Rollback();
-                    throw TraducirDuplicado(ex);
+                    throw DuplicadoException.Traducir(ex);
                 }
                 catch
                 {
@@ -156,18 +155,19 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
         // ---------------------------------------------------------------------
 
         /// <summary>
-        /// Edición en una transacción: SELECT del estado anterior -> UPDATE Persona ->
-        /// UPDATE Usuario (la contraseña solo si vino cargada) -> INSERT Auditoria (MODIFICACION).
+        /// Edición en una transacción: UPDATE Persona -> UPDATE Usuario -> INSERT Auditoria.
+        /// Si <paramref name="hash"/> viene en null, la contraseña no se toca: esa decisión
+        /// la tomó NegocioUsuario, acá solo se arma el UPDATE que corresponde.
         /// </summary>
-        public static void Actualizar(UsuarioEditModel m, int idUsuarioSesion)
+        public static void Actualizar(UsuarioEditModel m, int idUsuarioSesion,
+                                      byte[] hash, byte[] salt,
+                                      string resumenAnterior, string resumenNuevo)
         {
             using (var cn = Db.AbrirConexion())
             using (var tx = cn.BeginTransaction())
             {
                 try
                 {
-                    string valorAnterior = LeerResumen(cn, tx, m.IdUsuario);
-
                     const string sqlPersona = @"
 UPDATE dbo.Persona
 SET dni_cuit = @dni, nombre = @nombre, apellido = @apellido,
@@ -181,19 +181,16 @@ WHERE id_persona = @id_persona;";
                         cmd.ExecuteNonQuery();
                     }
 
-                    bool cambiaPassword = !string.IsNullOrWhiteSpace(m.PasswordPlano);
+                    bool cambiaPassword = hash != null && salt != null;
+
                     string sqlUsuario = "UPDATE dbo.Usuario SET nombre_usuario = @usuario, id_perfil = @id_perfil";
-                    byte[] hash = null, salt = null;
                     if (cambiaPassword)
-                    {
-                        PasswordHasher.Generar(m.PasswordPlano, out hash, out salt);
                         sqlUsuario += ", hash_password = @hash, salt = @salt, debe_cambiar_pass = 0";
-                    }
                     sqlUsuario += " WHERE id_usuario = @id_usuario;";
 
                     using (var cmd = new SqlCommand(sqlUsuario, cn, tx))
                     {
-                        cmd.Parameters.Add("@usuario", SqlDbType.NVarChar, 50).Value = m.NombreUsuario.Trim();
+                        cmd.Parameters.Add("@usuario", SqlDbType.NVarChar, 50).Value = m.NombreUsuario;
                         cmd.Parameters.Add("@id_perfil", SqlDbType.Int).Value = m.IdPerfil;
                         if (cambiaPassword)
                         {
@@ -204,11 +201,9 @@ WHERE id_persona = @id_persona;";
                         cmd.ExecuteNonQuery();
                     }
 
-                    string valorNuevo = Resumen(m) + (cambiaPassword ? "  [contraseña actualizada]" : string.Empty);
-
                     ServicioAuditoria.Registrar(
                         "MODIFICACION", "Usuario", m.IdUsuario,
-                        valorAnterior, valorNuevo, idUsuarioSesion,
+                        resumenAnterior, resumenNuevo, idUsuarioSesion,
                         cn, tx);
 
                     tx.Commit();
@@ -216,7 +211,7 @@ WHERE id_persona = @id_persona;";
                 catch (SqlException ex)
                 {
                     tx.Rollback();
-                    throw TraducirDuplicado(ex);
+                    throw DuplicadoException.Traducir(ex);
                 }
                 catch
                 {
@@ -231,21 +226,16 @@ WHERE id_persona = @id_persona;";
         // ---------------------------------------------------------------------
 
         /// <summary>
-        /// Baja lógica: UPDATE Usuario SET activo = 0 + Auditoria (BAJA).
-        /// Persona.activo NO se toca. Un usuario no puede darse de baja a sí mismo.
+        /// Baja lógica: UPDATE Usuario SET activo = 0 + Auditoria (BAJA). Persona.activo NO se toca.
+        /// Devuelve la cantidad de filas afectadas; 0 significa que ya estaba inactivo.
         /// </summary>
-        public static void DarDeBaja(int idUsuario, int idUsuarioSesion)
+        public static int DarDeBaja(int idUsuario, int idUsuarioSesion, string resumenAnterior)
         {
-            if (idUsuario == idUsuarioSesion)
-                throw new ReglaNegocioException("No podés dar de baja tu propio usuario.");
-
             using (var cn = Db.AbrirConexion())
             using (var tx = cn.BeginTransaction())
             {
                 try
                 {
-                    string valorAnterior = LeerResumen(cn, tx, idUsuario);
-
                     int filas;
                     using (var cmd = new SqlCommand(
                         "UPDATE dbo.Usuario SET activo = 0 WHERE id_usuario = @id AND activo = 1;", cn, tx))
@@ -254,22 +244,18 @@ WHERE id_persona = @id_persona;";
                         filas = cmd.ExecuteNonQuery();
                     }
 
-                    if (filas == 0)
-                        throw new ReglaNegocioException("El usuario ya estaba dado de baja o no existe.");
-
-                    ServicioAuditoria.Registrar(
-                        "BAJA", "Usuario", idUsuario,
-                        valorAnterior: valorAnterior,
-                        valorNuevo: "activo = 0 (baja lógica)",
-                        idUsuario: idUsuarioSesion,
-                        cn: cn, tx: tx);
+                    if (filas > 0)
+                    {
+                        ServicioAuditoria.Registrar(
+                            "BAJA", "Usuario", idUsuario,
+                            valorAnterior: resumenAnterior,
+                            valorNuevo: "activo = 0 (baja lógica)",
+                            idUsuario: idUsuarioSesion,
+                            cn: cn, tx: tx);
+                    }
 
                     tx.Commit();
-                }
-                catch (ReglaNegocioException)
-                {
-                    tx.Rollback();
-                    throw;
+                    return filas;
                 }
                 catch
                 {
@@ -285,82 +271,16 @@ WHERE id_persona = @id_persona;";
 
         private static void AgregarParamsPersona(SqlCommand cmd, UsuarioEditModel m)
         {
-            cmd.Parameters.Add("@dni", SqlDbType.NVarChar, 20).Value = m.DniCuit.Trim();
-            cmd.Parameters.Add("@nombre", SqlDbType.NVarChar, 100).Value = m.Nombre.Trim();
-            cmd.Parameters.Add("@apellido", SqlDbType.NVarChar, 100).Value = m.Apellido.Trim();
+            cmd.Parameters.Add("@dni", SqlDbType.NVarChar, 20).Value = m.DniCuit;
+            cmd.Parameters.Add("@nombre", SqlDbType.NVarChar, 100).Value = m.Nombre;
+            cmd.Parameters.Add("@apellido", SqlDbType.NVarChar, 100).Value = m.Apellido;
             cmd.Parameters.Add("@direccion", SqlDbType.NVarChar, 200).Value = Nz(m.Direccion);
             cmd.Parameters.Add("@telefono", SqlDbType.NVarChar, 30).Value = Nz(m.Telefono);
             cmd.Parameters.Add("@email", SqlDbType.NVarChar, 150).Value = Nz(m.Email);
             cmd.Parameters.Add("@fnac", SqlDbType.Date).Value = (object)m.FechaNacimiento ?? DBNull.Value;
         }
 
-        private static object Nz(string s)
-            => string.IsNullOrWhiteSpace(s) ? (object)DBNull.Value : s.Trim();
-
-        /// <summary>Resumen legible del estado actual del usuario (para valor_anterior de Auditoria).</summary>
-        private static string LeerResumen(SqlConnection cn, SqlTransaction tx, int idUsuario)
-        {
-            const string sql = @"
-SELECT  p.dni_cuit, p.nombre, p.apellido, p.direccion, p.telefono, p.email, p.fecha_nacimiento,
-        u.nombre_usuario, pf.nombre AS perfil_nombre, u.activo
-FROM        dbo.Usuario u
-INNER JOIN  dbo.Persona p  ON p.id_persona = u.id_persona
-INNER JOIN  dbo.Perfil  pf ON pf.id_perfil = u.id_perfil
-WHERE u.id_usuario = @id;";
-
-            using (var cmd = new SqlCommand(sql, cn, tx))
-            {
-                cmd.Parameters.Add("@id", SqlDbType.Int).Value = idUsuario;
-                using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
-                {
-                    if (!dr.Read())
-                        return "(sin datos)";
-
-                    var fnac = dr["fecha_nacimiento"] == DBNull.Value
-                        ? "-"
-                        : ((DateTime)dr["fecha_nacimiento"]).ToString("yyyy-MM-dd");
-
-                    return string.Format(
-                        "DNI/CUIT={0}; Nombre={1}, {2}; Dir={3}; Tel={4}; Email={5}; FNac={6}; Usuario={7}; Perfil={8}; Activo={9}",
-                        dr["dni_cuit"], dr["apellido"], dr["nombre"],
-                        dr["direccion"] == DBNull.Value ? "-" : dr["direccion"],
-                        dr["telefono"] == DBNull.Value ? "-" : dr["telefono"],
-                        dr["email"] == DBNull.Value ? "-" : dr["email"],
-                        fnac, dr["nombre_usuario"], dr["perfil_nombre"], dr["activo"]);
-                }
-            }
-        }
-
-        /// <summary>Resumen legible del modelo cargado en el editor (para valor_nuevo de Auditoria).</summary>
-        private static string Resumen(UsuarioEditModel m)
-        {
-            return string.Format(
-                "DNI/CUIT={0}; Nombre={1}, {2}; Dir={3}; Tel={4}; Email={5}; FNac={6}; Usuario={7}; Perfil={8}",
-                m.DniCuit, m.Apellido, m.Nombre,
-                string.IsNullOrWhiteSpace(m.Direccion) ? "-" : m.Direccion.Trim(),
-                string.IsNullOrWhiteSpace(m.Telefono) ? "-" : m.Telefono.Trim(),
-                string.IsNullOrWhiteSpace(m.Email) ? "-" : m.Email.Trim(),
-                m.FechaNacimiento.HasValue ? m.FechaNacimiento.Value.ToString("yyyy-MM-dd") : "-",
-                m.NombreUsuario.Trim(), m.NombrePerfil);
-        }
-
-        /// <summary>Traduce las violaciones de UNIQUE de la base a mensajes claros.</summary>
-        private static Exception TraducirDuplicado(SqlException ex)
-        {
-            if (ex.Number == 2627 || ex.Number == 2601)   // PK/UNIQUE violation
-            {
-                if (ex.Message.IndexOf("UQ_Persona_dni_cuit", StringComparison.OrdinalIgnoreCase) >= 0)
-                    return new ReglaNegocioException("Ya existe una persona registrada con ese DNI/CUIT.");
-
-                if (ex.Message.IndexOf("UQ_Usuario_nombre", StringComparison.OrdinalIgnoreCase) >= 0)
-                    return new ReglaNegocioException("Ya existe un usuario con ese nombre de usuario.");
-
-                if (ex.Message.IndexOf("UQ_Usuario_persona", StringComparison.OrdinalIgnoreCase) >= 0)
-                    return new ReglaNegocioException("La persona seleccionada ya tiene un usuario asociado.");
-
-                return new ReglaNegocioException("Ya existe un registro con esos datos (valor duplicado).");
-            }
-            return ex;
-        }
+        /// <summary>Mapea null de C# a NULL de SQL. El recorte de espacios ya lo hizo Negocio.</summary>
+        private static object Nz(string s) => (object)s ?? DBNull.Value;
     }
 }

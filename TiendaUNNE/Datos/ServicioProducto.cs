@@ -1,13 +1,13 @@
 using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.Globalization;
 
 namespace TiendaUNNE
 {
     /// <summary>
-    /// CRUD de Producto. Mismo patrón que ServicioUsuario / ServicioCategoria:
-    /// transacción + ServicioAuditoria (tabla_afectada = 'Producto').
+    /// Acceso a datos de Producto: conexión, SQL y transacciones. Nada más.
+    /// Los datos llegan validados y normalizados desde NegocioProducto, y los textos
+    /// de auditoría vienen armados desde ahí.
     /// </summary>
     public static class ServicioProducto
     {
@@ -37,8 +37,8 @@ ORDER BY p.nombre;";
             return dt;
         }
 
-        /// <summary>Trae un producto para cargar el editor en modo edición.</summary>
-        public static ProductoEditModel ObtenerParaEdicion(int idProducto)
+        /// <summary>Trae un producto, o null si no existe. Interpretar el null es cosa de Negocio.</summary>
+        public static ProductoEditModel Obtener(int idProducto)
         {
             const string sql = @"
 SELECT  p.id_producto, p.id_categoria, p.nombre, p.descripcion,
@@ -55,7 +55,7 @@ WHERE p.id_producto = @id;";
                 using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
                 {
                     if (!dr.Read())
-                        throw new ReglaNegocioException("El producto ya no existe.");
+                        return null;
 
                     return new ProductoEditModel
                     {
@@ -75,7 +75,7 @@ WHERE p.id_producto = @id;";
         // Alta
         // ---------------------------------------------------------------------
 
-        public static int Crear(ProductoEditModel m, int idUsuarioSesion)
+        public static int Crear(ProductoEditModel m, int idUsuarioSesion, string resumenNuevo)
         {
             using (var cn = Db.AbrirConexion())
             using (var tx = cn.BeginTransaction())
@@ -99,12 +99,17 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                     ServicioAuditoria.Registrar(
                         "ALTA", "Producto", idProducto,
                         valorAnterior: null,
-                        valorNuevo: Resumen(m),
+                        valorNuevo: resumenNuevo,
                         idUsuario: idUsuarioSesion,
                         cn: cn, tx: tx);
 
                     tx.Commit();
                     return idProducto;
+                }
+                catch (SqlException ex)
+                {
+                    tx.Rollback();
+                    throw DuplicadoException.Traducir(ex);
                 }
                 catch
                 {
@@ -118,15 +123,14 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
         // Edición
         // ---------------------------------------------------------------------
 
-        public static void Actualizar(ProductoEditModel m, int idUsuarioSesion)
+        public static void Actualizar(ProductoEditModel m, int idUsuarioSesion,
+                                      string resumenAnterior, string resumenNuevo)
         {
             using (var cn = Db.AbrirConexion())
             using (var tx = cn.BeginTransaction())
             {
                 try
                 {
-                    string valorAnterior = LeerResumen(cn, tx, m.IdProducto);
-
                     const string sql = @"
 UPDATE dbo.Producto
 SET id_categoria = @id_categoria,
@@ -145,10 +149,15 @@ WHERE id_producto = @id_producto;";
 
                     ServicioAuditoria.Registrar(
                         "MODIFICACION", "Producto", m.IdProducto,
-                        valorAnterior, Resumen(m), idUsuarioSesion,
+                        resumenAnterior, resumenNuevo, idUsuarioSesion,
                         cn, tx);
 
                     tx.Commit();
+                }
+                catch (SqlException ex)
+                {
+                    tx.Rollback();
+                    throw DuplicadoException.Traducir(ex);
                 }
                 catch
                 {
@@ -162,15 +171,14 @@ WHERE id_producto = @id_producto;";
         // Baja lógica
         // ---------------------------------------------------------------------
 
-        public static void DarDeBaja(int idProducto, int idUsuarioSesion)
+        /// <summary>Devuelve la cantidad de filas afectadas; 0 significa que ya estaba inactivo.</summary>
+        public static int DarDeBaja(int idProducto, int idUsuarioSesion, string resumenAnterior)
         {
             using (var cn = Db.AbrirConexion())
             using (var tx = cn.BeginTransaction())
             {
                 try
                 {
-                    string valorAnterior = LeerResumen(cn, tx, idProducto);
-
                     int filas;
                     using (var cmd = new SqlCommand(
                         "UPDATE dbo.Producto SET activo = 0 WHERE id_producto = @id AND activo = 1;", cn, tx))
@@ -179,22 +187,18 @@ WHERE id_producto = @id_producto;";
                         filas = cmd.ExecuteNonQuery();
                     }
 
-                    if (filas == 0)
-                        throw new ReglaNegocioException("El producto ya estaba dado de baja o no existe.");
-
-                    ServicioAuditoria.Registrar(
-                        "BAJA", "Producto", idProducto,
-                        valorAnterior: valorAnterior,
-                        valorNuevo: "activo = 0 (baja lógica)",
-                        idUsuario: idUsuarioSesion,
-                        cn: cn, tx: tx);
+                    if (filas > 0)
+                    {
+                        ServicioAuditoria.Registrar(
+                            "BAJA", "Producto", idProducto,
+                            valorAnterior: resumenAnterior,
+                            valorNuevo: "activo = 0 (baja lógica)",
+                            idUsuario: idUsuarioSesion,
+                            cn: cn, tx: tx);
+                    }
 
                     tx.Commit();
-                }
-                catch (ReglaNegocioException)
-                {
-                    tx.Rollback();
-                    throw;
+                    return filas;
                 }
                 catch
                 {
@@ -211,49 +215,13 @@ WHERE id_producto = @id_producto;";
         private static void AgregarParams(SqlCommand cmd, ProductoEditModel m)
         {
             cmd.Parameters.Add("@id_categoria", SqlDbType.Int).Value = m.IdCategoria;
-            cmd.Parameters.Add("@nombre", SqlDbType.NVarChar, 150).Value = m.Nombre.Trim();
+            cmd.Parameters.Add("@nombre", SqlDbType.NVarChar, 150).Value = m.Nombre;
             cmd.Parameters.Add("@descripcion", SqlDbType.NVarChar, 500).Value = Nz(m.Descripcion);
             cmd.Parameters.Add("@precio_venta", SqlDbType.Decimal).Value = m.PrecioVenta;
             cmd.Parameters.Add("@stock", SqlDbType.Decimal).Value = m.Stock;
         }
 
-        private static object Nz(string s)
-            => string.IsNullOrWhiteSpace(s) ? (object)DBNull.Value : s.Trim();
-
-        private static string LeerResumen(SqlConnection cn, SqlTransaction tx, int idProducto)
-        {
-            const string sql = @"
-SELECT  p.nombre, p.descripcion, p.precio_venta, p.stock, p.activo,
-        c.nombre AS categoria_nombre
-FROM        dbo.Producto  p
-INNER JOIN  dbo.Categoria c ON c.id_categoria = p.id_categoria
-WHERE p.id_producto = @id;";
-
-            using (var cmd = new SqlCommand(sql, cn, tx))
-            {
-                cmd.Parameters.Add("@id", SqlDbType.Int).Value = idProducto;
-                using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
-                {
-                    if (!dr.Read())
-                        return "(sin datos)";
-
-                    return string.Format(CultureInfo.InvariantCulture,
-                        "Nombre={0}; Categoría={1}; Desc={2}; PVenta={3}; Stock={4}; Activo={5}",
-                        dr["nombre"], dr["categoria_nombre"],
-                        dr["descripcion"] == DBNull.Value ? "-" : dr["descripcion"],
-                        dr["precio_venta"], dr["stock"], dr["activo"]);
-                }
-            }
-        }
-
-        private static string Resumen(ProductoEditModel m)
-        {
-            return string.Format(CultureInfo.InvariantCulture,
-                "Nombre={0}; Categoría={1}; Desc={2}; PVenta={3}; Stock={4}",
-                m.Nombre.Trim(),
-                string.IsNullOrWhiteSpace(m.NombreCategoria) ? ("id " + m.IdCategoria) : m.NombreCategoria,
-                string.IsNullOrWhiteSpace(m.Descripcion) ? "-" : m.Descripcion.Trim(),
-                m.PrecioVenta, m.Stock);
-        }
+        /// <summary>Mapea null de C# a NULL de SQL. El recorte de espacios ya lo hizo Negocio.</summary>
+        private static object Nz(string s) => (object)s ?? DBNull.Value;
     }
 }

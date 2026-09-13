@@ -1,6 +1,5 @@
 using System;
 using System.Data;
-using System.Data.SqlClient;
 using System.Windows.Forms;
 
 namespace TiendaUNNE
@@ -26,7 +25,7 @@ namespace TiendaUNNE
 
                 int? idSeleccionado = UsuarioSeleccionadoId();
 
-                DataTable dt = ServicioUsuario.ListarActivos();
+                DataTable dt = NegocioUsuario.ListarActivos();
                 dgvUsuarios.DataSource = dt;
 
                 if (dgvUsuarios.Columns.Contains("IdUsuario"))
@@ -40,10 +39,10 @@ namespace TiendaUNNE
 
                 ActualizarBotones();
             }
-            catch (SqlException ex)
+            catch (Exception)
             {
-                MessageBox.Show("No se pudo leer el listado de usuarios.\n\n" + ex.Message,
-                    "Base de datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("No se pudo leer el listado de usuarios.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -180,13 +179,6 @@ namespace TiendaUNNE
             int? id = UsuarioSeleccionadoId();
             if (!id.HasValue) return;
 
-            if (id.Value == SesionActual.Usuario.IdUsuario)
-            {
-                MessageBox.Show("No podés dar de baja tu propio usuario.",
-                    "Acción no permitida", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
             var r = MessageBox.Show(
                 "¿Seguro que querés dar de baja a " + UsuarioSeleccionadoDescripcion() + "?",
                 "Confirmar baja", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
@@ -197,7 +189,7 @@ namespace TiendaUNNE
             try
             {
                 Cursor = Cursors.WaitCursor;
-                ServicioUsuario.DarDeBaja(id.Value, SesionActual.Usuario.IdUsuario);
+                NegocioUsuario.DarDeBaja(id.Value, SesionActual.Usuario.IdUsuario);
                 CargarGrilla();
             }
             catch (ReglaNegocioException ex)
@@ -205,10 +197,10 @@ namespace TiendaUNNE
                 MessageBox.Show(ex.Message, "No se pudo dar de baja",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            catch (SqlException ex)
+            catch (Exception)
             {
-                MessageBox.Show("Error de base de datos.\n\n" + ex.Message,
-                    "Base de datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("No se pudo dar de baja el usuario.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {

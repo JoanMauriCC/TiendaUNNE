@@ -51,14 +51,13 @@ VALUES
         }
 
         /// <summary>
-        /// Listado para la pantalla de auditoría (solo lectura). Filtros opcionales:
-        /// <paramref name="tablaAfectada"/> null/""/"Todas" = sin filtro de tabla;
-        /// <paramref name="desde"/>/<paramref name="hasta"/> se aplican por día completo.
+        /// Listado para la pantalla de auditoría (solo lectura). Los filtros llegan ya
+        /// resueltos desde NegocioAuditoria: <paramref name="tablaAfectada"/> en null
+        /// significa sin filtro, y el rango de fechas viene como [desde, hasta).
         /// </summary>
-        public static DataTable Listar(string tablaAfectada, DateTime? desde, DateTime? hasta)
+        public static DataTable Listar(string tablaAfectada, DateTime? desdeInclusive, DateTime? hastaExclusive)
         {
-            bool filtraTabla = !string.IsNullOrWhiteSpace(tablaAfectada) &&
-                               !string.Equals(tablaAfectada, "Todas", StringComparison.OrdinalIgnoreCase);
+            bool filtraTabla = !string.IsNullOrWhiteSpace(tablaAfectada);
 
             var sql = new StringBuilder(@"
 SELECT  a.fecha_hora                        AS Fecha,
@@ -73,8 +72,8 @@ LEFT JOIN   dbo.Persona  p ON p.id_persona = u.id_persona
 WHERE 1 = 1");
 
             if (filtraTabla) sql.Append(" AND a.tabla_afectada = @tabla");
-            if (desde.HasValue) sql.Append(" AND a.fecha_hora >= @desde");
-            if (hasta.HasValue) sql.Append(" AND a.fecha_hora < @hasta");
+            if (desdeInclusive.HasValue) sql.Append(" AND a.fecha_hora >= @desde");
+            if (hastaExclusive.HasValue) sql.Append(" AND a.fecha_hora < @hasta");
             sql.Append(" ORDER BY a.fecha_hora DESC;");
 
             var dt = new DataTable();
@@ -83,10 +82,10 @@ WHERE 1 = 1");
             {
                 if (filtraTabla)
                     cmd.Parameters.Add("@tabla", SqlDbType.NVarChar, 100).Value = tablaAfectada;
-                if (desde.HasValue)
-                    cmd.Parameters.Add("@desde", SqlDbType.DateTime2).Value = desde.Value.Date;
-                if (hasta.HasValue)
-                    cmd.Parameters.Add("@hasta", SqlDbType.DateTime2).Value = hasta.Value.Date.AddDays(1);
+                if (desdeInclusive.HasValue)
+                    cmd.Parameters.Add("@desde", SqlDbType.DateTime2).Value = desdeInclusive.Value;
+                if (hastaExclusive.HasValue)
+                    cmd.Parameters.Add("@hasta", SqlDbType.DateTime2).Value = hastaExclusive.Value;
 
                 using (var da = new SqlDataAdapter(cmd))
                     da.Fill(dt);

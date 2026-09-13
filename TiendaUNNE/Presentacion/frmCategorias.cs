@@ -1,19 +1,18 @@
 using System;
 using System.Data;
-using System.Data.SqlClient;
 using System.Windows.Forms;
 
 namespace TiendaUNNE
 {
-    /// <summary>Listado de productos activos con alta/edición/baja lógica.</summary>
-    public partial class frmProductos : Form
+    /// <summary>Listado de categorías activas con alta/edición/baja lógica.</summary>
+    public partial class frmCategorias : Form
     {
-        public frmProductos()
+        public frmCategorias()
         {
             InitializeComponent();
         }
 
-        private void frmProductos_Load(object sender, EventArgs e)
+        private void frmCategorias_Load(object sender, EventArgs e)
         {
             CargarGrilla();
         }
@@ -24,25 +23,25 @@ namespace TiendaUNNE
             {
                 Cursor = Cursors.WaitCursor;
 
-                int? idSeleccionado = ProductoSeleccionadoId();
+                int? idSeleccionado = CategoriaSeleccionadaId();
 
-                DataTable dt = ServicioProducto.ListarParaGrilla();
-                dgvProductos.DataSource = dt;
+                DataTable dt = NegocioCategoria.ListarParaGrilla();
+                dgvCategorias.DataSource = dt;
 
-                if (dgvProductos.Columns.Contains("IdProducto"))
-                    dgvProductos.Columns["IdProducto"].Visible = false;
+                if (dgvCategorias.Columns.Contains("IdCategoria"))
+                    dgvCategorias.Columns["IdCategoria"].Visible = false;
 
-                AplicarFormato();
+                AplicarEncabezados();
 
                 if (!(idSeleccionado.HasValue && SeleccionarFilaPorId(idSeleccionado.Value)))
                     SeleccionarPrimeraFila();
 
                 ActualizarBotones();
             }
-            catch (SqlException ex)
+            catch (Exception)
             {
-                MessageBox.Show("No se pudo leer el listado de productos.\n\n" + ex.Message,
-                    "Base de datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("No se pudo leer el listado de categorías.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -50,34 +49,22 @@ namespace TiendaUNNE
             }
         }
 
-        private void AplicarFormato()
+        private void AplicarEncabezados()
         {
             SetHeader("Nombre", "Nombre");
-            SetHeader("Categoria", "Categoría");
-            SetHeader("PrecioVenta", "Precio venta");
-            SetHeader("Stock", "Stock");
+            SetHeader("Descripcion", "Descripción");
             SetHeader("Activo", "Activo");
-
-            SetFormatoNumerico("PrecioVenta", "N2");
-            SetFormatoNumerico("Stock", "N3");
         }
 
         private void SetHeader(string columna, string texto)
         {
-            if (dgvProductos.Columns.Contains(columna))
-                dgvProductos.Columns[columna].HeaderText = texto;
-        }
-
-        private void SetFormatoNumerico(string columna, string formato)
-        {
-            if (!dgvProductos.Columns.Contains(columna)) return;
-            dgvProductos.Columns[columna].DefaultCellStyle.Format = formato;
-            dgvProductos.Columns[columna].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            if (dgvCategorias.Columns.Contains(columna))
+                dgvCategorias.Columns[columna].HeaderText = texto;
         }
 
         private DataGridViewColumn PrimeraColumnaVisible()
         {
-            foreach (DataGridViewColumn col in dgvProductos.Columns)
+            foreach (DataGridViewColumn col in dgvCategorias.Columns)
                 if (col.Visible)
                     return col;
             return null;
@@ -85,30 +72,30 @@ namespace TiendaUNNE
 
         private void SeleccionarPrimeraFila()
         {
-            if (dgvProductos.Rows.Count == 0)
+            if (dgvCategorias.Rows.Count == 0)
             {
-                dgvProductos.ClearSelection();
+                dgvCategorias.ClearSelection();
                 return;
             }
 
             var col = PrimeraColumnaVisible();
-            dgvProductos.ClearSelection();
-            dgvProductos.Rows[0].Selected = true;
+            dgvCategorias.ClearSelection();
+            dgvCategorias.Rows[0].Selected = true;
             if (col != null)
-                dgvProductos.CurrentCell = dgvProductos.Rows[0].Cells[col.Index];
+                dgvCategorias.CurrentCell = dgvCategorias.Rows[0].Cells[col.Index];
         }
 
-        private bool SeleccionarFilaPorId(int idProducto)
+        private bool SeleccionarFilaPorId(int idCategoria)
         {
             var col = PrimeraColumnaVisible();
-            foreach (DataGridViewRow fila in dgvProductos.Rows)
+            foreach (DataGridViewRow fila in dgvCategorias.Rows)
             {
-                if (IdDeFila(fila) == idProducto)
+                if (IdDeFila(fila) == idCategoria)
                 {
-                    dgvProductos.ClearSelection();
+                    dgvCategorias.ClearSelection();
                     fila.Selected = true;
                     if (col != null)
-                        dgvProductos.CurrentCell = fila.Cells[col.Index];
+                        dgvCategorias.CurrentCell = fila.Cells[col.Index];
                     return true;
                 }
             }
@@ -121,27 +108,27 @@ namespace TiendaUNNE
 
         private DataGridViewRow FilaSeleccionada()
         {
-            if (dgvProductos.CurrentRow != null)
-                return dgvProductos.CurrentRow;
-            if (dgvProductos.SelectedRows.Count > 0)
-                return dgvProductos.SelectedRows[0];
+            if (dgvCategorias.CurrentRow != null)
+                return dgvCategorias.CurrentRow;
+            if (dgvCategorias.SelectedRows.Count > 0)
+                return dgvCategorias.SelectedRows[0];
             return null;
         }
 
         private static int? IdDeFila(DataGridViewRow fila)
         {
             var drv = fila == null ? null : fila.DataBoundItem as DataRowView;
-            if (drv == null || drv["IdProducto"] == DBNull.Value)
+            if (drv == null || drv["IdCategoria"] == DBNull.Value)
                 return null;
-            return Convert.ToInt32(drv["IdProducto"]);
+            return Convert.ToInt32(drv["IdCategoria"]);
         }
 
-        private int? ProductoSeleccionadoId()
+        private int? CategoriaSeleccionadaId()
         {
             return IdDeFila(FilaSeleccionada());
         }
 
-        private string ProductoSeleccionadoDescripcion()
+        private string CategoriaSeleccionadaDescripcion()
         {
             var fila = FilaSeleccionada();
             var drv = fila == null ? null : fila.DataBoundItem as DataRowView;
@@ -150,7 +137,7 @@ namespace TiendaUNNE
 
         private void ActualizarBotones()
         {
-            bool haySeleccion = ProductoSeleccionadoId().HasValue;
+            bool haySeleccion = CategoriaSeleccionadaId().HasValue;
             btnEditar.Enabled = haySeleccion;
             btnBaja.Enabled = haySeleccion;
         }
@@ -161,7 +148,7 @@ namespace TiendaUNNE
 
         private void btnNuevo_Click(object sender, EventArgs e)
         {
-            using (var editor = new frmProductoEditor(null))
+            using (var editor = new frmCategoriaEditor(null))
             {
                 if (editor.ShowDialog(this) == DialogResult.OK)
                     CargarGrilla();
@@ -170,10 +157,10 @@ namespace TiendaUNNE
 
         private void btnEditar_Click(object sender, EventArgs e)
         {
-            int? id = ProductoSeleccionadoId();
+            int? id = CategoriaSeleccionadaId();
             if (!id.HasValue) return;
 
-            using (var editor = new frmProductoEditor(id.Value))
+            using (var editor = new frmCategoriaEditor(id.Value))
             {
                 if (editor.ShowDialog(this) == DialogResult.OK)
                     CargarGrilla();
@@ -182,11 +169,11 @@ namespace TiendaUNNE
 
         private void btnBaja_Click(object sender, EventArgs e)
         {
-            int? id = ProductoSeleccionadoId();
+            int? id = CategoriaSeleccionadaId();
             if (!id.HasValue) return;
 
             var r = MessageBox.Show(
-                "¿Seguro que querés dar de baja el producto \"" + ProductoSeleccionadoDescripcion() + "\"?",
+                "¿Seguro que querés dar de baja la categoría \"" + CategoriaSeleccionadaDescripcion() + "\"?",
                 "Confirmar baja", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
                 MessageBoxDefaultButton.Button2);
 
@@ -195,7 +182,7 @@ namespace TiendaUNNE
             try
             {
                 Cursor = Cursors.WaitCursor;
-                ServicioProducto.DarDeBaja(id.Value, SesionActual.Usuario.IdUsuario);
+                NegocioCategoria.DarDeBaja(id.Value, SesionActual.Usuario.IdUsuario);
                 CargarGrilla();
             }
             catch (ReglaNegocioException ex)
@@ -203,10 +190,10 @@ namespace TiendaUNNE
                 MessageBox.Show(ex.Message, "No se pudo dar de baja",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            catch (SqlException ex)
+            catch (Exception)
             {
-                MessageBox.Show("Error de base de datos.\n\n" + ex.Message,
-                    "Base de datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("No se pudo dar de baja la categoría.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -219,17 +206,17 @@ namespace TiendaUNNE
             CargarGrilla();
         }
 
-        private void dgvProductos_SelectionChanged(object sender, EventArgs e)
+        private void dgvCategorias_SelectionChanged(object sender, EventArgs e)
         {
             ActualizarBotones();
         }
 
-        private void dgvProductos_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void dgvCategorias_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             ActualizarBotones();
         }
 
-        private void dgvProductos_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        private void dgvCategorias_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0 && btnEditar.Enabled)
                 btnEditar_Click(sender, e);

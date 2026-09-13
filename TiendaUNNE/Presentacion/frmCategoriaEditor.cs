@@ -1,10 +1,12 @@
 using System;
-using System.Data.SqlClient;
 using System.Windows.Forms;
 
 namespace TiendaUNNE
 {
-    /// <summary>Alta / edición de una categoría.</summary>
+    /// <summary>
+    /// Alta / edición de una categoría. Solo muestra datos y recoge lo que escribe el
+    /// usuario: validar, recortar espacios y decidir si es alta o edición lo hace NegocioCategoria.
+    /// </summary>
     public partial class frmCategoriaEditor : Form
     {
         private readonly int? _idCategoria;   // null = alta
@@ -29,7 +31,7 @@ namespace TiendaUNNE
                 else
                 {
                     Text = "Editar categoría";
-                    _original = ServicioCategoria.ObtenerParaEdicion(_idCategoria.Value);
+                    _original = NegocioCategoria.ObtenerParaEdicion(_idCategoria.Value);
                     txtNombre.Text = _original.Nombre;
                     txtDescripcion.Text = _original.Descripcion;
                 }
@@ -40,10 +42,10 @@ namespace TiendaUNNE
                 DialogResult = DialogResult.Cancel;
                 Close();
             }
-            catch (SqlException ex)
+            catch (Exception)
             {
-                MessageBox.Show("No se pudieron cargar los datos.\n\n" + ex.Message,
-                    "Base de datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("No se pudieron cargar los datos de la categoría.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.Cancel;
                 Close();
             }
@@ -51,30 +53,17 @@ namespace TiendaUNNE
 
         private void btnGuardar_Click(object sender, EventArgs e)
         {
-            string error = Validar();
-            if (error != null)
-            {
-                MessageBox.Show(error, "Datos incompletos",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
             var modelo = new CategoriaEditModel
             {
                 IdCategoria = EsAlta ? 0 : _original.IdCategoria,
-                Nombre = txtNombre.Text.Trim(),
-                Descripcion = txtDescripcion.Text.Trim()
+                Nombre = txtNombre.Text,
+                Descripcion = txtDescripcion.Text
             };
 
             try
             {
                 Cursor = Cursors.WaitCursor;
-                int idSesion = SesionActual.Usuario.IdUsuario;
-
-                if (EsAlta)
-                    ServicioCategoria.Crear(modelo, idSesion);
-                else
-                    ServicioCategoria.Actualizar(modelo, idSesion);
+                NegocioCategoria.Guardar(modelo, SesionActual.Usuario.IdUsuario);
 
                 DialogResult = DialogResult.OK;
                 Close();
@@ -84,10 +73,10 @@ namespace TiendaUNNE
                 MessageBox.Show(ex.Message, "No se pudo guardar",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            catch (SqlException ex)
+            catch (Exception)
             {
-                MessageBox.Show("Error de base de datos.\n\n" + ex.Message,
-                    "Base de datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("No se pudo guardar la categoría.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -99,13 +88,6 @@ namespace TiendaUNNE
         {
             DialogResult = DialogResult.Cancel;
             Close();
-        }
-
-        private string Validar()
-        {
-            if (string.IsNullOrWhiteSpace(txtNombre.Text))
-                return "Ingresá el nombre de la categoría.";
-            return null;
         }
     }
 }

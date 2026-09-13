@@ -14,7 +14,7 @@ namespace TiendaUNNE
             // Crea el administrador inicial si la tabla Usuario está vacía.
             try
             {
-                Bootstrap.AsegurarAdministradorInicial();
+                NegocioArranque.AsegurarAdministradorInicial();
             }
             catch (Exception ex)
             {

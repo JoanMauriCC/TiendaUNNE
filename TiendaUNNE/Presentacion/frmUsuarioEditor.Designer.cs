@@ -111,6 +111,7 @@ namespace TiendaUNNE
             this.txtTelefono.Name = "txtTelefono";
             this.txtTelefono.Size = new System.Drawing.Size(278, 23);
             this.txtTelefono.TabIndex = 9;
+            this.txtTelefono.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtTelefono_KeyPress);
             //
             // lblTelefono
             //
@@ -179,6 +180,7 @@ namespace TiendaUNNE
             this.txtDniCuit.Name = "txtDniCuit";
             this.txtDniCuit.Size = new System.Drawing.Size(278, 23);
             this.txtDniCuit.TabIndex = 1;
+            this.txtDniCuit.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtDniCuit_KeyPress);
             //
             // lblDniCuit
             //

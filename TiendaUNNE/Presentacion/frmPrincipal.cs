@@ -3,6 +3,10 @@ using System.Windows.Forms;
 
 namespace TiendaUNNE
 {
+    /// <summary>
+    /// Menú principal. Solo dibuja las tarjetas y abre pantallas: qué opciones ve cada rol
+    /// y si tiene permiso para entrar lo decide NegocioSeguridad.
+    /// </summary>
     public partial class frmPrincipal : Form
     {
         public frmPrincipal()
@@ -25,18 +29,20 @@ namespace TiendaUNNE
             panelTarjetas.SuspendLayout();
             panelTarjetas.Controls.Clear();
 
-            if (SesionActual.EsAdministrador)
-            {
+            if (NegocioSeguridad.PuedeAcceder(OpcionMenu.Usuarios))
                 panelTarjetas.Controls.Add(
                     CrearTarjeta(IconoTarjeta.Usuarios, "Usuarios", "Altas, bajas y roles", AbrirUsuarios));
+
+            if (NegocioSeguridad.PuedeAcceder(OpcionMenu.Productos))
                 panelTarjetas.Controls.Add(
                     CrearTarjeta(IconoTarjeta.Producto, "Productos", "Productos y categorías", AbrirProductosMenu));
+
+            if (NegocioSeguridad.PuedeAcceder(OpcionMenu.Auditoria))
                 panelTarjetas.Controls.Add(
                     CrearTarjeta(IconoTarjeta.Auditoria, "Auditoría", "Historial de cambios", AbrirAuditoria));
-            }
 
             var caja = CrearTarjeta(IconoTarjeta.Caja, "Caja", "Próximamente", null);
-            caja.Habilitada = false;
+            caja.Habilitada = NegocioSeguridad.ModuloDisponible(OpcionMenu.Caja);
             panelTarjetas.Controls.Add(caja);
 
             panelTarjetas.ResumeLayout();
@@ -63,38 +69,45 @@ namespace TiendaUNNE
 
         private void AbrirUsuarios()
         {
-            if (!ValidarAccesoAdministrador()) return;
+            if (!TienePermiso(OpcionMenu.Usuarios)) return;
             using (var f = new frmUsuarios())
                 f.ShowDialog(this);
         }
 
         private void AbrirProductosMenu()
         {
-            if (!ValidarAccesoAdministrador()) return;
+            if (!TienePermiso(OpcionMenu.Productos)) return;
             using (var f = new frmProductosMenu())
                 f.ShowDialog(this);
         }
 
         private void AbrirAuditoria()
         {
-            if (!ValidarAccesoAdministrador()) return;
+            if (!TienePermiso(OpcionMenu.Auditoria)) return;
             using (var f = new frmAuditoria())
                 f.ShowDialog(this);
         }
 
         private void btnCerrarSesion_Click(object sender, EventArgs e)
         {
-            SesionActual.Cerrar();
+            NegocioAutenticacion.CerrarSesion();
             Application.Restart();
         }
 
-        private bool ValidarAccesoAdministrador()
+        /// <summary>Le pregunta a Negocio y, si dice que no, muestra el motivo.</summary>
+        private bool TienePermiso(OpcionMenu opcion)
         {
-            if (SesionActual.EsAdministrador) return true;
-
-            MessageBox.Show("No tiene permisos para acceder a esta opción.",
-                "Acceso denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return false;
+            try
+            {
+                NegocioSeguridad.ValidarAcceso(opcion);
+                return true;
+            }
+            catch (ReglaNegocioException ex)
+            {
+                MessageBox.Show(ex.Message, "Acceso denegado",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
         }
     }
 }

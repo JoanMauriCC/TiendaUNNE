@@ -6,8 +6,9 @@ using System.Data.SqlClient;
 namespace TiendaUNNE
 {
     /// <summary>
-    /// CRUD de Categoria. Mismo patrón que ServicioUsuario: transacción + ServicioAuditoria
-    /// (tabla_afectada = 'Categoria') y traducción de los UNIQUE a ReglaNegocioException.
+    /// Acceso a datos de Categoria: conexión, SQL y transacciones. Nada más.
+    /// Los datos llegan ya validados y normalizados desde NegocioCategoria, y los textos
+    /// de auditoría vienen armados desde ahí; acá solo se persisten.
     /// </summary>
     public static class ServicioCategoria
     {
@@ -60,8 +61,8 @@ ORDER BY nombre;";
             return lista;
         }
 
-        /// <summary>Trae una categoría para cargar el editor en modo edición.</summary>
-        public static CategoriaEditModel ObtenerParaEdicion(int idCategoria)
+        /// <summary>Trae una categoría, o null si no existe. Interpretar el null es cosa de Negocio.</summary>
+        public static CategoriaEditModel Obtener(int idCategoria)
         {
             const string sql = @"
 SELECT id_categoria, nombre, descripcion
@@ -75,7 +76,7 @@ WHERE  id_categoria = @id;";
                 using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
                 {
                     if (!dr.Read())
-                        throw new ReglaNegocioException("La categoría ya no existe.");
+                        return null;
 
                     return new CategoriaEditModel
                     {
@@ -91,7 +92,7 @@ WHERE  id_categoria = @id;";
         // Alta
         // ---------------------------------------------------------------------
 
-        public static int Crear(CategoriaEditModel m, int idUsuarioSesion)
+        public static int Crear(CategoriaEditModel m, int idUsuarioSesion, string resumenNuevo)
         {
             using (var cn = Db.AbrirConexion())
             using (var tx = cn.BeginTransaction())
@@ -106,15 +107,14 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                     int idCategoria;
                     using (var cmd = new SqlCommand(sql, cn, tx))
                     {
-                        cmd.Parameters.Add("@nombre", SqlDbType.NVarChar, 100).Value = m.Nombre.Trim();
-                        cmd.Parameters.Add("@descripcion", SqlDbType.NVarChar, 200).Value = Nz(m.Descripcion);
+                        AgregarParams(cmd, m);
                         idCategoria = (int)cmd.ExecuteScalar();
                     }
 
                     ServicioAuditoria.Registrar(
                         "ALTA", "Categoria", idCategoria,
                         valorAnterior: null,
-                        valorNuevo: Resumen(m),
+                        valorNuevo: resumenNuevo,
                         idUsuario: idUsuarioSesion,
                         cn: cn, tx: tx);
 
@@ -124,7 +124,7 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                 catch (SqlException ex)
                 {
                     tx.Rollback();
-                    throw TraducirDuplicado(ex);
+                    throw DuplicadoException.Traducir(ex);
                 }
                 catch
                 {
@@ -138,15 +138,14 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
         // Edición
         // ---------------------------------------------------------------------
 
-        public static void Actualizar(CategoriaEditModel m, int idUsuarioSesion)
+        public static void Actualizar(CategoriaEditModel m, int idUsuarioSesion,
+                                      string resumenAnterior, string resumenNuevo)
         {
             using (var cn = Db.AbrirConexion())
             using (var tx = cn.BeginTransaction())
             {
                 try
                 {
-                    string valorAnterior = LeerResumen(cn, tx, m.IdCategoria);
-
                     const string sql = @"
 UPDATE dbo.Categoria
 SET nombre = @nombre, descripcion = @descripcion
@@ -154,15 +153,14 @@ WHERE id_categoria = @id;";
 
                     using (var cmd = new SqlCommand(sql, cn, tx))
                     {
-                        cmd.Parameters.Add("@nombre", SqlDbType.NVarChar, 100).Value = m.Nombre.Trim();
-                        cmd.Parameters.Add("@descripcion", SqlDbType.NVarChar, 200).Value = Nz(m.Descripcion);
+                        AgregarParams(cmd, m);
                         cmd.Parameters.Add("@id", SqlDbType.Int).Value = m.IdCategoria;
                         cmd.ExecuteNonQuery();
                     }
 
                     ServicioAuditoria.Registrar(
                         "MODIFICACION", "Categoria", m.IdCategoria,
-                        valorAnterior, Resumen(m), idUsuarioSesion,
+                        resumenAnterior, resumenNuevo, idUsuarioSesion,
                         cn, tx);
 
                     tx.Commit();
@@ -170,7 +168,7 @@ WHERE id_categoria = @id;";
                 catch (SqlException ex)
                 {
                     tx.Rollback();
-                    throw TraducirDuplicado(ex);
+                    throw DuplicadoException.Traducir(ex);
                 }
                 catch
                 {
@@ -184,15 +182,14 @@ WHERE id_categoria = @id;";
         // Baja lógica
         // ---------------------------------------------------------------------
 
-        public static void DarDeBaja(int idCategoria, int idUsuarioSesion)
+        /// <summary>Devuelve la cantidad de filas afectadas; 0 significa que ya estaba inactiva.</summary>
+        public static int DarDeBaja(int idCategoria, int idUsuarioSesion, string resumenAnterior)
         {
             using (var cn = Db.AbrirConexion())
             using (var tx = cn.BeginTransaction())
             {
                 try
                 {
-                    string valorAnterior = LeerResumen(cn, tx, idCategoria);
-
                     int filas;
                     using (var cmd = new SqlCommand(
                         "UPDATE dbo.Categoria SET activo = 0 WHERE id_categoria = @id AND activo = 1;", cn, tx))
@@ -201,22 +198,18 @@ WHERE id_categoria = @id;";
                         filas = cmd.ExecuteNonQuery();
                     }
 
-                    if (filas == 0)
-                        throw new ReglaNegocioException("La categoría ya estaba dada de baja o no existe.");
-
-                    ServicioAuditoria.Registrar(
-                        "BAJA", "Categoria", idCategoria,
-                        valorAnterior: valorAnterior,
-                        valorNuevo: "activo = 0 (baja lógica)",
-                        idUsuario: idUsuarioSesion,
-                        cn: cn, tx: tx);
+                    if (filas > 0)
+                    {
+                        ServicioAuditoria.Registrar(
+                            "BAJA", "Categoria", idCategoria,
+                            valorAnterior: resumenAnterior,
+                            valorNuevo: "activo = 0 (baja lógica)",
+                            idUsuario: idUsuarioSesion,
+                            cn: cn, tx: tx);
+                    }
 
                     tx.Commit();
-                }
-                catch (ReglaNegocioException)
-                {
-                    tx.Rollback();
-                    throw;
+                    return filas;
                 }
                 catch
                 {
@@ -230,45 +223,13 @@ WHERE id_categoria = @id;";
         // Auxiliares
         // ---------------------------------------------------------------------
 
-        private static object Nz(string s)
-            => string.IsNullOrWhiteSpace(s) ? (object)DBNull.Value : s.Trim();
-
-        private static string LeerResumen(SqlConnection cn, SqlTransaction tx, int idCategoria)
+        private static void AgregarParams(SqlCommand cmd, CategoriaEditModel m)
         {
-            const string sql = "SELECT nombre, descripcion, activo FROM dbo.Categoria WHERE id_categoria = @id;";
-            using (var cmd = new SqlCommand(sql, cn, tx))
-            {
-                cmd.Parameters.Add("@id", SqlDbType.Int).Value = idCategoria;
-                using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
-                {
-                    if (!dr.Read())
-                        return "(sin datos)";
-
-                    return string.Format("Nombre={0}; Descripción={1}; Activo={2}",
-                        dr["nombre"],
-                        dr["descripcion"] == DBNull.Value ? "-" : dr["descripcion"],
-                        dr["activo"]);
-                }
-            }
+            cmd.Parameters.Add("@nombre", SqlDbType.NVarChar, 100).Value = m.Nombre;
+            cmd.Parameters.Add("@descripcion", SqlDbType.NVarChar, 200).Value = Nz(m.Descripcion);
         }
 
-        private static string Resumen(CategoriaEditModel m)
-        {
-            return string.Format("Nombre={0}; Descripción={1}",
-                m.Nombre.Trim(),
-                string.IsNullOrWhiteSpace(m.Descripcion) ? "-" : m.Descripcion.Trim());
-        }
-
-        private static Exception TraducirDuplicado(SqlException ex)
-        {
-            if (ex.Number == 2627 || ex.Number == 2601)   // PK/UNIQUE violation
-            {
-                if (ex.Message.IndexOf("UQ_Categoria_nombre", StringComparison.OrdinalIgnoreCase) >= 0)
-                    return new ReglaNegocioException("Ya existe una categoría con ese nombre.");
-
-                return new ReglaNegocioException("Ya existe un registro con esos datos (valor duplicado).");
-            }
-            return ex;
-        }
+        /// <summary>Mapea null de C# a NULL de SQL. El recorte de espacios ya lo hizo Negocio.</summary>
+        private static object Nz(string s) => (object)s ?? DBNull.Value;
     }
 }

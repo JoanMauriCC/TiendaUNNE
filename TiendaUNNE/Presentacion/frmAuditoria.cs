@@ -1,6 +1,5 @@
 using System;
 using System.Data;
-using System.Data.SqlClient;
 using System.Windows.Forms;
 
 namespace TiendaUNNE
@@ -15,7 +14,7 @@ namespace TiendaUNNE
 
         private void frmAuditoria_Load(object sender, EventArgs e)
         {
-            cboTabla.Items.AddRange(new object[] { "Todas", "Usuario", "Categoria", "Producto" });
+            cboTabla.Items.AddRange(NegocioAuditoria.TablasAuditables().ToArray());
             LimpiarFiltros();          // deja los filtros en su estado inicial y carga la grilla
         }
 
@@ -29,14 +28,19 @@ namespace TiendaUNNE
                 DateTime? desde = dtpDesde.Checked ? dtpDesde.Value.Date : (DateTime?)null;
                 DateTime? hasta = dtpHasta.Checked ? dtpHasta.Value.Date : (DateTime?)null;
 
-                DataTable dt = ServicioAuditoria.Listar(tabla, desde, hasta);
+                DataTable dt = NegocioAuditoria.Listar(tabla, desde, hasta);
                 dgvAuditoria.DataSource = dt;
                 AplicarFormato();
             }
-            catch (SqlException ex)
+            catch (ReglaNegocioException ex)
             {
-                MessageBox.Show("No se pudo leer la auditoría.\n\n" + ex.Message,
-                    "Base de datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.Message, "Filtros inválidos",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("No se pudo leer la auditoría.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -55,7 +59,7 @@ namespace TiendaUNNE
 
             if (dgvAuditoria.Columns.Contains("Fecha"))
             {
-                dgvAuditoria.Columns["Fecha"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm:ss";
+                dgvAuditoria.Columns["Fecha"].DefaultCellStyle.Format = NegocioAuditoria.FormatoFechaHora;
                 dgvAuditoria.Columns["Fecha"].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
                 dgvAuditoria.Columns["Fecha"].Width = 140;
             }
@@ -83,8 +87,8 @@ namespace TiendaUNNE
 
             dtpDesde.Checked = false;
             dtpHasta.Checked = false;
-            dtpDesde.Value = DateTime.Today.AddMonths(-1);
-            dtpHasta.Value = DateTime.Today;
+            dtpDesde.Value = NegocioAuditoria.FechaDesdePorDefecto;
+            dtpHasta.Value = NegocioAuditoria.FechaHastaPorDefecto;
 
             CargarGrilla();
         }

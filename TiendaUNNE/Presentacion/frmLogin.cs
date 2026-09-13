@@ -1,9 +1,12 @@
 using System;
-using System.Data.SqlClient;
 using System.Windows.Forms;
 
 namespace TiendaUNNE
 {
+    /// <summary>
+    /// Pantalla de acceso. Solo toma lo que se tipea y muestra el resultado:
+    /// validar y verificar las credenciales es trabajo de NegocioAutenticacion.
+    /// </summary>
     public partial class frmLogin : Form
     {
         public frmLogin()
@@ -18,41 +21,26 @@ namespace TiendaUNNE
 
         private void btnIngresar_Click(object sender, EventArgs e)
         {
-            string usuario = txtUsuario.Text.Trim();
-            string password = txtPassword.Text;
-
             lblError.Visible = false;
-
-            if (usuario.Length == 0 || password.Length == 0)
-            {
-                MostrarError("Ingrese usuario y contraseña.");
-                return;
-            }
 
             try
             {
                 Cursor = Cursors.WaitCursor;
 
-                UsuarioLogueado login = ServicioAutenticacion.Autenticar(usuario, password);
+                NegocioAutenticacion.IniciarSesion(txtUsuario.Text, txtPassword.Text);
 
-                if (login == null)
-                {
-                    // Mensaje genérico: no se indica si falló el usuario o la contraseña.
-                    MostrarError("Usuario o contraseña incorrectos.");
-                    txtPassword.Clear();
-                    txtPassword.Focus();
-                    return;
-                }
-
-                SesionActual.Iniciar(login);
                 DialogResult = DialogResult.OK;   // Program.cs abre frmPrincipal
                 Close();
             }
-            catch (SqlException ex)
+            catch (ReglaNegocioException ex)
+            {
+                MostrarError(ex.Message);
+                txtPassword.Clear();
+                txtPassword.Focus();
+            }
+            catch (Exception)
             {
                 MostrarError("No se pudo conectar con la base de datos.");
-                MessageBox.Show(ex.Message, "Detalle del error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {

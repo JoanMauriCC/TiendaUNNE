@@ -1,10 +1,13 @@
 using System;
-using System.Data.SqlClient;
 using System.Windows.Forms;
 
 namespace TiendaUNNE
 {
-    /// <summary>Alta / edición de un usuario (datos de Persona + Usuario en una sola pantalla).</summary>
+    /// <summary>
+    /// Alta / edición de un usuario (datos de Persona + Usuario en una sola pantalla).
+    /// El formulario solo muestra datos y recoge lo tipeado: validar, recortar espacios,
+    /// hashear la contraseña y decidir alta/edición es trabajo de NegocioUsuario.
+    /// </summary>
     public partial class frmUsuarioEditor : Form
     {
         private readonly int? _idUsuario;   // null = alta
@@ -20,7 +23,7 @@ namespace TiendaUNNE
 
         private void frmUsuarioEditor_Load(object sender, EventArgs e)
         {
-            dtpFechaNac.MaxDate = DateTime.Today;
+            dtpFechaNac.MaxDate = NegocioUsuario.FechaNacimientoMaxima;
 
             try
             {
@@ -45,18 +48,33 @@ namespace TiendaUNNE
                 DialogResult = DialogResult.Cancel;
                 Close();
             }
-            catch (SqlException ex)
+            catch (Exception)
             {
-                MessageBox.Show("No se pudieron cargar los datos.\n\n" + ex.Message,
-                    "Base de datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("No se pudieron cargar los datos del usuario.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.Cancel;
                 Close();
             }
         }
 
+        /// <summary>
+        /// Evento propio del formulario: filtra lo que se puede tipear en el DNI/CUIT.
+        /// Qué carácter es aceptable lo decide Negocio, acá solo se aplica.
+        /// </summary>
+        private void txtDniCuit_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !Validaciones.EsCaracterDniCuitValido(e.KeyChar);
+        }
+
+        /// <summary>Ídem para el teléfono, que admite los mismos caracteres numéricos.</summary>
+        private void txtTelefono_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !Validaciones.EsCaracterDniCuitValido(e.KeyChar);
+        }
+
         private void CargarPerfiles()
         {
-            cboPerfil.DataSource = ServicioPerfil.ListarActivos();
+            cboPerfil.DataSource = NegocioPerfil.ListarActivos();
             cboPerfil.DisplayMember = "Nombre";
             cboPerfil.ValueMember = "Id";
             cboPerfil.SelectedIndex = -1;
@@ -64,7 +82,7 @@ namespace TiendaUNNE
 
         private void CargarUsuario(int idUsuario)
         {
-            _original = ServicioUsuario.ObtenerParaEdicion(idUsuario);
+            _original = NegocioUsuario.ObtenerParaEdicion(idUsuario);
 
             txtDniCuit.Text = _original.DniCuit;
             txtNombre.Text = _original.Nombre;
@@ -90,25 +108,10 @@ namespace TiendaUNNE
 
         private void btnGuardar_Click(object sender, EventArgs e)
         {
-            string error = Validar();
-            if (error != null)
-            {
-                MessageBox.Show(error, "Datos incompletos",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            UsuarioEditModel modelo = ArmarModelo();
-
             try
             {
                 Cursor = Cursors.WaitCursor;
-                int idSesion = SesionActual.Usuario.IdUsuario;
-
-                if (EsAlta)
-                    ServicioUsuario.Crear(modelo, idSesion);
-                else
-                    ServicioUsuario.Actualizar(modelo, idSesion);
+                NegocioUsuario.Guardar(ArmarModelo(), SesionActual.Usuario.IdUsuario);
 
                 DialogResult = DialogResult.OK;
                 Close();
@@ -118,10 +121,10 @@ namespace TiendaUNNE
                 MessageBox.Show(ex.Message, "No se pudo guardar",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            catch (SqlException ex)
+            catch (Exception)
             {
-                MessageBox.Show("Error de base de datos.\n\n" + ex.Message,
-                    "Base de datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("No se pudo guardar el usuario.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -135,45 +138,30 @@ namespace TiendaUNNE
             Close();
         }
 
-        private string Validar()
-        {
-            if (string.IsNullOrWhiteSpace(txtDniCuit.Text)) return "Ingresá el DNI/CUIT.";
-            if (string.IsNullOrWhiteSpace(txtNombre.Text)) return "Ingresá el nombre.";
-            if (string.IsNullOrWhiteSpace(txtApellido.Text)) return "Ingresá el apellido.";
-            if (string.IsNullOrWhiteSpace(txtNombreUsuario.Text)) return "Ingresá el nombre de usuario.";
-            if (cboPerfil.SelectedIndex < 0) return "Elegí un perfil.";
-
-            if (EsAlta && string.IsNullOrWhiteSpace(txtPassword.Text))
-                return "La contraseña es obligatoria en un alta.";
-
-            string email = txtEmail.Text.Trim();
-            if (email.Length > 0 && (!email.Contains("@") || email.EndsWith("@") || email.StartsWith("@")))
-                return "El email no tiene un formato válido.";
-
-            return null;
-        }
-
+        /// <summary>
+        /// Copia lo que hay en pantalla al modelo, sin transformarlo: de eso se encarga Negocio.
+        /// </summary>
         private UsuarioEditModel ArmarModelo()
         {
-            var perfil = (PerfilItem)cboPerfil.SelectedItem;
+            var perfil = cboPerfil.SelectedItem as PerfilItem;
 
             return new UsuarioEditModel
             {
                 IdUsuario = EsAlta ? 0 : _original.IdUsuario,
                 IdPersona = EsAlta ? 0 : _original.IdPersona,
 
-                DniCuit = txtDniCuit.Text.Trim(),
-                Nombre = txtNombre.Text.Trim(),
-                Apellido = txtApellido.Text.Trim(),
-                Direccion = txtDireccion.Text.Trim(),
-                Telefono = txtTelefono.Text.Trim(),
-                Email = txtEmail.Text.Trim(),
+                DniCuit = txtDniCuit.Text,
+                Nombre = txtNombre.Text,
+                Apellido = txtApellido.Text,
+                Direccion = txtDireccion.Text,
+                Telefono = txtTelefono.Text,
+                Email = txtEmail.Text,
                 FechaNacimiento = dtpFechaNac.Checked ? dtpFechaNac.Value.Date : (DateTime?)null,
 
-                NombreUsuario = txtNombreUsuario.Text.Trim(),
+                NombreUsuario = txtNombreUsuario.Text,
                 PasswordPlano = txtPassword.Text,   // vacío en edición = no cambiar
-                IdPerfil = perfil.Id,
-                NombrePerfil = perfil.Nombre
+                IdPerfil = perfil == null ? 0 : perfil.Id,
+                NombrePerfil = perfil == null ? null : perfil.Nombre
             };
         }
     }

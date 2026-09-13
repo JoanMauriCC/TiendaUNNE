@@ -1,10 +1,12 @@
 using System;
-using System.Data.SqlClient;
 using System.Windows.Forms;
 
 namespace TiendaUNNE
 {
-    /// <summary>Alta / edición de un producto.</summary>
+    /// <summary>
+    /// Alta / edición de un producto. Solo muestra datos y recoge lo que carga el usuario:
+    /// validar, recortar espacios, acotar rangos y decidir alta/edición lo hace NegocioProducto.
+    /// </summary>
     public partial class frmProductoEditor : Form
     {
         private readonly int? _idProducto;   // null = alta
@@ -40,10 +42,10 @@ namespace TiendaUNNE
                 DialogResult = DialogResult.Cancel;
                 Close();
             }
-            catch (SqlException ex)
+            catch (Exception)
             {
-                MessageBox.Show("No se pudieron cargar los datos.\n\n" + ex.Message,
-                    "Base de datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("No se pudieron cargar los datos del producto.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DialogResult = DialogResult.Cancel;
                 Close();
             }
@@ -51,7 +53,7 @@ namespace TiendaUNNE
 
         private void CargarCategorias()
         {
-            cboCategoria.DataSource = ServicioCategoria.ListarActivas();
+            cboCategoria.DataSource = NegocioCategoria.ListarActivas();
             cboCategoria.DisplayMember = "Nombre";
             cboCategoria.ValueMember = "Id";
             cboCategoria.SelectedIndex = -1;
@@ -59,53 +61,34 @@ namespace TiendaUNNE
 
         private void CargarProducto(int idProducto)
         {
-            _original = ServicioProducto.ObtenerParaEdicion(idProducto);
+            _original = NegocioProducto.ObtenerParaEdicion(idProducto);
 
             txtNombre.Text = _original.Nombre;
             txtDescripcion.Text = _original.Descripcion;
-            numPrecioVenta.Value = Acotar(numPrecioVenta, _original.PrecioVenta);
-            numStock.Value = Acotar(numStock, _original.Stock);
+            numPrecioVenta.Value = NegocioProducto.AcotarPrecio(_original.PrecioVenta);
+            numStock.Value = NegocioProducto.AcotarStock(_original.Stock);
             cboCategoria.SelectedValue = _original.IdCategoria;
-        }
-
-        private static decimal Acotar(NumericUpDown ctrl, decimal valor)
-        {
-            if (valor < ctrl.Minimum) return ctrl.Minimum;
-            if (valor > ctrl.Maximum) return ctrl.Maximum;
-            return valor;
         }
 
         private void btnGuardar_Click(object sender, EventArgs e)
         {
-            string error = Validar();
-            if (error != null)
-            {
-                MessageBox.Show(error, "Datos incompletos",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+            var categoria = cboCategoria.SelectedItem as CategoriaItem;
 
-            var categoria = (CategoriaItem)cboCategoria.SelectedItem;
             var modelo = new ProductoEditModel
             {
                 IdProducto = EsAlta ? 0 : _original.IdProducto,
-                Nombre = txtNombre.Text.Trim(),
-                Descripcion = txtDescripcion.Text.Trim(),
+                Nombre = txtNombre.Text,
+                Descripcion = txtDescripcion.Text,
                 PrecioVenta = numPrecioVenta.Value,
                 Stock = numStock.Value,
-                IdCategoria = categoria.Id,
-                NombreCategoria = categoria.Nombre
+                IdCategoria = categoria == null ? 0 : categoria.Id,
+                NombreCategoria = categoria == null ? null : categoria.Nombre
             };
 
             try
             {
                 Cursor = Cursors.WaitCursor;
-                int idSesion = SesionActual.Usuario.IdUsuario;
-
-                if (EsAlta)
-                    ServicioProducto.Crear(modelo, idSesion);
-                else
-                    ServicioProducto.Actualizar(modelo, idSesion);
+                NegocioProducto.Guardar(modelo, SesionActual.Usuario.IdUsuario);
 
                 DialogResult = DialogResult.OK;
                 Close();
@@ -115,10 +98,10 @@ namespace TiendaUNNE
                 MessageBox.Show(ex.Message, "No se pudo guardar",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            catch (SqlException ex)
+            catch (Exception)
             {
-                MessageBox.Show("Error de base de datos.\n\n" + ex.Message,
-                    "Base de datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("No se pudo guardar el producto.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -130,18 +113,6 @@ namespace TiendaUNNE
         {
             DialogResult = DialogResult.Cancel;
             Close();
-        }
-
-        private string Validar()
-        {
-            if (string.IsNullOrWhiteSpace(txtNombre.Text)) return "Ingresá el nombre del producto.";
-            if (cboCategoria.SelectedIndex < 0) return "Elegí una categoría.";
-
-            // Los NumericUpDown ya tienen Minimum = 0; se revalida por las dudas.
-            if (numPrecioVenta.Value < 0 || numStock.Value < 0)
-                return "El precio de venta y el stock no pueden ser negativos.";
-
-            return null;
         }
     }
 }
