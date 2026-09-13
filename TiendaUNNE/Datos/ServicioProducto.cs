@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -35,6 +36,41 @@ ORDER BY p.nombre;";
             using (var da = new SqlDataAdapter(sql, cn))
                 da.Fill(dt);
             return dt;
+        }
+
+        /// <summary>
+        /// Productos activos cuyo nombre contiene el texto buscado, con su precio y
+        /// stock actual. Lo usa la caja para armar el ticket.
+        /// </summary>
+        public static List<ProductoVentaItem> BuscarParaVenta(string texto)
+        {
+            const string sql = @"
+SELECT TOP 50 id_producto, nombre, precio_venta, stock
+FROM   dbo.Producto
+WHERE  activo = 1 AND nombre LIKE @texto
+ORDER BY nombre;";
+
+            var lista = new List<ProductoVentaItem>();
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand(sql, cn))
+            {
+                cmd.Parameters.Add("@texto", SqlDbType.NVarChar, 150).Value = "%" + texto + "%";
+
+                using (var dr = cmd.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        lista.Add(new ProductoVentaItem
+                        {
+                            IdProducto = (int)dr["id_producto"],
+                            Nombre = (string)dr["nombre"],
+                            PrecioVenta = (decimal)dr["precio_venta"],
+                            Stock = (decimal)dr["stock"]
+                        });
+                    }
+                }
+            }
+            return lista;
         }
 
         /// <summary>Trae un producto, o null si no existe. Interpretar el null es cosa de Negocio.</summary>
