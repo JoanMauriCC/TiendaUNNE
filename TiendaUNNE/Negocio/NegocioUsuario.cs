@@ -191,6 +191,16 @@ namespace TiendaUNNE
             ValidarLargo(m.Telefono, LargoMaximoTelefono, "El teléfono");
             ValidarLargo(m.Email, LargoMaximoEmail, "El email");
             ValidarLargo(m.NombreUsuario, LargoMaximoNombreUsuario, "El nombre de usuario");
+
+            // Va al final a propósito: es la única validación que consulta la base,
+            // así no se hace el viaje si algún otro campo ya estaba mal.
+            if (!string.IsNullOrWhiteSpace(m.Email))
+            {
+                int? personaQueSeEdita = m.EsAlta ? (int?)null : m.IdPersona;
+
+                if (ServicioUsuario.ExisteEmail(m.Email.Trim(), personaQueSeEdita))
+                    throw new ReglaNegocioException("Ya hay otra persona registrada con ese email.");
+            }
         }
 
         private static void ValidarLargo(string valor, int maximo, string etiqueta)
