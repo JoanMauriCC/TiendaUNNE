@@ -83,6 +83,25 @@ WHERE u.id_usuario = @id;";
             }
         }
 
+        /// <summary>
+        /// Consulta al stored procedure sp_ExisteEmailPersona si el email ya lo tiene
+        /// otra persona. <paramref name="idPersonaExcluir"/> es la persona que se está
+        /// editando (null en un alta), para que su propio email no cuente como repetido.
+        /// </summary>
+        public static bool ExisteEmail(string email, int? idPersonaExcluir)
+        {
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand("dbo.sp_ExisteEmailPersona", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add("@email", SqlDbType.NVarChar, 150).Value = email;
+                cmd.Parameters.Add("@id_persona_excluir", SqlDbType.Int).Value =
+                    (object)idPersonaExcluir ?? DBNull.Value;
+
+                return (bool)cmd.ExecuteScalar();
+            }
+        }
+
         // ---------------------------------------------------------------------
         // Alta
         // ---------------------------------------------------------------------
