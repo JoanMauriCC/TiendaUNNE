@@ -4,38 +4,47 @@ namespace TiendaUNNE
 {
     /// <summary>
     /// Reglas del turno de caja: cuándo se puede abrir, cuándo cerrar y cómo se
-    /// calcula el arqueo (lo que debería haber en el cajón contra lo que hay).
+    /// calcula el arqueo. Por ahora el turno vive solo en memoria: no se guarda en la
+    /// base de datos, así que al cerrar la aplicación la caja vuelve a estar cerrada.
     /// </summary>
     public static class NegocioCaja
     {
         public const decimal MontoMaximo = 10000000m;
-
-        /// <summary>Formato con el que se muestran los importes de la caja.</summary>
         public const string FormatoImporte = "N2";
 
-        /// <summary>Sesión abierta de la caja, o null si está cerrada.</summary>
-        public static CajaSesion ObtenerSesionAbierta()
-        {
-            CajaItem caja = ObtenerCaja();
-            return ServicioCaja.ObtenerSesionAbierta(caja.Id);
-        }
+        private const string NombreCaja = "Caja 1";
+
+        private static CajaSesion _sesionAbierta;
+        private static decimal _efectivoCobrado;
+        private static int _ultimoIdSesion;
+
+        /// <summary>Sesión abierta, o null si la caja está cerrada.</summary>
+        public static CajaSesion ObtenerSesionAbierta() => _sesionAbierta;
 
         public static CajaSesion AbrirCaja(decimal montoInicial, int idUsuario)
         {
             ValidarMonto(montoInicial, "El monto inicial");
 
-            CajaItem caja = ObtenerCaja();
-
-            if (ServicioCaja.ObtenerSesionAbierta(caja.Id) != null)
+            if (_sesionAbierta != null)
                 throw new ReglaNegocioException("La caja ya está abierta.");
 
-            ServicioCaja.AbrirSesion(caja.Id, idUsuario, montoInicial);
+            _ultimoIdSesion++;
+            _efectivoCobrado = 0;
+            _sesionAbierta = new CajaSesion
+            {
+                IdCajaSesion = _ultimoIdSesion,
+                NombreCaja = NombreCaja,
+                IdUsuarioApertura = idUsuario,
+                UsuarioApertura = SesionActual.HaySesion ? SesionActual.Usuario.NombreCompleto : "-",
+                FechaApertura = DateTime.Now,
+                MontoInicial = montoInicial
+            };
 
-            return ServicioCaja.ObtenerSesionAbierta(caja.Id);
+            return _sesionAbierta;
         }
 
         /// <summary>
-        /// Arma las cuentas del cierre: monto inicial + efectivo que entró durante el
+        /// Arma las cuentas del cierre: monto inicial + efectivo cobrado durante el
         /// turno es lo que debería haber, y la diferencia contra lo contado a mano.
         /// </summary>
         public static ArqueoCaja CalcularArqueo(CajaSesion sesion, decimal montoDeclarado)
@@ -46,7 +55,7 @@ namespace TiendaUNNE
             {
                 IdCajaSesion = sesion.IdCajaSesion,
                 MontoInicial = sesion.MontoInicial,
-                VentasEnEfectivo = ServicioCaja.TotalEfectivoDeLaSesion(sesion.IdCajaSesion),
+                VentasEnEfectivo = _efectivoCobrado,
                 MontoDeclarado = montoDeclarado
             };
         }
@@ -54,34 +63,27 @@ namespace TiendaUNNE
         public static ArqueoCaja CerrarCaja(CajaSesion sesion, decimal montoDeclarado,
                                             int idUsuario, string observaciones)
         {
-            if (sesion == null)
+            if (sesion == null || _sesionAbierta == null ||
+                sesion.IdCajaSesion != _sesionAbierta.IdCajaSesion)
                 throw new ReglaNegocioException("No hay ninguna caja abierta para cerrar.");
 
             ValidarMonto(montoDeclarado, "El efectivo contado");
 
             ArqueoCaja arqueo = CalcularArqueo(sesion, montoDeclarado);
 
-            int filas = ServicioCaja.CerrarSesion(
-                sesion.IdCajaSesion, idUsuario,
-                arqueo.EfectivoEsperado, arqueo.MontoDeclarado, arqueo.Diferencia,
-                string.IsNullOrWhiteSpace(observaciones) ? null : observaciones.Trim());
-
-            if (filas == 0)
-                throw new ReglaNegocioException("La caja ya estaba cerrada.");
+            _sesionAbierta = null;
+            _efectivoCobrado = 0;
 
             return arqueo;
         }
 
-        private static CajaItem ObtenerCaja()
+        /// <summary>Suma al turno el efectivo que quedó en el cajón por una venta.</summary>
+        internal static void RegistrarEfectivoCobrado(decimal importe)
         {
-            CajaItem caja = ServicioCaja.ObtenerCajaPredeterminada();
+            if (_sesionAbierta == null)
+                throw new ReglaNegocioException("Hay que abrir la caja antes de vender.");
 
-            if (caja == null)
-                throw new ReglaNegocioException(
-                    "No hay ninguna caja configurada en el sistema. " +
-                    "Hay que ejecutar el script TiendaUNNE_DatosCaja.sql sobre la base de datos.");
-
-            return caja;
+            _efectivoCobrado += importe;
         }
 
         private static void ValidarMonto(decimal monto, string etiqueta)

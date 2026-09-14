@@ -2,14 +2,6 @@ using System;
 
 namespace TiendaUNNE
 {
-    /// <summary>Un puesto de caja (ValueMember = Id para el ComboBox).</summary>
-    public sealed class CajaItem
-    {
-        public int Id { get; set; }
-        public string Nombre { get; set; }
-        public override string ToString() => Nombre;
-    }
-
     /// <summary>Turno de caja abierto: desde cuándo, con cuánto y por quién.</summary>
     public sealed class CajaSesion
     {

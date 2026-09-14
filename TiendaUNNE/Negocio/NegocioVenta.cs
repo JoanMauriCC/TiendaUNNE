@@ -7,15 +7,12 @@ namespace TiendaUNNE
 {
     /// <summary>
     /// Reglas de la venta en caja: qué se puede agregar al ticket, cuánto stock hay,
-    /// si los pagos alcanzan, cuánto vuelto corresponde y cómo queda el resumen
-    /// que va a la auditoría.
+    /// si los pagos alcanzan y cuánto vuelto corresponde.
+    /// Por ahora el cobro no se guarda en la base de datos: la venta se valida y se
+    /// suma al efectivo del turno en memoria, pero no se registra ni descuenta stock.
     /// </summary>
     public static class NegocioVenta
     {
-        /// <summary>Código del comprobante que emite la caja (cargado por TiendaUNNE_DatosCaja.sql).</summary>
-        public const string CodigoComprobante = "TKT";
-
-        public const int PuntoVenta = 1;
         public const decimal CantidadMaxima = 9999m;
 
         public const string FormatoImporte = "N2";
@@ -37,6 +34,7 @@ namespace TiendaUNNE
             };
         }
 
+        /// <summary>Busca en el catálogo de productos (solo lectura, no modifica nada).</summary>
         public static List<ProductoVentaItem> BuscarProductos(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto))
@@ -101,7 +99,16 @@ namespace TiendaUNNE
         // Cobro
         // ---------------------------------------------------------------------
 
-        public static List<MedioPagoItem> ListarMediosDePago() => ServicioMedioPago.ListarActivos();
+        public static List<MedioPagoItem> ListarMediosDePago()
+        {
+            return new List<MedioPagoItem>
+            {
+                new MedioPagoItem { Id = 1, Nombre = "Efectivo", EsEfectivo = true },
+                new MedioPagoItem { Id = 2, Nombre = "Tarjeta de débito" },
+                new MedioPagoItem { Id = 3, Nombre = "Tarjeta de crédito" },
+                new MedioPagoItem { Id = 4, Nombre = "Transferencia" }
+            };
+        }
 
         /// <summary>Lo que hay que devolverle al cliente si pagó de más.</summary>
         public static decimal CalcularVuelto(VentaEditModel venta)
@@ -122,32 +129,14 @@ namespace TiendaUNNE
         }
 
         /// <summary>
-        /// Valida, ajusta el vuelto y registra la venta. Devuelve el número de
-        /// comprobante emitido.
+        /// Valida el cobro, descuenta el vuelto y suma al turno el efectivo que queda
+        /// en el cajón. No escribe nada en la base de datos.
         /// </summary>
-        public static long ConfirmarVenta(VentaEditModel venta)
+        public static void ConfirmarVenta(VentaEditModel venta)
         {
             ValidarParaCobrar(venta);
             DescontarVuelto(venta);
-
-            int? idTipoComprobante = ServicioVenta.ObtenerIdTipoComprobante(CodigoComprobante);
-
-            if (idTipoComprobante == null)
-                throw new ReglaNegocioException(
-                    "No está configurado el tipo de comprobante 'Ticket'. " +
-                    "Hay que ejecutar el script TiendaUNNE_DatosCaja.sql sobre la base de datos.");
-
-            try
-            {
-                return ServicioVenta.RegistrarVenta(
-                    venta, idTipoComprobante.Value, PuntoVenta, Resumen(venta));
-            }
-            catch (StockInsuficienteException ex)
-            {
-                throw new ReglaNegocioException(
-                    "Otra venta se llevó el stock de " + ex.Descripcion +
-                    " mientras cobrabas. La venta no se registró: revisá el ticket.");
-            }
+            NegocioCaja.RegistrarEfectivoCobrado(venta.EfectivoRecibido);
         }
 
         private static void ValidarParaCobrar(VentaEditModel venta)
@@ -172,8 +161,7 @@ namespace TiendaUNNE
 
             // Solo se puede dar vuelto de lo que se pagó en efectivo: no se devuelve
             // plata de una transferencia o de una tarjeta.
-            decimal vuelto = CalcularVuelto(venta);
-            if (vuelto > venta.EfectivoRecibido)
+            if (CalcularVuelto(venta) > venta.EfectivoRecibido)
                 throw new ReglaNegocioException(
                     "El pago supera el total y no alcanza el efectivo para dar el vuelto. " +
                     "Ajustá los importes.");
@@ -198,21 +186,6 @@ namespace TiendaUNNE
             }
 
             venta.Pagos.RemoveAll(p => p.Importe <= 0);
-        }
-
-        private static string Resumen(VentaEditModel venta)
-        {
-            string renglones = string.Join(" | ", venta.Renglones.Select(r =>
-                string.Format(CultureInfo.InvariantCulture, "{0} x{1} = {2}",
-                    r.Descripcion, r.Cantidad, r.Subtotal)));
-
-            string pagos = string.Join(" | ", venta.Pagos.Select(p =>
-                string.Format(CultureInfo.InvariantCulture, "{0}={1}",
-                    p.NombreMedioPago, p.Importe)));
-
-            return string.Format(CultureInfo.InvariantCulture,
-                "Total={0}; Items={1}; Detalle=[{2}]; Pagos=[{3}]",
-                venta.Total, venta.Renglones.Count, renglones, pagos);
         }
     }
 }

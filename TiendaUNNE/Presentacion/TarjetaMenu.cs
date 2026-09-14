@@ -13,7 +13,8 @@ namespace TiendaUNNE
         Producto,
         Auditoria,
         Caja,
-        Etiqueta
+        Etiqueta,
+        Reportes
     }
 
     /// <summary>
@@ -67,6 +68,7 @@ namespace TiendaUNNE
                     case IconoTarjeta.Auditoria: return Color.FromArgb(139, 92, 246);  // violeta
                     case IconoTarjeta.Caja: return Color.FromArgb(234, 88, 12);        // naranja
                     case IconoTarjeta.Etiqueta: return Color.FromArgb(220, 38, 38);    // rojo
+                    case IconoTarjeta.Reportes: return Color.FromArgb(217, 119, 6);    // ámbar
                     default: return Color.FromArgb(74, 130, 200);
                 }
             }
@@ -217,6 +219,13 @@ namespace TiendaUNNE
                         };
                         g.DrawPolygon(pen, tag);
                         g.DrawEllipse(pen, r.X + 8, r.Y + 16, 6, 6);
+                        break;
+
+                    case IconoTarjeta.Reportes:
+                        g.DrawLine(pen, r.X + 3, r.Y + 35, r.X + 37, r.Y + 35);
+                        g.DrawRectangle(pen, r.X + 7, r.Y + 21, 6, 14);
+                        g.DrawRectangle(pen, r.X + 17, r.Y + 9, 6, 26);
+                        g.DrawRectangle(pen, r.X + 27, r.Y + 15, 6, 20);
                         break;
                 }
             }

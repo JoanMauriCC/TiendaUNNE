@@ -8,6 +8,7 @@ namespace TiendaUNNE
         Productos,
         Categorias,
         Auditoria,
+        Reportes,
         Caja
     }
 
@@ -33,6 +34,10 @@ namespace TiendaUNNE
                         || SesionActual.EsSupervisor
                         || SesionActual.EsAdministrador;
 
+                // "Supervisión de caja, ventas y reportes" según la definición del perfil.
+                case OpcionMenu.Reportes:
+                    return SesionActual.EsSupervisor || SesionActual.EsAdministrador;
+
                 case OpcionMenu.Usuarios:
                 case OpcionMenu.Productos:
                 case OpcionMenu.Categorias:
@@ -54,17 +59,18 @@ namespace TiendaUNNE
                 OpcionMenu.Productos,
                 OpcionMenu.Categorias,
                 OpcionMenu.Auditoria,
+                OpcionMenu.Reportes,
                 OpcionMenu.Caja
             };
         }
 
         /// <summary>
-        /// ¿El módulo ya está implementado? Es distinto de tener permiso: Caja todavía
-        /// no existe, así que se muestra deshabilitada para cualquier rol.
+        /// ¿El módulo ya está implementado? Es distinto de tener permiso: sirve para
+        /// mostrar deshabilitada una sección que todavía no existe. Hoy están todas.
         /// </summary>
         public static bool ModuloDisponible(OpcionMenu opcion)
         {
-            return opcion != OpcionMenu.Caja;
+            return true;
         }
 
         /// <summary>Lanza ReglaNegocioException si la sesión actual no puede entrar a la opción.</summary>
