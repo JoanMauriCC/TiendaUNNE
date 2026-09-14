@@ -94,6 +94,7 @@ namespace TiendaUNNE
             this.txtEmail.Name = "txtEmail";
             this.txtEmail.Size = new System.Drawing.Size(278, 23);
             this.txtEmail.TabIndex = 11;
+            this.txtEmail.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtEmail_KeyPress);
             //
             // lblEmail
             //
@@ -146,6 +147,7 @@ namespace TiendaUNNE
             this.txtApellido.Name = "txtApellido";
             this.txtApellido.Size = new System.Drawing.Size(278, 23);
             this.txtApellido.TabIndex = 5;
+            this.txtApellido.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtApellido_KeyPress);
             //
             // lblApellido
             //
@@ -163,6 +165,7 @@ namespace TiendaUNNE
             this.txtNombre.Name = "txtNombre";
             this.txtNombre.Size = new System.Drawing.Size(278, 23);
             this.txtNombre.TabIndex = 3;
+            this.txtNombre.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtNombre_KeyPress);
             //
             // lblNombre
             //
@@ -260,6 +263,7 @@ namespace TiendaUNNE
             this.txtNombreUsuario.Name = "txtNombreUsuario";
             this.txtNombreUsuario.Size = new System.Drawing.Size(220, 23);
             this.txtNombreUsuario.TabIndex = 1;
+            this.txtNombreUsuario.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtNombreUsuario_KeyPress);
             //
             // lblNombreUsuario
             //

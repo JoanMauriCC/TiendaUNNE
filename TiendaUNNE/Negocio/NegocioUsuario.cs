@@ -21,8 +21,24 @@ namespace TiendaUNNE
         /// <summary>Mínimo exigido al fijar o cambiar una contraseña.</summary>
         public const int LargoMinimoPassword = 8;
 
-        /// <summary>Nadie nació mañana: el editor toma de acá el tope del selector de fecha.</summary>
-        public static DateTime FechaNacimientoMaxima => DateTime.Today;
+        public const int LargoMinimoNombreUsuario = 3;
+
+        public const int EdadMinima = 16;
+
+        /// <summary>El editor toma de acá los topes del selector de fecha.</summary>
+        public static DateTime FechaNacimientoMinima => new DateTime(1900, 1, 1);
+        public static DateTime FechaNacimientoMaxima => DateTime.Today.AddYears(-EdadMinima);
+
+        /// <summary>
+        /// Encierra una fecha guardada dentro del rango permitido, para que un dato viejo
+        /// fuera de rango no rompa el selector de fecha al abrir el editor.
+        /// </summary>
+        public static DateTime AcotarFechaNacimiento(DateTime fecha)
+        {
+            if (fecha < FechaNacimientoMinima) return FechaNacimientoMinima;
+            if (fecha > FechaNacimientoMaxima) return FechaNacimientoMaxima;
+            return fecha;
+        }
 
         // ---------------------------------------------------------------------
         // Consultas
@@ -128,6 +144,22 @@ namespace TiendaUNNE
                     "El DNI/CUIT no tiene un formato válido. Usá solo números (por ej. 30123456) " +
                     "o el formato de CUIT con guiones (por ej. 20-30123456-9).");
 
+            if (!Validaciones.EsNombrePersonaValido(m.Nombre))
+                throw new ReglaNegocioException(
+                    "El nombre solo puede tener letras, espacios, apóstrofos o guiones.");
+
+            if (!Validaciones.EsNombrePersonaValido(m.Apellido))
+                throw new ReglaNegocioException(
+                    "El apellido solo puede tener letras, espacios, apóstrofos o guiones.");
+
+            if (m.NombreUsuario.Trim().Length < LargoMinimoNombreUsuario)
+                throw new ReglaNegocioException(
+                    "El nombre de usuario debe tener al menos " + LargoMinimoNombreUsuario + " caracteres.");
+
+            if (!Validaciones.EsNombreUsuarioValido(m.NombreUsuario))
+                throw new ReglaNegocioException(
+                    "El nombre de usuario solo puede tener letras sin tilde, números, punto, guion y guion bajo, sin espacios.");
+
             if (!string.IsNullOrWhiteSpace(m.Email) && !Validaciones.EsEmailValido(m.Email))
                 throw new ReglaNegocioException("El email no tiene un formato válido.");
 
@@ -144,8 +176,12 @@ namespace TiendaUNNE
                     "La contraseña debe tener al menos " + LargoMinimoPassword + " caracteres.");
 
             // Fecha de nacimiento
+            if (m.FechaNacimiento.HasValue && m.FechaNacimiento.Value.Date < FechaNacimientoMinima)
+                throw new ReglaNegocioException("La fecha de nacimiento no puede ser anterior a 1900.");
+
             if (m.FechaNacimiento.HasValue && m.FechaNacimiento.Value.Date > FechaNacimientoMaxima)
-                throw new ReglaNegocioException("La fecha de nacimiento no puede ser futura.");
+                throw new ReglaNegocioException(
+                    "El usuario tiene que tener al menos " + EdadMinima + " años.");
 
             // Largos máximos (coinciden con las columnas de la base)
             ValidarLargo(m.DniCuit, LargoMaximoDniCuit, "El DNI/CUIT");
@@ -171,8 +207,8 @@ namespace TiendaUNNE
         private static void Normalizar(UsuarioEditModel m)
         {
             m.DniCuit = m.DniCuit.Trim();
-            m.Nombre = m.Nombre.Trim();
-            m.Apellido = m.Apellido.Trim();
+            m.Nombre = Validaciones.NormalizarEspacios(m.Nombre);
+            m.Apellido = Validaciones.NormalizarEspacios(m.Apellido);
             m.NombreUsuario = m.NombreUsuario.Trim();
 
             m.Direccion = string.IsNullOrWhiteSpace(m.Direccion) ? null : m.Direccion.Trim();

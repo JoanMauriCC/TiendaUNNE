@@ -23,6 +23,7 @@ namespace TiendaUNNE
 
         private void frmUsuarioEditor_Load(object sender, EventArgs e)
         {
+            dtpFechaNac.MinDate = NegocioUsuario.FechaNacimientoMinima;
             dtpFechaNac.MaxDate = NegocioUsuario.FechaNacimientoMaxima;
 
             try
@@ -66,10 +67,29 @@ namespace TiendaUNNE
             e.Handled = !Validaciones.EsCaracterDniCuitValido(e.KeyChar);
         }
 
-        /// <summary>Ídem para el teléfono, que admite los mismos caracteres numéricos.</summary>
         private void txtTelefono_KeyPress(object sender, KeyPressEventArgs e)
         {
-            e.Handled = !Validaciones.EsCaracterDniCuitValido(e.KeyChar);
+            e.Handled = !Validaciones.EsCaracterTelefonoValido(e.KeyChar);
+        }
+
+        private void txtNombre_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !Validaciones.EsCaracterNombrePersonaValido(e.KeyChar);
+        }
+
+        private void txtApellido_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !Validaciones.EsCaracterNombrePersonaValido(e.KeyChar);
+        }
+
+        private void txtEmail_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !Validaciones.EsCaracterEmailValido(e.KeyChar);
+        }
+
+        private void txtNombreUsuario_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !Validaciones.EsCaracterNombreUsuarioValido(e.KeyChar);
         }
 
         private void CargarPerfiles()
@@ -93,7 +113,7 @@ namespace TiendaUNNE
 
             if (_original.FechaNacimiento.HasValue)
             {
-                dtpFechaNac.Value = _original.FechaNacimiento.Value;
+                dtpFechaNac.Value = NegocioUsuario.AcotarFechaNacimiento(_original.FechaNacimiento.Value);
                 dtpFechaNac.Checked = true;
             }
             else
