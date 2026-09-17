@@ -44,7 +44,8 @@ namespace TiendaUNNE
         // Consultas
         // ---------------------------------------------------------------------
 
-        public static DataTable ListarActivos() => ServicioUsuario.ListarActivos();
+        /// <summary>Usuarios activos o dados de baja, según <paramref name="activos"/>.</summary>
+        public static DataTable Listar(bool activos) => ServicioUsuario.Listar(activos);
 
         public static UsuarioEditModel ObtenerParaEdicion(int idUsuario)
         {

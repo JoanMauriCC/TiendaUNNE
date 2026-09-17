@@ -29,7 +29,7 @@ namespace TiendaUNNE
 
                 int? idSeleccionado = UsuarioSeleccionadoId();
 
-                DataTable dt = NegocioUsuario.ListarActivos();
+                DataTable dt = NegocioUsuario.Listar(activos: !chkVerInactivos.Checked);
                 dgvUsuarios.DataSource = dt;
 
                 if (dgvUsuarios.Columns.Contains("IdUsuario"))
@@ -150,7 +150,9 @@ namespace TiendaUNNE
         {
             bool haySeleccion = UsuarioSeleccionadoId().HasValue;
             btnEditar.Enabled = haySeleccion;
-            btnBaja.Enabled = haySeleccion;
+            // Dar de baja solo tiene sentido mirando la lista de activos: un usuario
+            // que ya está inactivo no se puede volver a dar de baja.
+            btnBaja.Enabled = haySeleccion && !chkVerInactivos.Checked;
         }
 
         // -----------------------------------------------------------------
@@ -214,6 +216,13 @@ namespace TiendaUNNE
 
         private void btnActualizar_Click(object sender, EventArgs e)
         {
+            CargarGrilla();
+        }
+
+        /// <summary>Alterna entre ver los usuarios activos o los dados de baja.</summary>
+        private void chkVerInactivos_CheckedChanged(object sender, EventArgs e)
+        {
+            chkVerInactivos.Text = chkVerInactivos.Checked ? "Mostrando: Inactivos" : "Mostrando: Activos";
             CargarGrilla();
         }
 

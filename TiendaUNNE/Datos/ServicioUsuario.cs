@@ -15,8 +15,12 @@ namespace TiendaUNNE
         // Consultas
         // ---------------------------------------------------------------------
 
-        /// <summary>Listado para la grilla: usuarios activos con datos de Persona y Perfil.</summary>
-        public static DataTable ListarActivos()
+        /// <summary>
+        /// Listado para la grilla: usuarios con datos de Persona y Perfil, filtrados por
+        /// estado. <paramref name="activos"/> en true trae los activos; en false, los
+        /// dados de baja (para el toggle "Activos / Inactivos" de la pantalla).
+        /// </summary>
+        public static DataTable Listar(bool activos)
         {
             const string sql = @"
 SELECT  u.id_usuario                            AS IdUsuario,
@@ -31,13 +35,17 @@ SELECT  u.id_usuario                            AS IdUsuario,
 FROM        dbo.Usuario u
 INNER JOIN  dbo.Persona p  ON p.id_persona = u.id_persona
 INNER JOIN  dbo.Perfil  pf ON pf.id_perfil = u.id_perfil
-WHERE u.activo = 1
+WHERE u.activo = @activo
 ORDER BY p.apellido, p.nombre;";
 
             var dt = new DataTable();
             using (var cn = Db.AbrirConexion())
-            using (var da = new SqlDataAdapter(sql, cn))
-                da.Fill(dt);
+            using (var cmd = new SqlCommand(sql, cn))
+            {
+                cmd.Parameters.Add("@activo", SqlDbType.Bit).Value = activos;
+                using (var da = new SqlDataAdapter(cmd))
+                    da.Fill(dt);
+            }
             return dt;
         }
 

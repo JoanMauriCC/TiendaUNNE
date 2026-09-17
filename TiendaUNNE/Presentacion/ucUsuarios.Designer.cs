@@ -18,6 +18,7 @@ namespace TiendaUNNE
         private void InitializeComponent()
         {
             this.panelBotones = new System.Windows.Forms.Panel();
+            this.chkVerInactivos = new System.Windows.Forms.CheckBox();
             this.btnActualizar = new System.Windows.Forms.Button();
             this.btnBaja = new System.Windows.Forms.Button();
             this.btnEditar = new System.Windows.Forms.Button();
@@ -29,6 +30,7 @@ namespace TiendaUNNE
             //
             // panelBotones
             //
+            this.panelBotones.Controls.Add(this.chkVerInactivos);
             this.panelBotones.Controls.Add(this.btnActualizar);
             this.panelBotones.Controls.Add(this.btnBaja);
             this.panelBotones.Controls.Add(this.btnEditar);
@@ -39,6 +41,18 @@ namespace TiendaUNNE
             this.panelBotones.Padding = new System.Windows.Forms.Padding(8);
             this.panelBotones.Size = new System.Drawing.Size(844, 52);
             this.panelBotones.TabIndex = 0;
+            //
+            // chkVerInactivos
+            //
+            this.chkVerInactivos.Appearance = System.Windows.Forms.Appearance.Button;
+            this.chkVerInactivos.Location = new System.Drawing.Point(574, 10);
+            this.chkVerInactivos.Name = "chkVerInactivos";
+            this.chkVerInactivos.Size = new System.Drawing.Size(180, 32);
+            this.chkVerInactivos.TabIndex = 4;
+            this.chkVerInactivos.Text = "Mostrando: Activos";
+            this.chkVerInactivos.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.chkVerInactivos.UseVisualStyleBackColor = true;
+            this.chkVerInactivos.CheckedChanged += new System.EventHandler(this.chkVerInactivos_CheckedChanged);
             //
             // btnActualizar
             //
@@ -119,6 +133,7 @@ namespace TiendaUNNE
         #endregion
 
         private System.Windows.Forms.Panel panelBotones;
+        private System.Windows.Forms.CheckBox chkVerInactivos;
         private System.Windows.Forms.Button btnActualizar;
         private System.Windows.Forms.Button btnBaja;
         private System.Windows.Forms.Button btnEditar;
