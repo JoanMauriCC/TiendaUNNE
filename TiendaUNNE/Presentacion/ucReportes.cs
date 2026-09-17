@@ -6,16 +6,14 @@ using System.Windows.Forms.DataVisualization.Charting;
 namespace TiendaUNNE
 {
     /// <summary>
-    /// Sección de Reportes: ventas, productos y recaudación por período.
-    /// Por ahora es solo la vista: muestra datos de ejemplo fijos y no consulta la
-    /// base de datos. Cuando se conecte, los datos tienen que venir de la capa Negocio.
+    /// Sección de Reportes: ventas, productos y recaudación para el rango de fechas
+    /// que elige el usuario (Desde/Hasta). Por ahora es solo la vista: muestra datos
+    /// de ejemplo fijos y no consulta la base de datos. Cuando se conecte, el rango
+    /// elegido acá es el que hay que pasarle a la capa Negocio.
     /// </summary>
     public partial class ucReportes : UserControl
     {
         private enum TipoReporte { Ventas, Productos, Recaudacion }
-
-        private const string PeriodoHoy = "Hoy";
-        private const string PeriodoMes = "Este mes";
 
         private static readonly Color ColorAcento = Color.FromArgb(59, 130, 246);
         private static readonly Color ColorAcentoFondo = Color.FromArgb(234, 242, 251);
@@ -33,8 +31,10 @@ namespace TiendaUNNE
         {
             CrearGrafico();
 
-            cboPeriodo.Items.AddRange(new object[] { PeriodoHoy, PeriodoMes });
-            cboPeriodo.SelectedItem = PeriodoMes;   // dispara MostrarReporte
+            dtpHasta.Value = DateTime.Today;
+            dtpDesde.Value = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+            MostrarReporte();
         }
 
         private void CrearGrafico()
@@ -71,7 +71,7 @@ namespace TiendaUNNE
         private void btnProductos_Click(object sender, EventArgs e) => CambiarTipo(TipoReporte.Productos);
         private void btnRecaudacion_Click(object sender, EventArgs e) => CambiarTipo(TipoReporte.Recaudacion);
 
-        private void cboPeriodo_SelectedIndexChanged(object sender, EventArgs e) => MostrarReporte();
+        private void btnAplicar_Click(object sender, EventArgs e) => MostrarReporte();
 
         private void CambiarTipo(TipoReporte tipo)
         {
@@ -87,8 +87,20 @@ namespace TiendaUNNE
         {
             if (_grafico == null) return;
 
-            bool esHoy = (cboPeriodo.SelectedItem as string) == PeriodoHoy;
-            ReporteEjemplo r = ObtenerEjemplo(_tipo, esHoy);
+            DateTime desde = dtpDesde.Value.Date;
+            DateTime hasta = dtpHasta.Value.Date;
+
+            if (desde > hasta)
+            {
+                MessageBox.Show("La fecha \"Desde\" no puede ser posterior a \"Hasta\".",
+                    "Rango de fechas inválido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Mientras la pantalla no consulte la base, un rango de un solo día muestra
+            // el ejemplo con detalle fino (por hora); un rango más amplio, el agregado.
+            bool esUnSoloDia = desde == hasta;
+            ReporteEjemplo r = ObtenerEjemplo(_tipo, esUnSoloDia);
 
             PintarBoton(btnVentas, _tipo == TipoReporte.Ventas);
             PintarBoton(btnProductos, _tipo == TipoReporte.Productos);
@@ -118,6 +130,10 @@ namespace TiendaUNNE
             }
             foreach (string[] fila in r.Filas)
                 dgvDetalle.Rows.Add(fila);
+
+            lblAviso.Text = string.Format(
+                "Datos de ejemplo del {0:dd/MM/yyyy} al {1:dd/MM/yyyy}: la pantalla todavía no está conectada a la base de datos.",
+                desde, hasta);
         }
 
         private static void PintarBoton(Button boton, bool activo)

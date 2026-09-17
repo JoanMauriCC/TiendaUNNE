@@ -11,7 +11,7 @@ namespace TiendaUNNE
     }
 
     /// <summary>
-    /// Datos combinados de Persona + Usuario que viajan entre frmUsuarioEditor y ServicioUsuario.
+    /// Datos combinados de Persona + Usuario que viajan entre ucUsuarios y ServicioUsuario.
     /// <see cref="IdUsuario"/> == 0 indica ALTA; distinto de 0 indica EDICIÓN.
     /// </summary>
     public sealed class UsuarioEditModel

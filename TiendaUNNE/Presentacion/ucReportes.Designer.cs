@@ -21,8 +21,11 @@ namespace TiendaUNNE
             this.btnVentas = new System.Windows.Forms.Button();
             this.btnProductos = new System.Windows.Forms.Button();
             this.btnRecaudacion = new System.Windows.Forms.Button();
-            this.lblPeriodo = new System.Windows.Forms.Label();
-            this.cboPeriodo = new System.Windows.Forms.ComboBox();
+            this.lblDesde = new System.Windows.Forms.Label();
+            this.dtpDesde = new System.Windows.Forms.DateTimePicker();
+            this.lblHasta = new System.Windows.Forms.Label();
+            this.dtpHasta = new System.Windows.Forms.DateTimePicker();
+            this.btnAplicar = new System.Windows.Forms.Button();
             this.tblIndicadores = new System.Windows.Forms.TableLayoutPanel();
             this.panelIndicador1 = new System.Windows.Forms.Panel();
             this.lblIndTitulo1 = new System.Windows.Forms.Label();
@@ -53,8 +56,11 @@ namespace TiendaUNNE
             this.panelBarra.Controls.Add(this.btnVentas);
             this.panelBarra.Controls.Add(this.btnProductos);
             this.panelBarra.Controls.Add(this.btnRecaudacion);
-            this.panelBarra.Controls.Add(this.lblPeriodo);
-            this.panelBarra.Controls.Add(this.cboPeriodo);
+            this.panelBarra.Controls.Add(this.lblDesde);
+            this.panelBarra.Controls.Add(this.dtpDesde);
+            this.panelBarra.Controls.Add(this.lblHasta);
+            this.panelBarra.Controls.Add(this.dtpHasta);
+            this.panelBarra.Controls.Add(this.btnAplicar);
             this.panelBarra.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelBarra.Location = new System.Drawing.Point(0, 0);
             this.panelBarra.Name = "panelBarra";
@@ -94,25 +100,54 @@ namespace TiendaUNNE
             this.btnRecaudacion.UseVisualStyleBackColor = false;
             this.btnRecaudacion.Click += new System.EventHandler(this.btnRecaudacion_Click);
             //
-            // lblPeriodo
+            // lblDesde
             //
-            this.lblPeriodo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblPeriodo.AutoSize = true;
-            this.lblPeriodo.Location = new System.Drawing.Point(608, 16);
-            this.lblPeriodo.Name = "lblPeriodo";
-            this.lblPeriodo.Size = new System.Drawing.Size(51, 15);
-            this.lblPeriodo.TabIndex = 3;
-            this.lblPeriodo.Text = "Período";
+            this.lblDesde.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblDesde.AutoSize = true;
+            this.lblDesde.Location = new System.Drawing.Point(392, 16);
+            this.lblDesde.Name = "lblDesde";
+            this.lblDesde.Size = new System.Drawing.Size(42, 15);
+            this.lblDesde.TabIndex = 3;
+            this.lblDesde.Text = "Desde:";
             //
-            // cboPeriodo
+            // dtpDesde
             //
-            this.cboPeriodo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cboPeriodo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboPeriodo.Location = new System.Drawing.Point(664, 12);
-            this.cboPeriodo.Name = "cboPeriodo";
-            this.cboPeriodo.Size = new System.Drawing.Size(130, 23);
-            this.cboPeriodo.TabIndex = 4;
-            this.cboPeriodo.SelectedIndexChanged += new System.EventHandler(this.cboPeriodo_SelectedIndexChanged);
+            this.dtpDesde.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.dtpDesde.Format = System.Windows.Forms.DateTimePickerFormat.Short;
+            this.dtpDesde.Location = new System.Drawing.Point(440, 12);
+            this.dtpDesde.Name = "dtpDesde";
+            this.dtpDesde.Size = new System.Drawing.Size(100, 23);
+            this.dtpDesde.TabIndex = 4;
+            //
+            // lblHasta
+            //
+            this.lblHasta.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblHasta.AutoSize = true;
+            this.lblHasta.Location = new System.Drawing.Point(548, 16);
+            this.lblHasta.Name = "lblHasta";
+            this.lblHasta.Size = new System.Drawing.Size(37, 15);
+            this.lblHasta.TabIndex = 5;
+            this.lblHasta.Text = "Hasta:";
+            //
+            // dtpHasta
+            //
+            this.dtpHasta.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.dtpHasta.Format = System.Windows.Forms.DateTimePickerFormat.Short;
+            this.dtpHasta.Location = new System.Drawing.Point(590, 12);
+            this.dtpHasta.Name = "dtpHasta";
+            this.dtpHasta.Size = new System.Drawing.Size(100, 23);
+            this.dtpHasta.TabIndex = 6;
+            //
+            // btnAplicar
+            //
+            this.btnAplicar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAplicar.Location = new System.Drawing.Point(698, 10);
+            this.btnAplicar.Name = "btnAplicar";
+            this.btnAplicar.Size = new System.Drawing.Size(96, 30);
+            this.btnAplicar.TabIndex = 7;
+            this.btnAplicar.Text = "Aplicar";
+            this.btnAplicar.UseVisualStyleBackColor = true;
+            this.btnAplicar.Click += new System.EventHandler(this.btnAplicar_Click);
             //
             // tblIndicadores
             //
@@ -303,8 +338,11 @@ namespace TiendaUNNE
         private System.Windows.Forms.Button btnVentas;
         private System.Windows.Forms.Button btnProductos;
         private System.Windows.Forms.Button btnRecaudacion;
-        private System.Windows.Forms.Label lblPeriodo;
-        private System.Windows.Forms.ComboBox cboPeriodo;
+        private System.Windows.Forms.Label lblDesde;
+        private System.Windows.Forms.DateTimePicker dtpDesde;
+        private System.Windows.Forms.Label lblHasta;
+        private System.Windows.Forms.DateTimePicker dtpHasta;
+        private System.Windows.Forms.Button btnAplicar;
         private System.Windows.Forms.TableLayoutPanel tblIndicadores;
         private System.Windows.Forms.Panel panelIndicador1;
         private System.Windows.Forms.Label lblIndTitulo1;
