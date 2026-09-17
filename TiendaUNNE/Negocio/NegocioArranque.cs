@@ -3,11 +3,11 @@ namespace TiendaUNNE
     /// <summary>
     /// Regla de arranque del sistema: si todavía no hay ningún usuario cargado, se crea
     /// un administrador inicial para poder entrar por primera vez.
-    /// Usuario: admin   /   Contraseña: Admin.1234   (hay que cambiarla tras el primer ingreso).
+    /// DNI: 00000000   /   Contraseña: Admin.1234   (hay que cambiarla tras el primer ingreso).
     /// </summary>
     public static class NegocioArranque
     {
-        public const string UsuarioInicial = "admin";
+        public const string DniInicial = "00000000";
         public const string PasswordInicial = "Admin.1234";
 
         private const string PerfilAdministrador = "Administrador";
@@ -26,10 +26,9 @@ namespace TiendaUNNE
             PasswordHasher.Generar(PasswordInicial, out hash, out salt);
 
             ServicioArranque.CrearAdministradorInicial(
-                dniCuit: "00000000",
+                dniCuit: DniInicial,
                 nombre: "Administrador",
                 apellido: "del Sistema",
-                nombreUsuario: UsuarioInicial,
                 idPerfil: idPerfilAdmin,
                 hash: hash,
                 salt: salt,

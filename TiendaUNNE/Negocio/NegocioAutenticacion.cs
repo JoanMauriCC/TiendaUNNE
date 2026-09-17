@@ -13,15 +13,15 @@ namespace TiendaUNNE
         private const string CredencialesInvalidas = "Usuario o contraseña incorrectos.";
 
         /// <summary>
-        /// Valida las credenciales y, si son correctas, deja la sesión abierta.
-        /// Lanza ReglaNegocioException con un mensaje presentable si no se puede entrar.
+        /// Valida las credenciales (DNI + contraseña) y, si son correctas, deja la sesión
+        /// abierta. Lanza ReglaNegocioException con un mensaje presentable si no se puede entrar.
         /// </summary>
-        public static UsuarioLogueado IniciarSesion(string usuario, string password)
+        public static UsuarioLogueado IniciarSesion(string dni, string password)
         {
-            if (string.IsNullOrWhiteSpace(usuario) || string.IsNullOrEmpty(password))
-                throw new ReglaNegocioException("Ingrese usuario y contraseña.");
+            if (string.IsNullOrWhiteSpace(dni) || string.IsNullOrEmpty(password))
+                throw new ReglaNegocioException("Ingresá el DNI y la contraseña.");
 
-            var credenciales = ServicioAutenticacion.ObtenerCredenciales(usuario.Trim());
+            var credenciales = ServicioAutenticacion.ObtenerCredenciales(dni.Trim());
             if (credenciales == null)
                 throw new ReglaNegocioException(CredencialesInvalidas);
 

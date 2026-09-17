@@ -88,13 +88,13 @@ GO
 
 -------------------------------------------------------------------------------
 -- 3. Usuario  (1:1 con Persona  ->  id_persona es UNIQUE)
+--    El login es con el DNI/CUIT de Persona: Usuario no tiene nombre propio.
 -------------------------------------------------------------------------------
 CREATE TABLE dbo.Usuario
 (
     id_usuario        INT             IDENTITY(1,1) NOT NULL,
     id_persona        INT             NOT NULL,
     id_perfil         INT             NOT NULL,
-    nombre_usuario    NVARCHAR(50)    NOT NULL,
     hash_password     VARBINARY(256)  NOT NULL,
     salt              VARBINARY(128)  NULL,
     debe_cambiar_pass BIT             NOT NULL CONSTRAINT DF_Usuario_cambiar_pass DEFAULT (0),
@@ -106,7 +106,6 @@ CREATE TABLE dbo.Usuario
 
     CONSTRAINT PK_Usuario PRIMARY KEY (id_usuario),
     CONSTRAINT UQ_Usuario_persona UNIQUE (id_persona),          -- garantiza la relación 1 a 1
-    CONSTRAINT UQ_Usuario_nombre  UNIQUE (nombre_usuario),
     CONSTRAINT FK_Usuario_Persona FOREIGN KEY (id_persona) REFERENCES dbo.Persona (id_persona),
     CONSTRAINT FK_Usuario_Perfil  FOREIGN KEY (id_perfil)  REFERENCES dbo.Perfil  (id_perfil)
 );
@@ -410,7 +409,7 @@ INSERT INTO dbo.Perfil (nombre, descripcion) VALUES
 GO
 
 -- El usuario administrador inicial lo crea la aplicación en el primer arranque
--- (clase Negocio\NegocioArranque.cs):  usuario = admin  /  contraseña = Admin.1234
+-- (clase Negocio\NegocioArranque.cs):  DNI = 00000000  /  contraseña = Admin.1234
 -- Cambiar esa contraseña después del primer ingreso.
 
 PRINT 'Base de datos TiendaUNNE creada correctamente.';

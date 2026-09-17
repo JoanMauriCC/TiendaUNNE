@@ -18,9 +18,9 @@ namespace TiendaUNNE
         private void InitializeComponent()
         {
             this.lblTitulo = new System.Windows.Forms.Label();
-            this.lblUsuario = new System.Windows.Forms.Label();
+            this.lblDni = new System.Windows.Forms.Label();
             this.lblPassword = new System.Windows.Forms.Label();
-            this.txtUsuario = new System.Windows.Forms.TextBox();
+            this.txtDni = new System.Windows.Forms.TextBox();
             this.txtPassword = new System.Windows.Forms.TextBox();
             this.btnIngresar = new System.Windows.Forms.Button();
             this.btnCancelar = new System.Windows.Forms.Button();
@@ -37,14 +37,14 @@ namespace TiendaUNNE
             this.lblTitulo.TabIndex = 0;
             this.lblTitulo.Text = "TiendaUNNE - Acceso";
             //
-            // lblUsuario
+            // lblDni
             //
-            this.lblUsuario.AutoSize = true;
-            this.lblUsuario.Location = new System.Drawing.Point(34, 78);
-            this.lblUsuario.Name = "lblUsuario";
-            this.lblUsuario.Size = new System.Drawing.Size(49, 15);
-            this.lblUsuario.TabIndex = 1;
-            this.lblUsuario.Text = "Usuario";
+            this.lblDni.AutoSize = true;
+            this.lblDni.Location = new System.Drawing.Point(34, 78);
+            this.lblDni.Name = "lblDni";
+            this.lblDni.Size = new System.Drawing.Size(29, 15);
+            this.lblDni.TabIndex = 1;
+            this.lblDni.Text = "DNI";
             //
             // lblPassword
             //
@@ -55,13 +55,14 @@ namespace TiendaUNNE
             this.lblPassword.TabIndex = 3;
             this.lblPassword.Text = "Contraseña";
             //
-            // txtUsuario
+            // txtDni
             //
-            this.txtUsuario.Location = new System.Drawing.Point(37, 96);
-            this.txtUsuario.MaxLength = 50;
-            this.txtUsuario.Name = "txtUsuario";
-            this.txtUsuario.Size = new System.Drawing.Size(280, 23);
-            this.txtUsuario.TabIndex = 2;
+            this.txtDni.Location = new System.Drawing.Point(37, 96);
+            this.txtDni.MaxLength = 20;
+            this.txtDni.Name = "txtDni";
+            this.txtDni.Size = new System.Drawing.Size(280, 23);
+            this.txtDni.TabIndex = 2;
+            this.txtDni.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtDni_KeyPress);
             //
             // txtPassword
             //
@@ -111,9 +112,9 @@ namespace TiendaUNNE
             this.Controls.Add(this.btnCancelar);
             this.Controls.Add(this.btnIngresar);
             this.Controls.Add(this.txtPassword);
-            this.Controls.Add(this.txtUsuario);
+            this.Controls.Add(this.txtDni);
             this.Controls.Add(this.lblPassword);
-            this.Controls.Add(this.lblUsuario);
+            this.Controls.Add(this.lblDni);
             this.Controls.Add(this.lblTitulo);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -129,9 +130,9 @@ namespace TiendaUNNE
         #endregion
 
         private System.Windows.Forms.Label lblTitulo;
-        private System.Windows.Forms.Label lblUsuario;
+        private System.Windows.Forms.Label lblDni;
         private System.Windows.Forms.Label lblPassword;
-        private System.Windows.Forms.TextBox txtUsuario;
+        private System.Windows.Forms.TextBox txtDni;
         private System.Windows.Forms.TextBox txtPassword;
         private System.Windows.Forms.Button btnIngresar;
         private System.Windows.Forms.Button btnCancelar;

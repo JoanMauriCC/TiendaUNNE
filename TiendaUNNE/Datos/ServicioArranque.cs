@@ -47,7 +47,7 @@ namespace TiendaUNNE
         /// </summary>
         public static int CrearAdministradorInicial(
             string dniCuit, string nombre, string apellido,
-            string nombreUsuario, int idPerfil,
+            int idPerfil,
             byte[] hash, byte[] salt, string resumenAuditoria)
         {
             using (var cn = Db.AbrirConexion())
@@ -70,8 +70,8 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                     }
 
                     const string sqlUsuario = @"
-INSERT INTO dbo.Usuario (id_persona, id_perfil, nombre_usuario, hash_password, salt, debe_cambiar_pass)
-VALUES (@id_persona, @id_perfil, @usuario, @hash, @salt, @debe_cambiar);
+INSERT INTO dbo.Usuario (id_persona, id_perfil, hash_password, salt, debe_cambiar_pass)
+VALUES (@id_persona, @id_perfil, @hash, @salt, @debe_cambiar);
 SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
                     int idUsuario;
@@ -79,7 +79,6 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                     {
                         cmd.Parameters.Add("@id_persona", SqlDbType.Int).Value = idPersona;
                         cmd.Parameters.Add("@id_perfil", SqlDbType.Int).Value = idPerfil;
-                        cmd.Parameters.Add("@usuario", SqlDbType.NVarChar, 50).Value = nombreUsuario;
                         cmd.Parameters.Add("@hash", SqlDbType.VarBinary, 256).Value = hash;
                         cmd.Parameters.Add("@salt", SqlDbType.VarBinary, 128).Value = salt;
                         cmd.Parameters.Add("@debe_cambiar", SqlDbType.Bit).Value = true;

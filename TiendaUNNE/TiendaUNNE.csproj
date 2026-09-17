@@ -85,6 +85,9 @@
     <Compile Include="Presentacion\TarjetaMenu.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Presentacion\TarjetaAccion.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Presentacion\ucReportes.cs">
       <SubType>UserControl</SubType>
     </Compile>

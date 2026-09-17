@@ -13,9 +13,9 @@ namespace TiendaUNNE
             @"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        // Acepta DNI suelto (7 a 11 dígitos) o CUIT con guiones: 20-12345678-9
-        private static readonly Regex RegexDniCuit = new Regex(
-            @"^(\d{7,11}|\d{2}-\d{7,8}-\d)$",
+        // Solo DNI (sin CUIT/guiones): es el mismo número que se usa para loguearse.
+        private static readonly Regex RegexDni = new Regex(
+            @"^\d{7,8}$",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         private static readonly Regex RegexTelefono = new Regex(
@@ -28,11 +28,6 @@ namespace TiendaUNNE
             @"^\p{L}+(?:(?: +|['\-])\p{L}+)*$",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        // Letras sin tilde, números, punto, guion y guion bajo. Sin espacios.
-        private static readonly Regex RegexNombreUsuario = new Regex(
-            @"^[A-Za-z0-9._\-]+$",
-            RegexOptions.Compiled | RegexOptions.CultureInvariant);
-
         private static readonly Regex RegexEspaciosRepetidos = new Regex(
             @" {2,}",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -43,10 +38,10 @@ namespace TiendaUNNE
             return RegexEmail.IsMatch(email.Trim());
         }
 
-        public static bool EsDniCuitValido(string dniCuit)
+        public static bool EsDniValido(string dni)
         {
-            if (string.IsNullOrWhiteSpace(dniCuit)) return false;
-            return RegexDniCuit.IsMatch(dniCuit.Trim());
+            if (string.IsNullOrWhiteSpace(dni)) return false;
+            return RegexDni.IsMatch(dni.Trim());
         }
 
         public static bool EsTelefonoValido(string telefono)
@@ -59,12 +54,6 @@ namespace TiendaUNNE
         {
             if (string.IsNullOrWhiteSpace(nombre)) return false;
             return RegexNombrePersona.IsMatch(nombre.Trim());
-        }
-
-        public static bool EsNombreUsuarioValido(string nombreUsuario)
-        {
-            if (string.IsNullOrWhiteSpace(nombreUsuario)) return false;
-            return RegexNombreUsuario.IsMatch(nombreUsuario.Trim());
         }
 
         /// <summary>Recorta los extremos y deja un solo espacio entre palabras.</summary>
@@ -82,14 +71,6 @@ namespace TiendaUNNE
         {
             return char.IsLetter(caracter) || char.IsControl(caracter)
                 || caracter == ' ' || caracter == '\'' || caracter == '-';
-        }
-
-        public static bool EsCaracterNombreUsuarioValido(char caracter)
-        {
-            return (caracter >= 'a' && caracter <= 'z')
-                || (caracter >= 'A' && caracter <= 'Z')
-                || char.IsDigit(caracter) || char.IsControl(caracter)
-                || caracter == '.' || caracter == '_' || caracter == '-';
         }
 
         /// <summary>Los mismos caracteres que acepta la Regex del teléfono.</summary>
@@ -116,10 +97,10 @@ namespace TiendaUNNE
             return char.IsDigit(caracter) || char.IsControl(caracter);
         }
 
-        /// <summary>Ídem, pero para DNI/CUIT, donde además se permite el guion.</summary>
-        public static bool EsCaracterDniCuitValido(char caracter)
+        /// <summary>Ídem, para el DNI: solo dígitos, sin guiones (no se admite CUIT).</summary>
+        public static bool EsCaracterDniValido(char caracter)
         {
-            return char.IsDigit(caracter) || char.IsControl(caracter) || caracter == '-';
+            return char.IsDigit(caracter) || char.IsControl(caracter);
         }
     }
 }

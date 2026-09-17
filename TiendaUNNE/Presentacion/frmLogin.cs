@@ -27,7 +27,7 @@ namespace TiendaUNNE
             {
                 Cursor = Cursors.WaitCursor;
 
-                NegocioAutenticacion.IniciarSesion(txtUsuario.Text, txtPassword.Text);
+                NegocioAutenticacion.IniciarSesion(txtDni.Text, txtPassword.Text);
 
                 DialogResult = DialogResult.OK;   // Program.cs abre frmPrincipal
                 Close();
@@ -46,6 +46,11 @@ namespace TiendaUNNE
             {
                 Cursor = Cursors.Default;
             }
+        }
+
+        private void txtDni_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !Validaciones.EsCaracterDniValido(e.KeyChar);
         }
 
         private void btnCancelar_Click(object sender, EventArgs e)

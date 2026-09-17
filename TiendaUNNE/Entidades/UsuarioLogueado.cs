@@ -5,7 +5,6 @@ namespace TiendaUNNE
     {
         public int IdUsuario { get; set; }
         public int IdPersona { get; set; }
-        public string NombreUsuario { get; set; }
         public string NombreCompleto { get; set; }
         public int IdPerfil { get; set; }
         public string Rol { get; set; }        // "Administrador", "Supervisor", "Cajero"

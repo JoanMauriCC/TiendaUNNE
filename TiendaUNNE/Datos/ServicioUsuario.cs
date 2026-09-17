@@ -29,7 +29,6 @@ SELECT  u.id_usuario                            AS IdUsuario,
         p.nombre                                AS Nombre,
         p.telefono                              AS Telefono,
         p.email                                 AS Email,
-        u.nombre_usuario                        AS Usuario,
         pf.nombre                               AS Perfil,
         u.activo                                AS Activo
 FROM        dbo.Usuario u
@@ -53,7 +52,7 @@ ORDER BY p.apellido, p.nombre;";
         public static UsuarioEditModel Obtener(int idUsuario)
         {
             const string sql = @"
-SELECT  u.id_usuario, u.id_persona, u.nombre_usuario, u.id_perfil,
+SELECT  u.id_usuario, u.id_persona, u.id_perfil,
         p.dni_cuit, p.nombre, p.apellido, p.direccion, p.telefono, p.email, p.fecha_nacimiento,
         pf.nombre AS perfil_nombre
 FROM        dbo.Usuario u
@@ -74,7 +73,6 @@ WHERE u.id_usuario = @id;";
                     {
                         IdUsuario = (int)dr["id_usuario"],
                         IdPersona = (int)dr["id_persona"],
-                        NombreUsuario = (string)dr["nombre_usuario"],
                         IdPerfil = (int)dr["id_perfil"],
                         NombrePerfil = (string)dr["perfil_nombre"],
                         DniCuit = (string)dr["dni_cuit"],
@@ -139,8 +137,8 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                     }
 
                     const string sqlUsuario = @"
-INSERT INTO dbo.Usuario (id_persona, id_perfil, nombre_usuario, hash_password, salt)
-VALUES (@id_persona, @id_perfil, @usuario, @hash, @salt);
+INSERT INTO dbo.Usuario (id_persona, id_perfil, hash_password, salt)
+VALUES (@id_persona, @id_perfil, @hash, @salt);
 SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
                     int idUsuario;
@@ -148,7 +146,6 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                     {
                         cmd.Parameters.Add("@id_persona", SqlDbType.Int).Value = idPersona;
                         cmd.Parameters.Add("@id_perfil", SqlDbType.Int).Value = m.IdPerfil;
-                        cmd.Parameters.Add("@usuario", SqlDbType.NVarChar, 50).Value = m.NombreUsuario;
                         cmd.Parameters.Add("@hash", SqlDbType.VarBinary, 256).Value = hash;
                         cmd.Parameters.Add("@salt", SqlDbType.VarBinary, 128).Value = salt;
                         idUsuario = (int)cmd.ExecuteScalar();
@@ -210,14 +207,13 @@ WHERE id_persona = @id_persona;";
 
                     bool cambiaPassword = hash != null && salt != null;
 
-                    string sqlUsuario = "UPDATE dbo.Usuario SET nombre_usuario = @usuario, id_perfil = @id_perfil";
+                    string sqlUsuario = "UPDATE dbo.Usuario SET id_perfil = @id_perfil";
                     if (cambiaPassword)
                         sqlUsuario += ", hash_password = @hash, salt = @salt, debe_cambiar_pass = 0";
                     sqlUsuario += " WHERE id_usuario = @id_usuario;";
 
                     using (var cmd = new SqlCommand(sqlUsuario, cn, tx))
                     {
-                        cmd.Parameters.Add("@usuario", SqlDbType.NVarChar, 50).Value = m.NombreUsuario;
                         cmd.Parameters.Add("@id_perfil", SqlDbType.Int).Value = m.IdPerfil;
                         if (cambiaPassword)
                         {

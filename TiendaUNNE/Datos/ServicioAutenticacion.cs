@@ -12,15 +12,15 @@ namespace TiendaUNNE
     public static class ServicioAutenticacion
     {
         /// <summary>
-        /// Trae las credenciales guardadas de un usuario, o null si ese nombre no existe.
+        /// Trae las credenciales guardadas del usuario cuya Persona tiene ese DNI,
+        /// o null si no existe ninguno.
         /// </summary>
-        public static CredencialesUsuario ObtenerCredenciales(string nombreUsuario)
+        public static CredencialesUsuario ObtenerCredenciales(string dni)
         {
             const string sql = @"
 SELECT  u.id_usuario,
         u.id_persona,
         u.id_perfil,
-        u.nombre_usuario,
         u.hash_password,
         u.salt,
         u.activo,
@@ -30,12 +30,12 @@ SELECT  u.id_usuario,
 FROM        dbo.Usuario u
 INNER JOIN  dbo.Persona p  ON p.id_persona = u.id_persona
 INNER JOIN  dbo.Perfil  pf ON pf.id_perfil = u.id_perfil
-WHERE u.nombre_usuario = @usuario;";
+WHERE p.dni_cuit = @dni;";
 
             using (var cn = Db.AbrirConexion())
             using (var cmd = new SqlCommand(sql, cn))
             {
-                cmd.Parameters.Add("@usuario", SqlDbType.NVarChar, 50).Value = nombreUsuario;
+                cmd.Parameters.Add("@dni", SqlDbType.NVarChar, 20).Value = dni;
 
                 using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
                 {
@@ -53,7 +53,6 @@ WHERE u.nombre_usuario = @usuario;";
                             IdUsuario = (int)dr["id_usuario"],
                             IdPersona = (int)dr["id_persona"],
                             IdPerfil = (int)dr["id_perfil"],
-                            NombreUsuario = (string)dr["nombre_usuario"],
                             NombreCompleto = (string)dr["nombre_completo"],
                             Rol = (string)dr["rol"]
                         }

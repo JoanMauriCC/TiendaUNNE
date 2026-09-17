@@ -16,12 +16,9 @@ namespace TiendaUNNE
         public const int LargoMaximoDireccion = 200;
         public const int LargoMaximoTelefono = 30;
         public const int LargoMaximoEmail = 150;
-        public const int LargoMaximoNombreUsuario = 50;
 
         /// <summary>Mínimo exigido al fijar o cambiar una contraseña.</summary>
         public const int LargoMinimoPassword = 8;
-
-        public const int LargoMinimoNombreUsuario = 3;
 
         public const int EdadMinima = 16;
 
@@ -129,21 +126,18 @@ namespace TiendaUNNE
         {
             // Obligatorios
             if (string.IsNullOrWhiteSpace(m.DniCuit))
-                throw new ReglaNegocioException("Ingresá el DNI/CUIT.");
+                throw new ReglaNegocioException("Ingresá el DNI.");
             if (string.IsNullOrWhiteSpace(m.Nombre))
                 throw new ReglaNegocioException("Ingresá el nombre.");
             if (string.IsNullOrWhiteSpace(m.Apellido))
                 throw new ReglaNegocioException("Ingresá el apellido.");
-            if (string.IsNullOrWhiteSpace(m.NombreUsuario))
-                throw new ReglaNegocioException("Ingresá el nombre de usuario.");
             if (m.IdPerfil <= 0)
                 throw new ReglaNegocioException("Elegí un perfil.");
 
             // Formato (expresiones regulares)
-            if (!Validaciones.EsDniCuitValido(m.DniCuit))
+            if (!Validaciones.EsDniValido(m.DniCuit))
                 throw new ReglaNegocioException(
-                    "El DNI/CUIT no tiene un formato válido. Usá solo números (por ej. 30123456) " +
-                    "o el formato de CUIT con guiones (por ej. 20-30123456-9).");
+                    "El DNI no tiene un formato válido. Usá solo números, sin puntos ni guiones (por ej. 30123456).");
 
             if (!Validaciones.EsNombrePersonaValido(m.Nombre))
                 throw new ReglaNegocioException(
@@ -152,14 +146,6 @@ namespace TiendaUNNE
             if (!Validaciones.EsNombrePersonaValido(m.Apellido))
                 throw new ReglaNegocioException(
                     "El apellido solo puede tener letras, espacios, apóstrofos o guiones.");
-
-            if (m.NombreUsuario.Trim().Length < LargoMinimoNombreUsuario)
-                throw new ReglaNegocioException(
-                    "El nombre de usuario debe tener al menos " + LargoMinimoNombreUsuario + " caracteres.");
-
-            if (!Validaciones.EsNombreUsuarioValido(m.NombreUsuario))
-                throw new ReglaNegocioException(
-                    "El nombre de usuario solo puede tener letras sin tilde, números, punto, guion y guion bajo, sin espacios.");
 
             if (!string.IsNullOrWhiteSpace(m.Email) && !Validaciones.EsEmailValido(m.Email))
                 throw new ReglaNegocioException("El email no tiene un formato válido.");
@@ -185,13 +171,12 @@ namespace TiendaUNNE
                     "El usuario tiene que tener al menos " + EdadMinima + " años.");
 
             // Largos máximos (coinciden con las columnas de la base)
-            ValidarLargo(m.DniCuit, LargoMaximoDniCuit, "El DNI/CUIT");
+            ValidarLargo(m.DniCuit, LargoMaximoDniCuit, "El DNI");
             ValidarLargo(m.Nombre, LargoMaximoNombre, "El nombre");
             ValidarLargo(m.Apellido, LargoMaximoApellido, "El apellido");
             ValidarLargo(m.Direccion, LargoMaximoDireccion, "La dirección");
             ValidarLargo(m.Telefono, LargoMaximoTelefono, "El teléfono");
             ValidarLargo(m.Email, LargoMaximoEmail, "El email");
-            ValidarLargo(m.NombreUsuario, LargoMaximoNombreUsuario, "El nombre de usuario");
 
             // Va al final a propósito: es la única validación que consulta la base,
             // así no se hace el viaje si algún otro campo ya estaba mal.
@@ -220,7 +205,6 @@ namespace TiendaUNNE
             m.DniCuit = m.DniCuit.Trim();
             m.Nombre = Validaciones.NormalizarEspacios(m.Nombre);
             m.Apellido = Validaciones.NormalizarEspacios(m.Apellido);
-            m.NombreUsuario = m.NombreUsuario.Trim();
 
             m.Direccion = string.IsNullOrWhiteSpace(m.Direccion) ? null : m.Direccion.Trim();
             m.Telefono = string.IsNullOrWhiteSpace(m.Telefono) ? null : m.Telefono.Trim();
@@ -237,23 +221,19 @@ namespace TiendaUNNE
         private static string Resumen(UsuarioEditModel m)
         {
             return string.Format(
-                "DNI/CUIT={0}; Nombre={1}, {2}; Dir={3}; Tel={4}; Email={5}; FNac={6}; Usuario={7}; Perfil={8}",
+                "DNI={0}; Nombre={1}, {2}; Dir={3}; Tel={4}; Email={5}; FNac={6}; Perfil={7}",
                 m.DniCuit, m.Apellido, m.Nombre,
                 string.IsNullOrWhiteSpace(m.Direccion) ? "-" : m.Direccion.Trim(),
                 string.IsNullOrWhiteSpace(m.Telefono) ? "-" : m.Telefono.Trim(),
                 string.IsNullOrWhiteSpace(m.Email) ? "-" : m.Email.Trim(),
                 m.FechaNacimiento.HasValue ? m.FechaNacimiento.Value.ToString("yyyy-MM-dd") : "-",
-                m.NombreUsuario == null ? "-" : m.NombreUsuario.Trim(),
                 m.NombrePerfil);
         }
 
         private static ReglaNegocioException TraducirDuplicado(DuplicadoException ex)
         {
             if (ex.Restriccion.IndexOf("UQ_Persona_dni_cuit", StringComparison.OrdinalIgnoreCase) >= 0)
-                return new ReglaNegocioException("Ya existe una persona registrada con ese DNI/CUIT.");
-
-            if (ex.Restriccion.IndexOf("UQ_Usuario_nombre", StringComparison.OrdinalIgnoreCase) >= 0)
-                return new ReglaNegocioException("Ya existe un usuario con ese nombre de usuario.");
+                return new ReglaNegocioException("Ya existe una persona registrada con ese DNI.");
 
             if (ex.Restriccion.IndexOf("UQ_Usuario_persona", StringComparison.OrdinalIgnoreCase) >= 0)
                 return new ReglaNegocioException("La persona seleccionada ya tiene un usuario asociado.");

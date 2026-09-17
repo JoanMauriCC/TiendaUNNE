@@ -8,12 +8,16 @@ namespace TiendaUNNE
     /// Sección de usuarios activos (Persona + Usuario + Perfil): formulario de alta/edición
     /// arriba, siempre visible, y listado abajo. Es un UserControl: se muestra dentro del
     /// panel de contenido de frmPrincipal, no en una ventana aparte.
+    /// No hay botones "Nuevo"/"Editar": seleccionar una fila de la grilla carga ese usuario
+    /// en el formulario; "Limpiar" lo deja listo para un alta.
     /// El formulario solo muestra datos y recoge lo tipeado: validar, recortar espacios,
     /// hashear la contraseña y decidir alta/edición es trabajo de NegocioUsuario.
     /// </summary>
     public partial class ucUsuarios : UserControl
     {
         private UsuarioEditModel _original;   // distinto de null = editando ese usuario
+        private bool _actualizandoGrilla;      // true mientras CargarGrilla() reacomoda la selección
+        private bool _verInactivos;            // false = activos, true = dados de baja
 
         public ucUsuarios()
         {
@@ -44,7 +48,7 @@ namespace TiendaUNNE
             cboPerfil.SelectedIndex = -1;
         }
 
-        /// <summary>Deja el formulario listo para cargar un usuario nuevo.</summary>
+        /// <summary>Deja el formulario listo para cargar un usuario nuevo y sin nada seleccionado.</summary>
         private void LimpiarFormulario()
         {
             _original = null;
@@ -59,9 +63,11 @@ namespace TiendaUNNE
             txtTelefono.Clear();
             txtEmail.Clear();
             dtpFechaNac.Checked = false;
-            txtNombreUsuario.Clear();
             txtPassword.Clear();
             cboPerfil.SelectedIndex = -1;
+
+            dgvUsuarios.ClearSelection();
+            dgvUsuarios.CurrentCell = null;
 
             txtDniCuit.Focus();
         }
@@ -91,46 +97,20 @@ namespace TiendaUNNE
                 dtpFechaNac.Checked = false;
             }
 
-            txtNombreUsuario.Text = m.NombreUsuario;
             txtPassword.Clear();
             cboPerfil.SelectedValue = m.IdPerfil;
-
-            txtDniCuit.Focus();
         }
 
-        private UsuarioEditModel ArmarModelo()
-        {
-            var perfil = cboPerfil.SelectedItem as PerfilItem;
-
-            return new UsuarioEditModel
-            {
-                IdUsuario = EsAlta ? 0 : _original.IdUsuario,
-                IdPersona = EsAlta ? 0 : _original.IdPersona,
-
-                DniCuit = txtDniCuit.Text,
-                Nombre = txtNombre.Text,
-                Apellido = txtApellido.Text,
-                Direccion = txtDireccion.Text,
-                Telefono = txtTelefono.Text,
-                Email = txtEmail.Text,
-                FechaNacimiento = dtpFechaNac.Checked ? dtpFechaNac.Value.Date : (DateTime?)null,
-
-                NombreUsuario = txtNombreUsuario.Text,
-                PasswordPlano = txtPassword.Text,   // vacío en edición = no cambiar
-                IdPerfil = perfil == null ? 0 : perfil.Id,
-                NombrePerfil = perfil == null ? null : perfil.Nombre
-            };
-        }
-
-        private void btnNuevo_Click(object sender, EventArgs e)
-        {
-            LimpiarFormulario();
-        }
-
-        private void btnEditar_Click(object sender, EventArgs e)
+        /// <summary>Trae del servidor y carga el usuario que está seleccionado en la grilla.</summary>
+        private void CargarSeleccionEnFormulario()
         {
             int? id = UsuarioSeleccionadoId();
-            if (!id.HasValue) return;
+            if (!id.HasValue)
+                return;
+
+            // Ya está cargado (p.ej. la grilla se refrescó pero la selección no cambió): no repetir el viaje.
+            if (!EsAlta && _original.IdUsuario == id.Value)
+                return;
 
             try
             {
@@ -150,6 +130,29 @@ namespace TiendaUNNE
             {
                 Cursor = Cursors.Default;
             }
+        }
+
+        private UsuarioEditModel ArmarModelo()
+        {
+            var perfil = cboPerfil.SelectedItem as PerfilItem;
+
+            return new UsuarioEditModel
+            {
+                IdUsuario = EsAlta ? 0 : _original.IdUsuario,
+                IdPersona = EsAlta ? 0 : _original.IdPersona,
+
+                DniCuit = txtDniCuit.Text,
+                Nombre = txtNombre.Text,
+                Apellido = txtApellido.Text,
+                Direccion = txtDireccion.Text,
+                Telefono = txtTelefono.Text,
+                Email = txtEmail.Text,
+                FechaNacimiento = dtpFechaNac.Checked ? dtpFechaNac.Value.Date : (DateTime?)null,
+
+                PasswordPlano = txtPassword.Text,   // vacío en edición = no cambiar
+                IdPerfil = perfil == null ? 0 : perfil.Id,
+                NombrePerfil = perfil == null ? null : perfil.Nombre
+            };
         }
 
         private void btnGuardar_Click(object sender, EventArgs e)
@@ -178,7 +181,7 @@ namespace TiendaUNNE
             }
         }
 
-        private void btnCancelar_Click(object sender, EventArgs e)
+        private void btnLimpiar_Click(object sender, EventArgs e)
         {
             LimpiarFormulario();
         }
@@ -189,7 +192,7 @@ namespace TiendaUNNE
         /// </summary>
         private void txtDniCuit_KeyPress(object sender, KeyPressEventArgs e)
         {
-            e.Handled = !Validaciones.EsCaracterDniCuitValido(e.KeyChar);
+            e.Handled = !Validaciones.EsCaracterDniValido(e.KeyChar);
         }
 
         private void txtTelefono_KeyPress(object sender, KeyPressEventArgs e)
@@ -212,11 +215,6 @@ namespace TiendaUNNE
             e.Handled = !Validaciones.EsCaracterEmailValido(e.KeyChar);
         }
 
-        private void txtNombreUsuario_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            e.Handled = !Validaciones.EsCaracterNombreUsuarioValido(e.KeyChar);
-        }
-
         // -----------------------------------------------------------------
         // Listado
         // -----------------------------------------------------------------
@@ -226,22 +224,26 @@ namespace TiendaUNNE
             try
             {
                 Cursor = Cursors.WaitCursor;
+                _actualizandoGrilla = true;
 
                 int? idSeleccionado = UsuarioSeleccionadoId();
 
-                DataTable dt = NegocioUsuario.Listar(activos: !chkVerInactivos.Checked);
+                DataTable dt = NegocioUsuario.Listar(activos: !_verInactivos);
                 dgvUsuarios.DataSource = dt;
 
                 if (dgvUsuarios.Columns.Contains("IdUsuario"))
                     dgvUsuarios.Columns["IdUsuario"].Visible = false;
 
                 AplicarEncabezados();
+                AplicarFiltroBusqueda();
 
-                // Reposiciona la selección en una celda VISIBLE (nunca sobre la columna oculta).
+                // Si había algo seleccionado (y sigue existiendo) se reselecciona; si no,
+                // la grilla queda sin selección y el formulario tal como esté.
                 if (!(idSeleccionado.HasValue && SeleccionarFilaPorId(idSeleccionado.Value)))
-                    SeleccionarPrimeraFila();
-
-                ActualizarBotones();
+                {
+                    dgvUsuarios.ClearSelection();
+                    dgvUsuarios.CurrentCell = null;
+                }
             }
             catch (Exception)
             {
@@ -250,18 +252,21 @@ namespace TiendaUNNE
             }
             finally
             {
+                _actualizandoGrilla = false;
                 Cursor = Cursors.Default;
             }
+
+            ActualizarBotones();
+            CargarSeleccionEnFormulario();
         }
 
         private void AplicarEncabezados()
         {
-            SetHeader("DniCuit", "DNI/CUIT");
+            SetHeader("DniCuit", "DNI");
             SetHeader("Apellido", "Apellido");
             SetHeader("Nombre", "Nombre");
             SetHeader("Telefono", "Teléfono");
             SetHeader("Email", "Email");
-            SetHeader("Usuario", "Usuario");
             SetHeader("Perfil", "Perfil");
             SetHeader("Activo", "Activo");
         }
@@ -272,27 +277,36 @@ namespace TiendaUNNE
                 dgvUsuarios.Columns[columna].HeaderText = texto;
         }
 
+        /// <summary>Filtra la grilla por lo tipeado en Buscar (DNI, apellido, nombre o email).</summary>
+        private void AplicarFiltroBusqueda()
+        {
+            var dt = dgvUsuarios.DataSource as DataTable;
+            if (dt == null) return;
+
+            string texto = txtBuscar.Text.Trim();
+            if (texto.Length == 0)
+            {
+                dt.DefaultView.RowFilter = string.Empty;
+                return;
+            }
+
+            string escapado = texto.Replace("'", "''");
+            dt.DefaultView.RowFilter = string.Format(
+                "DniCuit LIKE '%{0}%' OR Apellido LIKE '%{0}%' OR Nombre LIKE '%{0}%' OR Email LIKE '%{0}%'",
+                escapado);
+        }
+
+        private void txtBuscar_TextChanged(object sender, EventArgs e)
+        {
+            AplicarFiltroBusqueda();
+        }
+
         private DataGridViewColumn PrimeraColumnaVisible()
         {
             foreach (DataGridViewColumn col in dgvUsuarios.Columns)
                 if (col.Visible)
                     return col;
             return null;
-        }
-
-        private void SeleccionarPrimeraFila()
-        {
-            if (dgvUsuarios.Rows.Count == 0)
-            {
-                dgvUsuarios.ClearSelection();
-                return;
-            }
-
-            var col = PrimeraColumnaVisible();
-            dgvUsuarios.ClearSelection();
-            dgvUsuarios.Rows[0].Selected = true;
-            if (col != null)
-                dgvUsuarios.CurrentCell = dgvUsuarios.Rows[0].Cells[col.Index];
         }
 
         private bool SeleccionarFilaPorId(int idUsuario)
@@ -343,23 +357,22 @@ namespace TiendaUNNE
         {
             var drv = FilaSeleccionada() == null ? null : FilaSeleccionada().DataBoundItem as DataRowView;
             if (drv == null) return string.Empty;
-            return string.Format("{0}, {1} ({2})", drv["Apellido"], drv["Nombre"], drv["Usuario"]);
+            return string.Format("{0}, {1} (DNI {2})", drv["Apellido"], drv["Nombre"], drv["DniCuit"]);
         }
 
         private void ActualizarBotones()
         {
             bool haySeleccion = UsuarioSeleccionadoId().HasValue;
-            btnEditar.Enabled = haySeleccion;
             // Dar de baja solo tiene sentido mirando la lista de activos: un usuario
             // que ya está inactivo no se puede volver a dar de baja.
-            btnBaja.Enabled = haySeleccion && !chkVerInactivos.Checked;
+            tarjetaBaja.Enabled = haySeleccion && !_verInactivos;
         }
 
         // -----------------------------------------------------------------
         // Acciones
         // -----------------------------------------------------------------
 
-        private void btnBaja_Click(object sender, EventArgs e)
+        private void tarjetaBaja_Click(object sender, EventArgs e)
         {
             int? id = UsuarioSeleccionadoId();
             if (!id.HasValue) return;
@@ -406,34 +419,30 @@ namespace TiendaUNNE
             }
         }
 
-        private void btnActualizar_Click(object sender, EventArgs e)
+        private void tarjetaActualizar_Click(object sender, EventArgs e)
         {
             CargarGrilla();
         }
 
         /// <summary>Alterna entre ver los usuarios activos o los dados de baja.</summary>
-        private void chkVerInactivos_CheckedChanged(object sender, EventArgs e)
+        private void tarjetaVerInactivos_Click(object sender, EventArgs e)
         {
-            chkVerInactivos.Text = chkVerInactivos.Checked ? "Mostrando: Inactivos" : "Mostrando: Activos";
+            _verInactivos = !_verInactivos;
+            tarjetaVerInactivos.Activa = _verInactivos;
+            tarjetaVerInactivos.Titulo = _verInactivos ? "Mostrando: Inactivos" : "Mostrando: Activos";
+            tarjetaVerInactivos.Descripcion = _verInactivos
+                ? "Tocá para ver los activos"
+                : "Tocá para ver los dados de baja";
+            tarjetaVerInactivos.Invalidate();
             CargarGrilla();
         }
 
-        // Ambos eventos mantienen el estado de los botones: SelectionChanged cubre el
-        // cambio de fila; CellClick cubre el clic sobre la fila que ya estaba seleccionada.
         private void dgvUsuarios_SelectionChanged(object sender, EventArgs e)
         {
-            ActualizarBotones();
-        }
+            if (_actualizandoGrilla) return;   // evita recargar el formulario en medio de un refresco
 
-        private void dgvUsuarios_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
             ActualizarBotones();
-        }
-
-        private void dgvUsuarios_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex >= 0 && btnEditar.Enabled)
-                btnEditar_Click(sender, e);
+            CargarSeleccionEnFormulario();
         }
     }
 }

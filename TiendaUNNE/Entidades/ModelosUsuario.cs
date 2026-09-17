@@ -28,8 +28,7 @@ namespace TiendaUNNE
         public string Email { get; set; }
         public DateTime? FechaNacimiento { get; set; }
 
-        // Usuario
-        public string NombreUsuario { get; set; }
+        // Usuario (el login es con DniCuit; no tiene nombre propio)
         /// <summary>Contraseña en claro. En edición, vacío = no cambiarla.</summary>
         public string PasswordPlano { get; set; }
         public int IdPerfil { get; set; }
