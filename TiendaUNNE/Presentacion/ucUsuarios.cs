@@ -19,9 +19,17 @@ namespace TiendaUNNE
         private bool _actualizandoGrilla;      // true mientras CargarGrilla() reacomoda la selección
         private bool _verInactivos;            // false = activos, true = dados de baja
 
+        // Ancho fijo del riel de acciones de la derecha (Buscar + tarjetas) y el margen
+        // que se le deja antes; las 3 columnas del formulario se reparten todo lo demás.
+        private const int RailAncho = 260;
+        private const int RailMargen = 24;
+        private const int FormMargen = 12;
+        private const int FormGapColumna = 14;
+
         public ucUsuarios()
         {
             InitializeComponent();
+            panelFormulario.Resize += (s, e) => ReubicarFormulario();
         }
 
         private bool EsAlta => _original == null;
@@ -34,6 +42,61 @@ namespace TiendaUNNE
             CargarPerfiles();
             LimpiarFormulario();
             CargarGrilla();
+            ReubicarFormulario();
+        }
+
+        /// <summary>
+        /// Reparte el ancho disponible del panel: las 3 columnas del formulario crecen
+        /// parejo y el riel de acciones de la derecha queda siempre pegado al borde
+        /// derecho. Se llama al cargar y cada vez que cambia el tamaño de la ventana.
+        /// </summary>
+        private void ReubicarFormulario()
+        {
+            int anchoPanel = panelFormulario.ClientSize.Width;
+            if (anchoPanel <= 0) return;
+
+            int railX = anchoPanel - RailAncho - FormMargen;
+            int anchoForm = railX - RailMargen - FormMargen;
+            int colAncho = Math.Max(90, (anchoForm - 2 * FormGapColumna) / 3);
+
+            int col1 = FormMargen;
+            int col2 = col1 + colAncho + FormGapColumna;
+            int col3 = col2 + colAncho + FormGapColumna;
+
+            // Si la ventana es demasiado angosta, el riel no se mete debajo de la columna 3.
+            railX = Math.Max(railX, col3 + colAncho + RailMargen);
+
+            UbicarColumna(lblDniCuit, txtDniCuit, col1, colAncho);
+            UbicarColumna(lblNombre, txtNombre, col2, colAncho);
+            UbicarColumna(lblApellido, txtApellido, col3, colAncho);
+
+            UbicarColumna(lblDireccion, txtDireccion, col1, colAncho);
+            UbicarColumna(lblTelefono, txtTelefono, col2, colAncho);
+            UbicarColumna(lblEmail, txtEmail, col3, colAncho);
+
+            UbicarColumna(lblFechaNac, dtpFechaNac, col1, colAncho);
+            UbicarColumna(lblPassword, txtPassword, col2, colAncho);
+            UbicarColumna(lblPerfil, cboPerfil, col3, colAncho);
+
+            lblPasswordAyuda.Left = col2;
+
+            int anchoBotones = btnGuardar.Width + 6 + btnLimpiar.Width;
+            int xBotones = col2 + (colAncho - anchoBotones) / 2;
+            btnGuardar.Left = xBotones;
+            btnLimpiar.Left = xBotones + btnGuardar.Width + 6;
+
+            lblBuscar.Left = railX;
+            txtBuscar.Left = railX;
+            tarjetaVerInactivos.Left = railX;
+            tarjetaBaja.Left = railX;
+            tarjetaActualizar.Left = railX;
+        }
+
+        private static void UbicarColumna(Label etiqueta, Control campo, int x, int ancho)
+        {
+            etiqueta.Left = x;
+            campo.Left = x;
+            campo.Width = ancho;
         }
 
         // -----------------------------------------------------------------
