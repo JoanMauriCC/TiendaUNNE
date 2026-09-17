@@ -119,6 +119,22 @@ namespace TiendaUNNE
         }
 
         // ---------------------------------------------------------------------
+        // Reactivación
+        // ---------------------------------------------------------------------
+
+        public static void DarDeAlta(int idUsuario, int idUsuarioSesion)
+        {
+            var anterior = ServicioUsuario.Obtener(idUsuario);
+            if (anterior == null)
+                throw new ReglaNegocioException("El usuario ya no existe.");
+
+            int filas = ServicioUsuario.DarDeAlta(idUsuario, idUsuarioSesion, Resumen(anterior));
+
+            if (filas == 0)
+                throw new ReglaNegocioException("El usuario ya estaba activo.");
+        }
+
+        // ---------------------------------------------------------------------
         // Validación y normalización
         // ---------------------------------------------------------------------
 

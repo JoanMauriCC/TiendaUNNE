@@ -10,6 +10,7 @@ namespace TiendaUNNE
     {
         Ver,
         Baja,
+        Alta,
         Actualizar
     }
 
@@ -117,6 +118,17 @@ namespace TiendaUNNE
                         g.DrawArc(pen, r.X, r.Y + 9, 20, 16, 180, 180);
                         g.DrawLine(pen, r.X + 15, r.Y + 15, r.X + 22, r.Y + 22);
                         g.DrawLine(pen, r.X + 22, r.Y + 15, r.X + 15, r.Y + 22);
+                        break;
+
+                    case IconoAccion.Alta:
+                        g.DrawEllipse(pen, r.X + 5, r.Y + 1, 10, 10);
+                        g.DrawArc(pen, r.X, r.Y + 9, 20, 16, 180, 180);
+                        g.DrawLines(pen, new[]
+                        {
+                            new Point(r.X + 14, r.Y + 19),
+                            new Point(r.X + 18, r.Y + 23),
+                            new Point(r.X + 24, r.Y + 14)
+                        });
                         break;
 
                     case IconoAccion.Actualizar:

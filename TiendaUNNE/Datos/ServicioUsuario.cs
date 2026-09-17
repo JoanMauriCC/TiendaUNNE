@@ -288,6 +288,46 @@ WHERE id_persona = @id_persona;";
             }
         }
 
+        /// <summary>
+        /// Reactivación: UPDATE Usuario SET activo = 1 + Auditoria (MODIFICACION). Persona.activo
+        /// NO se toca. Devuelve la cantidad de filas afectadas; 0 significa que ya estaba activo.
+        /// </summary>
+        public static int DarDeAlta(int idUsuario, int idUsuarioSesion, string resumenAnterior)
+        {
+            using (var cn = Db.AbrirConexion())
+            using (var tx = cn.BeginTransaction())
+            {
+                try
+                {
+                    int filas;
+                    using (var cmd = new SqlCommand(
+                        "UPDATE dbo.Usuario SET activo = 1 WHERE id_usuario = @id AND activo = 0;", cn, tx))
+                    {
+                        cmd.Parameters.Add("@id", SqlDbType.Int).Value = idUsuario;
+                        filas = cmd.ExecuteNonQuery();
+                    }
+
+                    if (filas > 0)
+                    {
+                        ServicioAuditoria.Registrar(
+                            "MODIFICACION", "Usuario", idUsuario,
+                            valorAnterior: resumenAnterior,
+                            valorNuevo: "activo = 1 (reactivado)",
+                            idUsuario: idUsuarioSesion,
+                            cn: cn, tx: tx);
+                    }
+
+                    tx.Commit();
+                    return filas;
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
+                }
+            }
+        }
+
         // ---------------------------------------------------------------------
         // Auxiliares
         // ---------------------------------------------------------------------

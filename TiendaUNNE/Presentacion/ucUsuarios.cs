@@ -41,6 +41,7 @@ namespace TiendaUNNE
 
             CargarPerfiles();
             LimpiarFormulario();
+            ActualizarTarjetaBaja();
             CargarGrilla();
             ReubicarFormulario();
         }
@@ -426,9 +427,25 @@ namespace TiendaUNNE
         private void ActualizarBotones()
         {
             bool haySeleccion = UsuarioSeleccionadoId().HasValue;
-            // Dar de baja solo tiene sentido mirando la lista de activos: un usuario
-            // que ya está inactivo no se puede volver a dar de baja.
-            tarjetaBaja.Enabled = haySeleccion && !_verInactivos;
+            tarjetaBaja.Enabled = haySeleccion;
+        }
+
+        /// <summary>Pone la tarjeta en modo "Dar de baja" o "Dar de alta" según lo que se está viendo.</summary>
+        private void ActualizarTarjetaBaja()
+        {
+            if (_verInactivos)
+            {
+                tarjetaBaja.Icono = IconoAccion.Alta;
+                tarjetaBaja.Titulo = "Dar de alta";
+                tarjetaBaja.Descripcion = "Reactiva al usuario seleccionado";
+            }
+            else
+            {
+                tarjetaBaja.Icono = IconoAccion.Baja;
+                tarjetaBaja.Titulo = "Dar de baja";
+                tarjetaBaja.Descripcion = "Al usuario seleccionado";
+            }
+            tarjetaBaja.Invalidate();
         }
 
         // -----------------------------------------------------------------
@@ -436,6 +453,14 @@ namespace TiendaUNNE
         // -----------------------------------------------------------------
 
         private void tarjetaBaja_Click(object sender, EventArgs e)
+        {
+            if (_verInactivos)
+                DarDeAlta();
+            else
+                DarDeBaja();
+        }
+
+        private void DarDeBaja()
         {
             int? id = UsuarioSeleccionadoId();
             if (!id.HasValue) return;
@@ -482,6 +507,40 @@ namespace TiendaUNNE
             }
         }
 
+        private void DarDeAlta()
+        {
+            int? id = UsuarioSeleccionadoId();
+            if (!id.HasValue) return;
+
+            var r = MessageBox.Show(
+                "¿Reactivar a " + UsuarioSeleccionadoDescripcion() + "?",
+                "Confirmar alta", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+                MessageBoxDefaultButton.Button2);
+
+            if (r != DialogResult.Yes) return;
+
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                NegocioUsuario.DarDeAlta(id.Value, SesionActual.Usuario.IdUsuario);
+                CargarGrilla();
+            }
+            catch (ReglaNegocioException ex)
+            {
+                MessageBox.Show(ex.Message, "No se pudo dar de alta",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("No se pudo dar de alta el usuario.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
+        }
+
         private void tarjetaActualizar_Click(object sender, EventArgs e)
         {
             CargarGrilla();
@@ -497,6 +556,7 @@ namespace TiendaUNNE
                 ? "Tocá para ver los activos"
                 : "Tocá para ver los dados de baja";
             tarjetaVerInactivos.Invalidate();
+            ActualizarTarjetaBaja();
             CargarGrilla();
         }
 
