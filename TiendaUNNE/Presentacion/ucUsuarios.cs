@@ -130,9 +130,17 @@ namespace TiendaUNNE
             txtPassword.Clear();
             cboPerfil.SelectedIndex = -1;
 
+            // ClearSelection() sola no borra CurrentRow: entre esta línea y la siguiente,
+            // la grilla dispararía SelectionChanged todavía "viendo" la fila vieja, y como
+            // _original ya es null en ese instante, CargarSeleccionEnFormulario la volvería
+            // a cargar y pisaría el vaciado que acabamos de hacer. Se suprime ese evento
+            // intermedio con la misma bandera que usa CargarGrilla().
+            _actualizandoGrilla = true;
             dgvUsuarios.ClearSelection();
             dgvUsuarios.CurrentCell = null;
+            _actualizandoGrilla = false;
 
+            ActualizarBotones();
             txtDniCuit.Focus();
         }
 
