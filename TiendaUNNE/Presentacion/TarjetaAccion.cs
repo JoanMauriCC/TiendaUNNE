@@ -11,6 +11,8 @@ namespace TiendaUNNE
         Ver,
         Baja,
         Alta,
+        BajaProducto,
+        AltaProducto,
         Actualizar
     }
 
@@ -100,6 +102,18 @@ namespace TiendaUNNE
             }
         }
 
+        /// <summary>Caja de producto en la esquina superior izquierda, para dejar lugar a la X o el tilde.</summary>
+        private static void DibujarCaja(Graphics g, Pen pen, Rectangle r)
+        {
+            var caja = new Rectangle(r.X + 1, r.Y + 5, 14, 12);
+            g.DrawRectangle(pen, caja);
+            g.DrawLine(pen, caja.Left, caja.Top + 4, caja.Right, caja.Top + 4);
+            g.DrawLine(pen, caja.Left + 7, caja.Top, caja.Left + 7, caja.Top + 4);
+            g.DrawLine(pen, caja.Left, caja.Top, caja.Left + 3, r.Y + 1);
+            g.DrawLine(pen, caja.Right, caja.Top, caja.Right - 3, r.Y + 1);
+            g.DrawLine(pen, caja.Left + 3, r.Y + 1, caja.Right - 3, r.Y + 1);
+        }
+
         private void DibujarIcono(Graphics g, Rectangle r, Color color)
         {
             using (var pen = new Pen(color, 1.8f) { LineJoin = LineJoin.Round, StartCap = LineCap.Round, EndCap = LineCap.Round })
@@ -123,6 +137,22 @@ namespace TiendaUNNE
                     case IconoAccion.Alta:
                         g.DrawEllipse(pen, r.X + 5, r.Y + 1, 10, 10);
                         g.DrawArc(pen, r.X, r.Y + 9, 20, 16, 180, 180);
+                        g.DrawLines(pen, new[]
+                        {
+                            new Point(r.X + 14, r.Y + 19),
+                            new Point(r.X + 18, r.Y + 23),
+                            new Point(r.X + 24, r.Y + 14)
+                        });
+                        break;
+
+                    case IconoAccion.BajaProducto:
+                        DibujarCaja(g, pen, r);
+                        g.DrawLine(pen, r.X + 15, r.Y + 15, r.X + 22, r.Y + 22);
+                        g.DrawLine(pen, r.X + 22, r.Y + 15, r.X + 15, r.Y + 22);
+                        break;
+
+                    case IconoAccion.AltaProducto:
+                        DibujarCaja(g, pen, r);
                         g.DrawLines(pen, new[]
                         {
                             new Point(r.X + 14, r.Y + 19),

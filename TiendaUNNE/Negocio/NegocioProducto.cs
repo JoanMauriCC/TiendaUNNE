@@ -16,6 +16,9 @@ namespace TiendaUNNE
 
         public const decimal PrecioMinimo = 0m;
         public const decimal PrecioMaximo = 1000000000m;
+
+        // Rango permitido para cualquier cantidad de stock (incluido el stock mínimo de aviso).
+        // No confundir con ProductoEditModel.StockMinimo, que es el umbral de "stock bajo".
         public const decimal StockMinimo = 0m;
         public const decimal StockMaximo = 1000000000m;
 
@@ -27,7 +30,38 @@ namespace TiendaUNNE
         // Consultas
         // ---------------------------------------------------------------------
 
-        public static DataTable ListarParaGrilla() => ServicioProducto.ListarParaGrilla();
+        /// <summary>Texto de la columna Estado cuando el stock alcanzó el mínimo.</summary>
+        public const string EstadoStockBajo = "Stock bajo";
+
+        /// <summary>Texto de la columna Estado cuando el stock se agotó.</summary>
+        public const string EstadoSinStock = "Sin stock";
+
+        /// <summary>
+        /// Productos activos o dados de baja, según <paramref name="activos"/>. Le agrega
+        /// la columna Estado ("Sin stock", "Stock bajo" o vacío) que usa la grilla para
+        /// el semáforo, así la pantalla no decide qué significa cada nivel.
+        /// </summary>
+        public static DataTable Listar(bool activos)
+        {
+            DataTable dt = ServicioProducto.Listar(activos);
+
+            dt.Columns.Add("Estado", typeof(string));
+            foreach (DataRow fila in dt.Rows)
+                fila["Estado"] = EstadoDeStock((decimal)fila["Stock"], (decimal)fila["StockMinimo"]);
+
+            return dt;
+        }
+
+        /// <summary>
+        /// Sin stock si no queda nada; stock bajo si quedan como mucho las unidades del
+        /// mínimo; vacío si está bien. Un mínimo en 0 significa "no avisar por stock bajo".
+        /// </summary>
+        public static string EstadoDeStock(decimal stock, decimal stockMinimo)
+        {
+            if (stock <= 0) return EstadoSinStock;
+            if (stock <= stockMinimo) return EstadoStockBajo;
+            return string.Empty;
+        }
 
         public static ProductoEditModel ObtenerParaEdicion(int idProducto)
         {
@@ -87,6 +121,22 @@ namespace TiendaUNNE
         }
 
         // ---------------------------------------------------------------------
+        // Reactivación
+        // ---------------------------------------------------------------------
+
+        public static void DarDeAlta(int idProducto, int idUsuarioSesion)
+        {
+            var anterior = ServicioProducto.Obtener(idProducto);
+            if (anterior == null)
+                throw new ReglaNegocioException("El producto ya no existe.");
+
+            int filas = ServicioProducto.DarDeAlta(idProducto, idUsuarioSesion, Resumen(anterior));
+
+            if (filas == 0)
+                throw new ReglaNegocioException("El producto ya estaba activo.");
+        }
+
+        // ---------------------------------------------------------------------
         // Validación, normalización y acotado
         // ---------------------------------------------------------------------
 
@@ -107,14 +157,14 @@ namespace TiendaUNNE
             if (m.IdCategoria <= 0)
                 throw new ReglaNegocioException("Elegí una categoría.");
 
-            if (m.PrecioVenta < PrecioMinimo || m.Stock < StockMinimo)
-                throw new ReglaNegocioException("El precio de venta y el stock no pueden ser negativos.");
+            if (m.PrecioVenta < PrecioMinimo || m.Stock < StockMinimo || m.StockMinimo < StockMinimo)
+                throw new ReglaNegocioException("El precio, el stock y el stock mínimo no pueden ser negativos.");
 
             if (m.PrecioVenta > PrecioMaximo)
                 throw new ReglaNegocioException("El precio de venta supera el máximo permitido.");
 
-            if (m.Stock > StockMaximo)
-                throw new ReglaNegocioException("El stock supera el máximo permitido.");
+            if (m.Stock > StockMaximo || m.StockMinimo > StockMaximo)
+                throw new ReglaNegocioException("El stock o el stock mínimo supera el máximo permitido.");
         }
 
         private static void Normalizar(ProductoEditModel m)
@@ -146,11 +196,11 @@ namespace TiendaUNNE
         private static string Resumen(ProductoEditModel m)
         {
             return string.Format(CultureInfo.InvariantCulture,
-                "Nombre={0}; Categoría={1}; Desc={2}; PVenta={3}; Stock={4}",
+                "Nombre={0}; Categoría={1}; Desc={2}; PVenta={3}; Stock={4}; StockMin={5}",
                 m.Nombre == null ? "-" : m.Nombre.Trim(),
                 string.IsNullOrWhiteSpace(m.NombreCategoria) ? ("id " + m.IdCategoria) : m.NombreCategoria,
                 string.IsNullOrWhiteSpace(m.Descripcion) ? "-" : m.Descripcion.Trim(),
-                m.PrecioVenta, m.Stock);
+                m.PrecioVenta, m.Stock, m.StockMinimo);
         }
 
         private static ReglaNegocioException TraducirDuplicado(DuplicadoException ex)

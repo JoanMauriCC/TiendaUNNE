@@ -183,11 +183,13 @@ CREATE TABLE dbo.Producto
     descripcion     NVARCHAR(500)   NULL,
     precio_venta    DECIMAL(12,2)   NOT NULL CONSTRAINT DF_Producto_precio_venta DEFAULT (0),
     stock           DECIMAL(12,3)   NOT NULL CONSTRAINT DF_Producto_stock DEFAULT (0),
+    stock_minimo    DECIMAL(12,3)   NOT NULL CONSTRAINT DF_Producto_stock_minimo DEFAULT (0),  -- umbral de "stock bajo"
     activo          BIT             NOT NULL CONSTRAINT DF_Producto_activo DEFAULT (1),
 
     CONSTRAINT PK_Producto PRIMARY KEY (id_producto),
     CONSTRAINT FK_Producto_Categoria FOREIGN KEY (id_categoria) REFERENCES dbo.Categoria (id_categoria),
-    CONSTRAINT CK_Producto_precio_venta CHECK (precio_venta >= 0)
+    CONSTRAINT CK_Producto_precio_venta CHECK (precio_venta >= 0),
+    CONSTRAINT CK_Producto_stock_minimo CHECK (stock_minimo >= 0)
 );
 GO
 

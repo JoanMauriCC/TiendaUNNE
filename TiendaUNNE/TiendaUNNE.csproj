@@ -148,12 +148,6 @@
     <Compile Include="Presentacion\ucProductos.Designer.cs">
       <DependentUpon>ucProductos.cs</DependentUpon>
     </Compile>
-    <Compile Include="Presentacion\frmProductoEditor.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Presentacion\frmProductoEditor.Designer.cs">
-      <DependentUpon>frmProductoEditor.cs</DependentUpon>
-    </Compile>
     <Compile Include="Presentacion\ucAuditoria.cs">
       <SubType>UserControl</SubType>
     </Compile>
