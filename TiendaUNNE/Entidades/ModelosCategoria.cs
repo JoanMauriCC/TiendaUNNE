@@ -9,7 +9,7 @@ namespace TiendaUNNE
     }
 
     /// <summary>
-    /// Datos de una categoría que viajan entre frmCategoriaEditor y ServicioCategoria.
+    /// Datos de una categoría que viajan entre ucCategorias y ServicioCategoria.
     /// <see cref="IdCategoria"/> == 0 indica ALTA; distinto de 0 indica EDICIÓN.
     /// </summary>
     public sealed class CategoriaEditModel

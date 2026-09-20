@@ -16,22 +16,32 @@ namespace TiendaUNNE
         // Consultas
         // ---------------------------------------------------------------------
 
-        /// <summary>Listado para la grilla de frmCategorias (categorías activas).</summary>
-        public static DataTable ListarParaGrilla()
+        /// <summary>
+        /// Listado para la grilla, filtrado por estado: <paramref name="activas"/> en true trae
+        /// las activas; en false, las dadas de baja. Incluye cuántos productos activos tiene
+        /// cada categoría (dato calculado, no se guarda).
+        /// </summary>
+        public static DataTable Listar(bool activas)
         {
             const string sql = @"
-SELECT  id_categoria AS IdCategoria,
-        nombre       AS Nombre,
-        descripcion  AS Descripcion,
-        activo       AS Activo
-FROM   dbo.Categoria
-WHERE  activo = 1
-ORDER BY nombre;";
+SELECT  c.id_categoria AS IdCategoria,
+        c.nombre       AS Nombre,
+        c.descripcion  AS Descripcion,
+        (SELECT COUNT(*) FROM dbo.Producto p
+          WHERE p.id_categoria = c.id_categoria AND p.activo = 1) AS Productos,
+        c.activo       AS Activo
+FROM   dbo.Categoria c
+WHERE  c.activo = @activo
+ORDER BY c.nombre;";
 
             var dt = new DataTable();
             using (var cn = Db.AbrirConexion())
-            using (var da = new SqlDataAdapter(sql, cn))
-                da.Fill(dt);
+            using (var cmd = new SqlCommand(sql, cn))
+            {
+                cmd.Parameters.Add("@activo", SqlDbType.Bit).Value = activas;
+                using (var da = new SqlDataAdapter(cmd))
+                    da.Fill(dt);
+            }
             return dt;
         }
 
@@ -204,6 +214,46 @@ WHERE id_categoria = @id;";
                             "BAJA", "Categoria", idCategoria,
                             valorAnterior: resumenAnterior,
                             valorNuevo: "activo = 0 (baja lógica)",
+                            idUsuario: idUsuarioSesion,
+                            cn: cn, tx: tx);
+                    }
+
+                    tx.Commit();
+                    return filas;
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reactivación: UPDATE Categoria SET activo = 1 + Auditoria (MODIFICACION).
+        /// Devuelve la cantidad de filas afectadas; 0 significa que ya estaba activa.
+        /// </summary>
+        public static int DarDeAlta(int idCategoria, int idUsuarioSesion, string resumenAnterior)
+        {
+            using (var cn = Db.AbrirConexion())
+            using (var tx = cn.BeginTransaction())
+            {
+                try
+                {
+                    int filas;
+                    using (var cmd = new SqlCommand(
+                        "UPDATE dbo.Categoria SET activo = 1 WHERE id_categoria = @id AND activo = 0;", cn, tx))
+                    {
+                        cmd.Parameters.Add("@id", SqlDbType.Int).Value = idCategoria;
+                        filas = cmd.ExecuteNonQuery();
+                    }
+
+                    if (filas > 0)
+                    {
+                        ServicioAuditoria.Registrar(
+                            "MODIFICACION", "Categoria", idCategoria,
+                            valorAnterior: resumenAnterior,
+                            valorNuevo: "activo = 1 (reactivada)",
                             idUsuario: idUsuarioSesion,
                             cn: cn, tx: tx);
                     }

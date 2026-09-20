@@ -18,7 +18,8 @@ namespace TiendaUNNE
         // Consultas
         // ---------------------------------------------------------------------
 
-        public static DataTable ListarParaGrilla() => ServicioCategoria.ListarParaGrilla();
+        /// <summary>Categorías activas o dadas de baja, según <paramref name="activas"/>.</summary>
+        public static DataTable Listar(bool activas) => ServicioCategoria.Listar(activas);
 
         public static List<CategoriaItem> ListarActivas() => ServicioCategoria.ListarActivas();
 
@@ -81,6 +82,22 @@ namespace TiendaUNNE
 
             if (filas == 0)
                 throw new ReglaNegocioException("La categoría ya estaba dada de baja o no existe.");
+        }
+
+        // ---------------------------------------------------------------------
+        // Reactivación
+        // ---------------------------------------------------------------------
+
+        public static void DarDeAlta(int idCategoria, int idUsuarioSesion)
+        {
+            var anterior = ServicioCategoria.Obtener(idCategoria);
+            if (anterior == null)
+                throw new ReglaNegocioException("La categoría ya no existe.");
+
+            int filas = ServicioCategoria.DarDeAlta(idCategoria, idUsuarioSesion, Resumen(anterior));
+
+            if (filas == 0)
+                throw new ReglaNegocioException("La categoría ya estaba activa.");
         }
 
         // ---------------------------------------------------------------------
