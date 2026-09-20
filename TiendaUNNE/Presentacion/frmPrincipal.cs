@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace TiendaUNNE
@@ -33,6 +34,27 @@ namespace TiendaUNNE
 
             ConstruirMenu();
             MostrarSeccion(OpcionMenu.Inicio);
+
+            // Al entrar, el foco arranca en la primera tarjeta para poder usar las flechas
+            // enseguida, sin tener que tocar Tab antes.
+            TarjetaMenu primera = panelHost.Controls.Count == 0 ? null : PrimeraTarjeta(panelHost);
+            if (primera != null)
+                ActiveControl = primera;
+        }
+
+        private static TarjetaMenu PrimeraTarjeta(Control raiz)
+        {
+            foreach (Control hijo in raiz.Controls)
+            {
+                var tarjeta = hijo as TarjetaMenu;
+                if (tarjeta != null && tarjeta.Habilitada)
+                    return tarjeta;
+
+                tarjeta = PrimeraTarjeta(hijo);
+                if (tarjeta != null)
+                    return tarjeta;
+            }
+            return null;
         }
 
         // -----------------------------------------------------------------
@@ -254,6 +276,74 @@ namespace TiendaUNNE
                 tarjeta.Click += (s, e) => MostrarSeccion(opcion);
 
             contenedor.Controls.Add(tarjeta);
+        }
+
+        // -----------------------------------------------------------------
+        // Teclado en el dashboard: flechas para moverse entre tarjetas, Enter para abrir
+        // -----------------------------------------------------------------
+
+        /// <summary>
+        /// Se intercepta acá y no en la tarjeta porque Windows procesa las flechas y Enter
+        /// como teclas de diálogo antes de que el control llegue a verlas.
+        /// </summary>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            var tarjeta = ActiveControl as TarjetaMenu;
+            if (tarjeta != null && ManejarTeclaEnTarjeta(tarjeta, keyData))
+                return true;
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        private static bool ManejarTeclaEnTarjeta(TarjetaMenu actual, Keys tecla)
+        {
+            if (tecla == Keys.Enter || tecla == Keys.Space)
+            {
+                actual.Activar();
+                return true;
+            }
+
+            if (tecla != Keys.Left && tecla != Keys.Right && tecla != Keys.Up && tecla != Keys.Down)
+                return false;
+
+            List<TarjetaMenu> tarjetas = actual.Parent.Controls
+                .OfType<TarjetaMenu>()
+                .Where(t => t.Habilitada)
+                .OrderBy(t => t.Top).ThenBy(t => t.Left)
+                .ToList();
+
+            int indice = tarjetas.IndexOf(actual);
+            TarjetaMenu destino = null;
+
+            if (tecla == Keys.Left)
+                destino = indice > 0 ? tarjetas[indice - 1] : null;
+            else if (tecla == Keys.Right)
+                destino = indice < tarjetas.Count - 1 ? tarjetas[indice + 1] : null;
+            else
+                destino = TarjetaEnFilaVecina(tarjetas, actual, hacia: tecla == Keys.Up ? -1 : 1);
+
+            if (destino != null)
+                destino.Focus();
+
+            return true;   // aunque no haya destino: que la flecha no mueva el foco a otro lado
+        }
+
+        /// <summary>Tarjeta de la fila de arriba (-1) o de abajo (1) más alineada con la actual.</summary>
+        private static TarjetaMenu TarjetaEnFilaVecina(List<TarjetaMenu> tarjetas, TarjetaMenu actual, int hacia)
+        {
+            IEnumerable<TarjetaMenu> otras = hacia < 0
+                ? tarjetas.Where(t => t.Top < actual.Top)
+                : tarjetas.Where(t => t.Top > actual.Top);
+
+            if (!otras.Any())
+                return null;
+
+            int filaVecina = hacia < 0 ? otras.Max(t => t.Top) : otras.Min(t => t.Top);
+
+            return otras
+                .Where(t => t.Top == filaVecina)
+                .OrderBy(t => Math.Abs(t.Left - actual.Left))
+                .First();
         }
 
         private void btnCerrarSesion_Click(object sender, EventArgs e)

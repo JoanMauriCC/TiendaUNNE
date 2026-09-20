@@ -37,8 +37,31 @@ namespace TiendaUNNE
             Size = new Size(266, 168);
             Margin = new Padding(14);
             Cursor = Cursors.Hand;
-            SetStyle(ControlStyles.ResizeRedraw | ControlStyles.OptimizedDoubleBuffer | ControlStyles.SupportsTransparentBackColor, true);
+            // Selectable + TabStop: un Panel común no puede recibir el foco del teclado,
+            // así que sin esto las tarjetas solo se podrían usar con el mouse.
+            SetStyle(ControlStyles.ResizeRedraw | ControlStyles.OptimizedDoubleBuffer
+                     | ControlStyles.SupportsTransparentBackColor | ControlStyles.Selectable, true);
+            TabStop = true;
             BackColor = Color.Transparent;
+        }
+
+        /// <summary>Equivale a hacer clic en la tarjeta; lo usa el teclado (Enter o barra espaciadora).</summary>
+        public void Activar()
+        {
+            if (_habilitada)
+                OnClick(EventArgs.Empty);
+        }
+
+        protected override void OnGotFocus(EventArgs e)
+        {
+            Invalidate();
+            base.OnGotFocus(e);
+        }
+
+        protected override void OnLostFocus(EventArgs e)
+        {
+            Invalidate();
+            base.OnLostFocus(e);
         }
 
         public IconoTarjeta Icono { get; set; }
@@ -52,6 +75,7 @@ namespace TiendaUNNE
             {
                 _habilitada = value;
                 Cursor = value ? Cursors.Hand : Cursors.Default;
+                TabStop = value;   // una tarjeta deshabilitada se saltea con el teclado
                 Invalidate();
             }
         }
@@ -133,7 +157,10 @@ namespace TiendaUNNE
                     g.FillRectangle(b, 0, 0, 5, Height);
                 g.Clip = clipOriginal;
 
-                using (var p = new Pen(_hover && _habilitada ? acento : Color.FromArgb(228, 230, 234)))
+                // Con el teclado se necesita ver dónde está el foco: contorno de color y más grueso.
+                bool enfocada = Focused && _habilitada;
+                Color colorBorde = (_hover && _habilitada) || enfocada ? acento : Color.FromArgb(228, 230, 234);
+                using (var p = new Pen(colorBorde, enfocada ? 2f : 1f))
                     g.DrawPath(p, fondoCard);
             }
 
