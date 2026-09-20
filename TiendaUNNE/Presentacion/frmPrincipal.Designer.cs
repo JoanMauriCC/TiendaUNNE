@@ -186,6 +186,7 @@ namespace TiendaUNNE
             this.MinimumSize = new System.Drawing.Size(880, 600);
             this.Name = "frmPrincipal";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Text = "TiendaUNNE";
             this.Load += new System.EventHandler(this.frmPrincipal_Load);
             this.panelLateral.ResumeLayout(false);
