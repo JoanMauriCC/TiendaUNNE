@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <!-- ================= Capa Entidades ================= -->
+    <Compile Include="Entidades\CampoUsuario.cs" />
     <Compile Include="Entidades\CredencialesUsuario.cs" />
     <Compile Include="Entidades\ModelosCaja.cs" />
     <Compile Include="Entidades\ModelosCategoria.cs" />
@@ -67,6 +68,7 @@
     <Compile Include="Datos\ServicioProducto.cs" />
     <Compile Include="Datos\ServicioUsuario.cs" />
     <!-- ================= Capa Negocio ================= -->
+    <Compile Include="Negocio\CamposIncompletosException.cs" />
     <Compile Include="Negocio\NegocioArranque.cs" />
     <Compile Include="Negocio\NegocioAuditoria.cs" />
     <Compile Include="Negocio\NegocioAutenticacion.cs" />

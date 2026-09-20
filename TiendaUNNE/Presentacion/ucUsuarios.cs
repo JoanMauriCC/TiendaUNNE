@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace TiendaUNNE
@@ -25,11 +27,88 @@ namespace TiendaUNNE
         private const int RailMargen = 24;
         private const int FormMargen = 12;
         private const int FormGapColumna = 14;
+        private const int BotonesSeparacion = 8;
+
+        // Colores del título: neutro para un alta, ámbar para avisar que se está
+        // modificando algo que ya existe.
+        private static readonly System.Drawing.Color ColorTituloAlta =
+            System.Drawing.Color.FromArgb(45, 48, 54);
+        private static readonly System.Drawing.Color ColorTituloEdicion =
+            System.Drawing.Color.FromArgb(217, 119, 6);
+
+        // Campos que Negocio dijo que faltaban: se les dibuja un contorno rojo hasta que
+        // la persona empieza a completarlos.
+        private readonly HashSet<Control> _camposIncompletos = new HashSet<Control>();
+        private static readonly Color ColorCampoIncompleto = Color.FromArgb(220, 38, 38);
 
         public ucUsuarios()
         {
             InitializeComponent();
             panelFormulario.Resize += (s, e) => ReubicarFormulario();
+            panelFormulario.Paint += panelFormulario_Paint;
+
+            txtDniCuit.TextChanged += CampoModificado;
+            txtNombre.TextChanged += CampoModificado;
+            txtApellido.TextChanged += CampoModificado;
+            txtPassword.TextChanged += CampoModificado;
+            cboPerfil.SelectedIndexChanged += CampoModificado;
+        }
+
+        // -----------------------------------------------------------------
+        // Campos incompletos: contorno rojo
+        // -----------------------------------------------------------------
+
+        /// <summary>A qué control del formulario corresponde cada campo que señala Negocio.</summary>
+        private Control ControlDeCampo(CampoUsuario campo)
+        {
+            switch (campo)
+            {
+                case CampoUsuario.Dni: return txtDniCuit;
+                case CampoUsuario.Nombre: return txtNombre;
+                case CampoUsuario.Apellido: return txtApellido;
+                case CampoUsuario.Perfil: return cboPerfil;
+                default: return txtPassword;
+            }
+        }
+
+        private void MarcarCamposIncompletos(IReadOnlyList<CampoUsuario> campos)
+        {
+            _camposIncompletos.Clear();
+            foreach (CampoUsuario campo in campos)
+                _camposIncompletos.Add(ControlDeCampo(campo));
+
+            panelFormulario.Invalidate();
+            panelFormulario.Update();   // que el rojo se vea ya, detrás del cartel
+        }
+
+        private void QuitarMarcasDeCampos()
+        {
+            if (_camposIncompletos.Count == 0) return;
+
+            _camposIncompletos.Clear();
+            panelFormulario.Invalidate();
+        }
+
+        /// <summary>Apenas se toca un campo marcado, deja de estar en rojo.</summary>
+        private void CampoModificado(object sender, EventArgs e)
+        {
+            if (_camposIncompletos.Remove((Control)sender))
+                panelFormulario.Invalidate();
+        }
+
+        private void panelFormulario_Paint(object sender, PaintEventArgs e)
+        {
+            if (_camposIncompletos.Count == 0) return;
+
+            using (var lapiz = new Pen(ColorCampoIncompleto, 2f))
+            {
+                foreach (Control campo in _camposIncompletos)
+                {
+                    Rectangle borde = campo.Bounds;
+                    borde.Inflate(1, 1);
+                    e.Graphics.DrawRectangle(lapiz, borde);
+                }
+            }
         }
 
         private bool EsAlta => _original == null;
@@ -81,10 +160,17 @@ namespace TiendaUNNE
 
             lblPasswordAyuda.Left = col2;
 
-            int anchoBotones = btnGuardar.Width + 6 + btnLimpiar.Width;
-            int xBotones = col2 + (colAncho - anchoBotones) / 2;
+            // El título ocupa todo el ancho del formulario (sin invadir el riel de la derecha)
+            // y se recorta con "…" si el texto de edición es más largo.
+            lblTituloForm.Left = col1;
+            lblTituloForm.Width = Math.Max(120, anchoForm);
+
+            // Los botones van centrados bajo la columna 2, pero sin salirse por la izquierda
+            // cuando la ventana es angosta.
+            int anchoBotones = btnGuardar.Width + BotonesSeparacion + btnLimpiar.Width;
+            int xBotones = Math.Max(col1, col2 + (colAncho - anchoBotones) / 2);
             btnGuardar.Left = xBotones;
-            btnLimpiar.Left = xBotones + btnGuardar.Width + 6;
+            btnLimpiar.Left = xBotones + btnGuardar.Width + BotonesSeparacion;
 
             lblBuscar.Left = railX;
             txtBuscar.Left = railX;
@@ -112,13 +198,40 @@ namespace TiendaUNNE
             cboPerfil.SelectedIndex = -1;
         }
 
+        /// <summary>
+        /// Hace evidente en qué modo está el formulario. Antes solo cambiaba un título chico y
+        /// el único modo de volver a cargar un usuario nuevo era un botón llamado "Limpiar",
+        /// que no da ninguna pista de eso. Ahora el título, su color y los dos botones cuentan
+        /// lo mismo: mientras se edita, el segundo botón se llama "Nuevo usuario".
+        /// </summary>
+        private void ActualizarModoFormulario()
+        {
+            if (EsAlta)
+            {
+                lblTituloForm.Text = "Nuevo usuario";
+                lblTituloForm.ForeColor = ColorTituloAlta;
+                lblPasswordAyuda.Text = "Obligatoria.";
+                btnGuardar.Text = "Guardar usuario";
+                btnLimpiar.Text = "Limpiar campos";
+            }
+            else
+            {
+                lblTituloForm.Text = string.Format(
+                    "Editando a {0}, {1}   ·   Para cargar uno nuevo tocá «Nuevo usuario»",
+                    _original.Apellido, _original.Nombre);
+                lblTituloForm.ForeColor = ColorTituloEdicion;
+                lblPasswordAyuda.Text = "Dejar en blanco para no cambiarla.";
+                btnGuardar.Text = "Guardar cambios";
+                btnLimpiar.Text = "Nuevo usuario";
+            }
+        }
+
         /// <summary>Deja el formulario listo para cargar un usuario nuevo y sin nada seleccionado.</summary>
         private void LimpiarFormulario()
         {
             _original = null;
 
-            lblTituloForm.Text = "Nuevo usuario";
-            lblPasswordAyuda.Text = "Obligatoria.";
+            ActualizarModoFormulario();
 
             txtDniCuit.Clear();
             txtNombre.Clear();
@@ -140,6 +253,7 @@ namespace TiendaUNNE
             dgvUsuarios.CurrentCell = null;
             _actualizandoGrilla = false;
 
+            QuitarMarcasDeCampos();
             ActualizarBotones();
             txtDniCuit.Focus();
         }
@@ -149,8 +263,7 @@ namespace TiendaUNNE
         {
             _original = m;
 
-            lblTituloForm.Text = "Editar usuario";
-            lblPasswordAyuda.Text = "Dejar en blanco para no cambiarla.";
+            ActualizarModoFormulario();
 
             txtDniCuit.Text = m.DniCuit;
             txtNombre.Text = m.Nombre;
@@ -236,6 +349,14 @@ namespace TiendaUNNE
 
                 LimpiarFormulario();
                 CargarGrilla();
+            }
+            catch (CamposIncompletosException ex)
+            {
+                MarcarCamposIncompletos(ex.Campos);
+                ControlDeCampo(ex.Campos[0]).Focus();
+
+                MessageBox.Show(ex.Message, "Campos incompletos",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             catch (ReglaNegocioException ex)
             {

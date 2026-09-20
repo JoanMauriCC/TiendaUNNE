@@ -26,6 +26,7 @@ SELECT  u.id_usuario,
         u.activo,
         u.bloqueado,
         (p.apellido + N', ' + p.nombre) AS nombre_completo,
+        p.nombre                        AS nombre,
         pf.nombre                       AS rol
 FROM        dbo.Usuario u
 INNER JOIN  dbo.Persona p  ON p.id_persona = u.id_persona
@@ -54,6 +55,7 @@ WHERE p.dni_cuit = @dni;";
                             IdPersona = (int)dr["id_persona"],
                             IdPerfil = (int)dr["id_perfil"],
                             NombreCompleto = (string)dr["nombre_completo"],
+                            Nombre = (string)dr["nombre"],
                             Rol = (string)dr["rol"]
                         }
                     };

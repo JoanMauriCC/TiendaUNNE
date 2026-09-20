@@ -189,7 +189,50 @@ namespace TiendaUNNE
             AgregarTarjetaInicio(panel, OpcionMenu.Reportes, IconoTarjeta.Reportes, "Ventas y recaudación");
             AgregarTarjetaInicio(panel, OpcionMenu.Caja, IconoTarjeta.Caja, "Cobrar productos");
 
-            return panel;
+            panel.Dock = DockStyle.Fill;
+
+            // Al agregar, el último control con Dock.Top queda arriba de todo:
+            // por eso primero las tarjetas, después el subtítulo y por último el saludo.
+            var contenedor = new Panel { BackColor = Color.Transparent };
+            contenedor.Controls.Add(panel);
+            contenedor.Controls.Add(CrearSubtituloInicio());
+            contenedor.Controls.Add(CrearSaludoInicio());
+            return contenedor;
+        }
+
+        private Label CrearSaludoInicio()
+        {
+            string saludo = SesionActual.HaySesion && !string.IsNullOrWhiteSpace(SesionActual.Usuario.Nombre)
+                ? "Bienvenido, " + SesionActual.Usuario.Nombre + "."
+                : "Bienvenido.";
+
+            return new Label
+            {
+                Text = saludo,
+                Dock = DockStyle.Top,
+                AutoSize = false,
+                AutoEllipsis = true,
+                Height = 64,
+                Padding = new Padding(8, 0, 0, 0),
+                Font = new Font("Segoe UI", 28f, FontStyle.Bold),
+                ForeColor = ColorTexto,
+                TextAlign = ContentAlignment.BottomLeft
+            };
+        }
+
+        private Label CrearSubtituloInicio()
+        {
+            return new Label
+            {
+                Text = "Elegí un módulo para empezar.",
+                Dock = DockStyle.Top,
+                AutoSize = false,
+                Height = 34,
+                Padding = new Padding(10, 0, 0, 0),
+                Font = new Font("Segoe UI", 11f),
+                ForeColor = ColorTextoInactivo,
+                TextAlign = ContentAlignment.TopLeft
+            };
         }
 
         private void AgregarTarjetaInicio(Control contenedor, OpcionMenu opcion,

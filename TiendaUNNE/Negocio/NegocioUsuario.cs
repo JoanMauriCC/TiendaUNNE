@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 
 namespace TiendaUNNE
@@ -138,17 +139,30 @@ namespace TiendaUNNE
         // Validación y normalización
         // ---------------------------------------------------------------------
 
+        /// <summary>
+        /// Campos obligatorios que están vacíos. Es la única definición de "qué es
+        /// obligatorio": la contraseña solo lo es en un alta, porque al editar en blanco
+        /// significa "no cambiarla". Dirección, teléfono, email y fecha son opcionales.
+        /// </summary>
+        public static List<CampoUsuario> CamposObligatoriosFaltantes(UsuarioEditModel m)
+        {
+            var faltantes = new List<CampoUsuario>();
+
+            if (string.IsNullOrWhiteSpace(m.DniCuit)) faltantes.Add(CampoUsuario.Dni);
+            if (string.IsNullOrWhiteSpace(m.Nombre)) faltantes.Add(CampoUsuario.Nombre);
+            if (string.IsNullOrWhiteSpace(m.Apellido)) faltantes.Add(CampoUsuario.Apellido);
+            if (m.IdPerfil <= 0) faltantes.Add(CampoUsuario.Perfil);
+            if (m.EsAlta && string.IsNullOrWhiteSpace(m.PasswordPlano)) faltantes.Add(CampoUsuario.Password);
+
+            return faltantes;
+        }
+
         private static void Validar(UsuarioEditModel m)
         {
-            // Obligatorios
-            if (string.IsNullOrWhiteSpace(m.DniCuit))
-                throw new ReglaNegocioException("Ingresá el DNI.");
-            if (string.IsNullOrWhiteSpace(m.Nombre))
-                throw new ReglaNegocioException("Ingresá el nombre.");
-            if (string.IsNullOrWhiteSpace(m.Apellido))
-                throw new ReglaNegocioException("Ingresá el apellido.");
-            if (m.IdPerfil <= 0)
-                throw new ReglaNegocioException("Elegí un perfil.");
+            // Obligatorios: se avisan todos juntos, no de a uno.
+            List<CampoUsuario> faltantes = CamposObligatoriosFaltantes(m);
+            if (faltantes.Count > 0)
+                throw new CamposIncompletosException(faltantes);
 
             // Formato (expresiones regulares)
             if (!Validaciones.EsDniValido(m.DniCuit))

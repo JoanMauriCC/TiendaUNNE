@@ -83,16 +83,17 @@ namespace TiendaUNNE
             this.panelFormulario.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelFormulario.Location = new System.Drawing.Point(0, 0);
             this.panelFormulario.Name = "panelFormulario";
-            this.panelFormulario.Size = new System.Drawing.Size(844, 244);
+            this.panelFormulario.Size = new System.Drawing.Size(844, 258);
             this.panelFormulario.TabIndex = 0;
             //
             // lblTituloForm
             //
-            this.lblTituloForm.AutoSize = true;
-            this.lblTituloForm.Font = new System.Drawing.Font("Segoe UI", 10.5F, System.Drawing.FontStyle.Bold);
-            this.lblTituloForm.Location = new System.Drawing.Point(12, 8);
+            this.lblTituloForm.AutoEllipsis = true;
+            this.lblTituloForm.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
+            this.lblTituloForm.Location = new System.Drawing.Point(12, 6);
             this.lblTituloForm.Name = "lblTituloForm";
-            this.lblTituloForm.Size = new System.Drawing.Size(107, 20);
+            this.lblTituloForm.Size = new System.Drawing.Size(500, 24);
+            this.lblTituloForm.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.lblTituloForm.TabIndex = 0;
             this.lblTituloForm.Text = "Nuevo usuario";
             //
@@ -271,22 +272,34 @@ namespace TiendaUNNE
             //
             // Centrado bajo la columna 2 (Contraseña/Perfil), en su propia fila para que el
             // texto de ayuda de arriba nunca lo tape, sin importar cuánto mida ese texto.
-            this.btnGuardar.Location = new System.Drawing.Point(184, 202);
+            this.btnGuardar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(59)))), ((int)(((byte)(130)))), ((int)(((byte)(246)))));
+            this.btnGuardar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnGuardar.FlatAppearance.BorderSize = 0;
+            this.btnGuardar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGuardar.Font = new System.Drawing.Font("Segoe UI", 10.5F, System.Drawing.FontStyle.Bold);
+            this.btnGuardar.ForeColor = System.Drawing.Color.White;
+            this.btnGuardar.Location = new System.Drawing.Point(184, 204);
             this.btnGuardar.Name = "btnGuardar";
-            this.btnGuardar.Size = new System.Drawing.Size(77, 30);
+            this.btnGuardar.Size = new System.Drawing.Size(160, 40);
             this.btnGuardar.TabIndex = 20;
-            this.btnGuardar.Text = "Guardar";
-            this.btnGuardar.UseVisualStyleBackColor = true;
+            this.btnGuardar.Text = "Guardar usuario";
+            this.btnGuardar.UseVisualStyleBackColor = false;
             this.btnGuardar.Click += new System.EventHandler(this.btnGuardar_Click);
             //
             // btnLimpiar
             //
-            this.btnLimpiar.Location = new System.Drawing.Point(267, 202);
+            this.btnLimpiar.BackColor = System.Drawing.Color.White;
+            this.btnLimpiar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnLimpiar.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(204)))), ((int)(((byte)(210)))));
+            this.btnLimpiar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLimpiar.Font = new System.Drawing.Font("Segoe UI", 10.5F);
+            this.btnLimpiar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(48)))), ((int)(((byte)(54)))));
+            this.btnLimpiar.Location = new System.Drawing.Point(352, 204);
             this.btnLimpiar.Name = "btnLimpiar";
-            this.btnLimpiar.Size = new System.Drawing.Size(77, 30);
+            this.btnLimpiar.Size = new System.Drawing.Size(160, 40);
             this.btnLimpiar.TabIndex = 21;
-            this.btnLimpiar.Text = "Limpiar";
-            this.btnLimpiar.UseVisualStyleBackColor = true;
+            this.btnLimpiar.Text = "Limpiar campos";
+            this.btnLimpiar.UseVisualStyleBackColor = false;
             this.btnLimpiar.Click += new System.EventHandler(this.btnLimpiar_Click);
             //
             // lblBuscar
@@ -347,7 +360,7 @@ namespace TiendaUNNE
             this.dgvUsuarios.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvUsuarios.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvUsuarios.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.dgvUsuarios.Location = new System.Drawing.Point(0, 244);
+            this.dgvUsuarios.Location = new System.Drawing.Point(0, 258);
             this.dgvUsuarios.MultiSelect = false;
             this.dgvUsuarios.Name = "dgvUsuarios";
             this.dgvUsuarios.ReadOnly = true;
