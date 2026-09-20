@@ -28,6 +28,12 @@ namespace TiendaUNNE
         private const int RailMargen = 24;
         private const int FormMargen = 12;
         private const int FormGapColumna = 14;
+        private const int BotonesSeparacion = 8;
+
+        // Colores del título: neutro para un alta, ámbar para avisar que se está
+        // modificando algo que ya existe.
+        private static readonly Color ColorTituloAlta = Color.FromArgb(45, 48, 54);
+        private static readonly Color ColorTituloEdicion = Color.FromArgb(217, 119, 6);
 
         public ucProductos()
         {
@@ -81,10 +87,18 @@ namespace TiendaUNNE
 
             lblObligatorios.Left = col1;
 
-            int anchoBotones = btnGuardar.Width + 6 + btnLimpiar.Width;
-            int xBotones = col2 + (colAncho - anchoBotones) / 2;
+            // El título ocupa todo el ancho del formulario (sin invadir el riel de la derecha)
+            // y se recorta con "…" si el texto de edición es más largo.
+            lblTituloForm.Left = col1;
+            lblTituloForm.Width = Math.Max(120, anchoForm);
+
+            // Los botones van centrados bajo la columna 2, pero sin pisar el aviso de
+            // "Campos obligatorios" de la izquierda cuando la ventana es angosta.
+            int anchoBotones = btnGuardar.Width + BotonesSeparacion + btnLimpiar.Width;
+            int xMinimo = lblObligatorios.Right + 16;
+            int xBotones = Math.Max(xMinimo, col2 + (colAncho - anchoBotones) / 2);
             btnGuardar.Left = xBotones;
-            btnLimpiar.Left = xBotones + btnGuardar.Width + 6;
+            btnLimpiar.Left = xBotones + btnGuardar.Width + BotonesSeparacion;
 
             lblBuscar.Left = railX;
             txtBuscar.Left = railX;
@@ -112,12 +126,38 @@ namespace TiendaUNNE
             cboCategoria.SelectedIndex = -1;
         }
 
+        /// <summary>
+        /// Hace evidente en qué modo está el formulario: el título, su color y los dos
+        /// botones cuentan lo mismo. Mientras se edita, el segundo botón se llama
+        /// "Nuevo producto", que es lo que hace: sale de la edición y deja todo listo
+        /// para un alta.
+        /// </summary>
+        private void ActualizarModoFormulario()
+        {
+            if (EsAlta)
+            {
+                lblTituloForm.Text = "Nuevo producto";
+                lblTituloForm.ForeColor = ColorTituloAlta;
+                btnGuardar.Text = "Guardar producto";
+                btnLimpiar.Text = "Limpiar campos";
+            }
+            else
+            {
+                lblTituloForm.Text = string.Format(
+                    "Editando: {0}   ·   Para cargar uno nuevo tocá «Nuevo producto»",
+                    _original.Nombre);
+                lblTituloForm.ForeColor = ColorTituloEdicion;
+                btnGuardar.Text = "Guardar cambios";
+                btnLimpiar.Text = "Nuevo producto";
+            }
+        }
+
         /// <summary>Deja el formulario listo para cargar un producto nuevo y sin nada seleccionado.</summary>
         private void LimpiarFormulario()
         {
             _original = null;
 
-            lblTituloForm.Text = "Nuevo producto";
+            ActualizarModoFormulario();
 
             txtNombre.Clear();
             cboCategoria.SelectedIndex = -1;
@@ -144,7 +184,7 @@ namespace TiendaUNNE
         {
             _original = m;
 
-            lblTituloForm.Text = "Editar producto";
+            ActualizarModoFormulario();
 
             txtNombre.Text = m.Nombre;
             cboCategoria.SelectedValue = m.IdCategoria;
