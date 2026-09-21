@@ -63,6 +63,7 @@ namespace TiendaUNNE
             this.lblTituloForm.Size = new System.Drawing.Size(130, 20);
             this.lblTituloForm.TabIndex = 0;
             this.lblTituloForm.Text = "Nueva categoría";
+            this.lblTituloForm.UseMnemonic = false;
             //
             // lblNombre
             //
@@ -71,7 +72,7 @@ namespace TiendaUNNE
             this.lblNombre.Name = "lblNombre";
             this.lblNombre.Size = new System.Drawing.Size(56, 15);
             this.lblNombre.TabIndex = 1;
-            this.lblNombre.Text = "Nombre *";
+            this.lblNombre.Text = "&Nombre *";
             //
             // txtNombre
             //
@@ -88,7 +89,7 @@ namespace TiendaUNNE
             this.lblDescripcion.Name = "lblDescripcion";
             this.lblDescripcion.Size = new System.Drawing.Size(69, 15);
             this.lblDescripcion.TabIndex = 3;
-            this.lblDescripcion.Text = "Descripción";
+            this.lblDescripcion.Text = "&Descripción";
             //
             // txtDescripcion
             //
@@ -104,7 +105,7 @@ namespace TiendaUNNE
             this.btnGuardar.Name = "btnGuardar";
             this.btnGuardar.Size = new System.Drawing.Size(84, 30);
             this.btnGuardar.TabIndex = 5;
-            this.btnGuardar.Text = "Guardar";
+            this.btnGuardar.Text = "&Guardar";
             this.btnGuardar.UseVisualStyleBackColor = true;
             this.btnGuardar.Click += new System.EventHandler(this.btnGuardar_Click);
             //
@@ -114,7 +115,7 @@ namespace TiendaUNNE
             this.btnLimpiar.Name = "btnLimpiar";
             this.btnLimpiar.Size = new System.Drawing.Size(84, 30);
             this.btnLimpiar.TabIndex = 6;
-            this.btnLimpiar.Text = "Limpiar";
+            this.btnLimpiar.Text = "&Limpiar";
             this.btnLimpiar.UseVisualStyleBackColor = true;
             this.btnLimpiar.Click += new System.EventHandler(this.btnLimpiar_Click);
             //
@@ -139,7 +140,7 @@ namespace TiendaUNNE
             this.lblBuscar.Name = "lblBuscar";
             this.lblBuscar.Size = new System.Drawing.Size(45, 15);
             this.lblBuscar.TabIndex = 0;
-            this.lblBuscar.Text = "Buscar";
+            this.lblBuscar.Text = "&Buscar";
             //
             // txtBuscar
             //
@@ -158,7 +159,7 @@ namespace TiendaUNNE
             this.rdoActivas.Size = new System.Drawing.Size(84, 32);
             this.rdoActivas.TabIndex = 2;
             this.rdoActivas.TabStop = true;
-            this.rdoActivas.Text = "Activas";
+            this.rdoActivas.Text = "&Activas";
             this.rdoActivas.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.rdoActivas.UseVisualStyleBackColor = true;
             //
@@ -169,7 +170,7 @@ namespace TiendaUNNE
             this.rdoInactivas.Name = "rdoInactivas";
             this.rdoInactivas.Size = new System.Drawing.Size(84, 32);
             this.rdoInactivas.TabIndex = 3;
-            this.rdoInactivas.Text = "Inactivas";
+            this.rdoInactivas.Text = "&Inactivas";
             this.rdoInactivas.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.rdoInactivas.UseVisualStyleBackColor = true;
             this.rdoInactivas.CheckedChanged += new System.EventHandler(this.rdoInactivas_CheckedChanged);
@@ -181,7 +182,7 @@ namespace TiendaUNNE
             this.btnBaja.Name = "btnBaja";
             this.btnBaja.Size = new System.Drawing.Size(110, 32);
             this.btnBaja.TabIndex = 4;
-            this.btnBaja.Text = "Dar de baja";
+            this.btnBaja.Text = "Da&r de baja";
             this.btnBaja.UseVisualStyleBackColor = true;
             this.btnBaja.Click += new System.EventHandler(this.btnBaja_Click);
             //

@@ -44,7 +44,7 @@ namespace TiendaUNNE
             this.lblDni.Name = "lblDni";
             this.lblDni.Size = new System.Drawing.Size(29, 15);
             this.lblDni.TabIndex = 1;
-            this.lblDni.Text = "DNI";
+            this.lblDni.Text = "&DNI";
             //
             // lblPassword
             //
@@ -53,7 +53,7 @@ namespace TiendaUNNE
             this.lblPassword.Name = "lblPassword";
             this.lblPassword.Size = new System.Drawing.Size(67, 15);
             this.lblPassword.TabIndex = 3;
-            this.lblPassword.Text = "Contraseña";
+            this.lblPassword.Text = "Contra&seña";
             //
             // txtDni
             //
@@ -79,7 +79,7 @@ namespace TiendaUNNE
             this.btnIngresar.Name = "btnIngresar";
             this.btnIngresar.Size = new System.Drawing.Size(130, 34);
             this.btnIngresar.TabIndex = 5;
-            this.btnIngresar.Text = "Ingresar";
+            this.btnIngresar.Text = "&Ingresar";
             this.btnIngresar.UseVisualStyleBackColor = true;
             this.btnIngresar.Click += new System.EventHandler(this.btnIngresar_Click);
             //
@@ -89,7 +89,7 @@ namespace TiendaUNNE
             this.btnCancelar.Name = "btnCancelar";
             this.btnCancelar.Size = new System.Drawing.Size(130, 34);
             this.btnCancelar.TabIndex = 6;
-            this.btnCancelar.Text = "Cancelar";
+            this.btnCancelar.Text = "&Cancelar";
             this.btnCancelar.UseVisualStyleBackColor = true;
             this.btnCancelar.Click += new System.EventHandler(this.btnCancelar_Click);
             //

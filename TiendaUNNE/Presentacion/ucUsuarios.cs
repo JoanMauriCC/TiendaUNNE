@@ -113,6 +113,44 @@ namespace TiendaUNNE
 
         private bool EsAlta => _original == null;
 
+        // -----------------------------------------------------------------
+        // Atajos de teclado (ver AtajosTeclado para la lista completa)
+        // -----------------------------------------------------------------
+
+        /// <summary>
+        /// Se intercepta acá y no en cada control porque Windows procesa Enter y Esc como
+        /// teclas de diálogo antes de que el control llegue a verlas. Un UserControl no
+        /// tiene AcceptButton/CancelButton como una ventana, por eso se resuelve así.
+        /// </summary>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            // Esc en el buscador: primero borra lo que se escribió, sin tocar el formulario.
+            if (keyData == Keys.Escape && ActiveControl == txtBuscar && txtBuscar.Text.Length > 0)
+            {
+                txtBuscar.Clear();
+                return true;
+            }
+
+            switch (AtajosTeclado.Interpretar(keyData, ActiveControl, panelFormulario, txtBuscar))
+            {
+                case AccionAtajo.Guardar:
+                    btnGuardar.PerformClick();
+                    return true;
+                case AccionAtajo.Limpiar:
+                    btnLimpiar.PerformClick();
+                    return true;
+                case AccionAtajo.Buscar:
+                    txtBuscar.Focus();
+                    txtBuscar.SelectAll();
+                    return true;
+                case AccionAtajo.Actualizar:
+                    CargarGrilla();
+                    return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         private void ucUsuarios_Load(object sender, EventArgs e)
         {
             dtpFechaNac.MinDate = NegocioUsuario.FechaNacimientoMinima;
@@ -211,8 +249,8 @@ namespace TiendaUNNE
                 lblTituloForm.Text = "Nuevo usuario";
                 lblTituloForm.ForeColor = ColorTituloAlta;
                 lblPasswordAyuda.Text = "Obligatoria.";
-                btnGuardar.Text = "Guardar usuario";
-                btnLimpiar.Text = "Limpiar campos";
+                btnGuardar.Text = "&Guardar usuario";
+                btnLimpiar.Text = "&Limpiar campos";
             }
             else
             {
@@ -221,8 +259,8 @@ namespace TiendaUNNE
                     _original.Apellido, _original.Nombre);
                 lblTituloForm.ForeColor = ColorTituloEdicion;
                 lblPasswordAyuda.Text = "Dejar en blanco para no cambiarla.";
-                btnGuardar.Text = "Guardar cambios";
-                btnLimpiar.Text = "Nuevo usuario";
+                btnGuardar.Text = "&Guardar cambios";
+                btnLimpiar.Text = "N&uevo usuario";
             }
         }
 
@@ -476,17 +514,8 @@ namespace TiendaUNNE
             var dt = dgvUsuarios.DataSource as DataTable;
             if (dt == null) return;
 
-            string texto = txtBuscar.Text.Trim();
-            if (texto.Length == 0)
-            {
-                dt.DefaultView.RowFilter = string.Empty;
-                return;
-            }
-
-            string escapado = texto.Replace("'", "''");
-            dt.DefaultView.RowFilter = string.Format(
-                "DniCuit LIKE '%{0}%' OR Apellido LIKE '%{0}%' OR Nombre LIKE '%{0}%' OR Email LIKE '%{0}%'",
-                escapado);
+            dt.DefaultView.RowFilter = FiltroGrilla.Contiene(
+                txtBuscar.Text, "DniCuit", "Apellido", "Nombre", "Email");
         }
 
         private void txtBuscar_TextChanged(object sender, EventArgs e)
