@@ -90,6 +90,8 @@
     <Compile Include="Presentacion\TarjetaAccion.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Presentacion\AtajosTeclado.cs" />
+    <Compile Include="Presentacion\FiltroGrilla.cs" />
     <Compile Include="Presentacion\ucReportes.cs">
       <SubType>UserControl</SubType>
     </Compile>

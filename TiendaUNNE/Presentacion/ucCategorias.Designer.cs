@@ -64,6 +64,7 @@ namespace TiendaUNNE
             this.lblTituloForm.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.lblTituloForm.TabIndex = 0;
             this.lblTituloForm.Text = "Nueva categoría";
+            this.lblTituloForm.UseMnemonic = false;
             //
             // lblNombre
             //
@@ -194,7 +195,7 @@ namespace TiendaUNNE
             this.btnBaja.Name = "btnBaja";
             this.btnBaja.Size = new System.Drawing.Size(110, 32);
             this.btnBaja.TabIndex = 4;
-            this.btnBaja.Text = "Dar de ba&ja";
+            this.btnBaja.Text = "Da&r de baja";
             this.btnBaja.UseVisualStyleBackColor = true;
             this.btnBaja.Click += new System.EventHandler(this.btnBaja_Click);
             //

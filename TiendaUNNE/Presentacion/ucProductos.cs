@@ -43,6 +43,44 @@ namespace TiendaUNNE
 
         private bool EsAlta => _original == null;
 
+        // -----------------------------------------------------------------
+        // Atajos de teclado (ver AtajosTeclado para la lista completa)
+        // -----------------------------------------------------------------
+
+        /// <summary>
+        /// Se intercepta acá y no en cada control porque Windows procesa Enter y Esc como
+        /// teclas de diálogo antes de que el control llegue a verlas. Un UserControl no
+        /// tiene AcceptButton/CancelButton como una ventana, por eso se resuelve así.
+        /// </summary>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            // Esc en el buscador: primero borra lo que se escribió, sin tocar el formulario.
+            if (keyData == Keys.Escape && ActiveControl == txtBuscar && txtBuscar.Text.Length > 0)
+            {
+                txtBuscar.Clear();
+                return true;
+            }
+
+            switch (AtajosTeclado.Interpretar(keyData, ActiveControl, panelFormulario, txtBuscar))
+            {
+                case AccionAtajo.Guardar:
+                    btnGuardar.PerformClick();
+                    return true;
+                case AccionAtajo.Limpiar:
+                    btnLimpiar.PerformClick();
+                    return true;
+                case AccionAtajo.Buscar:
+                    txtBuscar.Focus();
+                    txtBuscar.SelectAll();
+                    return true;
+                case AccionAtajo.Actualizar:
+                    CargarGrilla();
+                    return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         private void ucProductos_Load(object sender, EventArgs e)
         {
             CargarCategorias();
@@ -138,8 +176,8 @@ namespace TiendaUNNE
             {
                 lblTituloForm.Text = "Nuevo producto";
                 lblTituloForm.ForeColor = ColorTituloAlta;
-                btnGuardar.Text = "Guardar producto";
-                btnLimpiar.Text = "Limpiar campos";
+                btnGuardar.Text = "&Guardar producto";
+                btnLimpiar.Text = "&Limpiar campos";
             }
             else
             {
@@ -147,8 +185,8 @@ namespace TiendaUNNE
                     "Editando: {0}   ·   Para cargar uno nuevo tocá «Nuevo producto»",
                     _original.Nombre);
                 lblTituloForm.ForeColor = ColorTituloEdicion;
-                btnGuardar.Text = "Guardar cambios";
-                btnLimpiar.Text = "Nuevo producto";
+                btnGuardar.Text = "&Guardar cambios";
+                btnLimpiar.Text = "N&uevo producto";
             }
         }
 
@@ -374,16 +412,7 @@ namespace TiendaUNNE
             var dt = dgvProductos.DataSource as DataTable;
             if (dt == null) return;
 
-            string texto = txtBuscar.Text.Trim();
-            if (texto.Length == 0)
-            {
-                dt.DefaultView.RowFilter = string.Empty;
-                return;
-            }
-
-            string escapado = texto.Replace("'", "''");
-            dt.DefaultView.RowFilter = string.Format(
-                "Nombre LIKE '%{0}%' OR Categoria LIKE '%{0}%'", escapado);
+            dt.DefaultView.RowFilter = FiltroGrilla.Contiene(txtBuscar.Text, "Nombre", "Categoria");
         }
 
         private void txtBuscar_TextChanged(object sender, EventArgs e)

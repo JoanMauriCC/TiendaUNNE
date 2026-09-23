@@ -87,6 +87,7 @@ namespace TiendaUNNE
             this.lblTituloForm.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.lblTituloForm.TabIndex = 0;
             this.lblTituloForm.Text = "Nuevo producto";
+            this.lblTituloForm.UseMnemonic = false;
             //
             // lblNombre
             //

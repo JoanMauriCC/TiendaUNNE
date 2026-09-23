@@ -35,6 +35,44 @@ namespace TiendaUNNE
 
         private bool EsAlta => _original == null;
 
+        // -----------------------------------------------------------------
+        // Atajos de teclado (ver AtajosTeclado para la lista completa)
+        // -----------------------------------------------------------------
+
+        /// <summary>
+        /// Se intercepta acá y no en cada control porque Windows procesa Enter y Esc como
+        /// teclas de diálogo antes de que el control llegue a verlas. Un UserControl no
+        /// tiene AcceptButton/CancelButton como una ventana, por eso se resuelve así.
+        /// </summary>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            // Esc en el buscador: primero borra lo que se escribió, sin tocar el formulario.
+            if (keyData == Keys.Escape && ActiveControl == txtBuscar && txtBuscar.Text.Length > 0)
+            {
+                txtBuscar.Clear();
+                return true;
+            }
+
+            switch (AtajosTeclado.Interpretar(keyData, ActiveControl, panelFormulario, txtBuscar))
+            {
+                case AccionAtajo.Guardar:
+                    btnGuardar.PerformClick();
+                    return true;
+                case AccionAtajo.Limpiar:
+                    btnLimpiar.PerformClick();
+                    return true;
+                case AccionAtajo.Buscar:
+                    txtBuscar.Focus();
+                    txtBuscar.SelectAll();
+                    return true;
+                case AccionAtajo.Actualizar:
+                    CargarGrilla();
+                    return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         private void ucCategorias_Load(object sender, EventArgs e)
         {
             LimpiarFormulario();
@@ -106,8 +144,8 @@ namespace TiendaUNNE
             {
                 lblTituloForm.Text = "Nueva categoría";
                 lblTituloForm.ForeColor = ColorTituloAlta;
-                btnGuardar.Text = "Guardar categoría";
-                btnLimpiar.Text = "Limpiar campos";
+                btnGuardar.Text = "&Guardar categoría";
+                btnLimpiar.Text = "&Limpiar campos";
             }
             else
             {
@@ -115,8 +153,8 @@ namespace TiendaUNNE
                     "Editando: {0}   ·   Para cargar una nueva tocá «Nueva categoría»",
                     _original.Nombre);
                 lblTituloForm.ForeColor = ColorTituloEdicion;
-                btnGuardar.Text = "Guardar cambios";
-                btnLimpiar.Text = "Nueva categoría";
+                btnGuardar.Text = "&Guardar cambios";
+                btnLimpiar.Text = "N&ueva categoría";
             }
         }
 
@@ -297,16 +335,7 @@ namespace TiendaUNNE
             var dt = dgvCategorias.DataSource as DataTable;
             if (dt == null) return;
 
-            string texto = txtBuscar.Text.Trim();
-            if (texto.Length == 0)
-            {
-                dt.DefaultView.RowFilter = string.Empty;
-                return;
-            }
-
-            string escapado = texto.Replace("'", "''");
-            dt.DefaultView.RowFilter = string.Format(
-                "Nombre LIKE '%{0}%' OR Descripcion LIKE '%{0}%'", escapado);
+            dt.DefaultView.RowFilter = FiltroGrilla.Contiene(txtBuscar.Text, "Nombre", "Descripcion");
         }
 
         private void txtBuscar_TextChanged(object sender, EventArgs e)
@@ -381,7 +410,7 @@ namespace TiendaUNNE
         /// <summary>El botón dice "Dar de baja" viendo activas y "Dar de alta" viendo inactivas.</summary>
         private void ActualizarBotonBaja()
         {
-            btnBaja.Text = _verInactivas ? "Dar de alta" : "Dar de baja";
+            btnBaja.Text = _verInactivas ? "Da&r de alta" : "Da&r de baja";
         }
 
         // -----------------------------------------------------------------
