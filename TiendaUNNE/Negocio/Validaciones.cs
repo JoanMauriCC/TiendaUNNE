@@ -14,8 +14,9 @@ namespace TiendaUNNE
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         // Solo DNI (sin CUIT/guiones): es el mismo número que se usa para loguearse.
+        // Tiene que ser exactamente 8 dígitos, ni más ni menos.
         private static readonly Regex RegexDni = new Regex(
-            @"^\d{7,8}$",
+            @"^\d{8}$",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         private static readonly Regex RegexTelefono = new Regex(

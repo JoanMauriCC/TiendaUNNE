@@ -135,7 +135,7 @@ namespace TiendaUNNE
         private void AplicarFormatoTicket()
         {
             SetColumna("Descripcion", "Producto", null);
-            SetColumna("Cantidad", "Cantidad", NegocioVenta.FormatoCantidad);
+            SetColumna("Cantidad", "Cantidad", NegocioVenta.FormatoCantidadTicket);
             SetColumna("PrecioUnitario", "Precio unit.", NegocioVenta.FormatoImporte);
             SetColumna("Subtotal", "Subtotal", NegocioVenta.FormatoImporte);
         }

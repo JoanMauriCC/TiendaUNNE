@@ -109,7 +109,7 @@ namespace TiendaUNNE
             // txtDniCuit
             //
             this.txtDniCuit.Location = new System.Drawing.Point(12, 52);
-            this.txtDniCuit.MaxLength = 20;
+            this.txtDniCuit.MaxLength = 8;
             this.txtDniCuit.Name = "txtDniCuit";
             this.txtDniCuit.Size = new System.Drawing.Size(160, 23);
             this.txtDniCuit.TabIndex = 2;

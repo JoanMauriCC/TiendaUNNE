@@ -18,6 +18,9 @@ namespace TiendaUNNE
         public const string FormatoImporte = "N2";
         public const string FormatoCantidad = "N3";
 
+        /// <summary>Como FormatoCantidad pero sin ceros de más: 1 se ve "1", no "1,000".</summary>
+        public const string FormatoCantidadTicket = "#,##0.###";
+
         // ---------------------------------------------------------------------
         // Armado del ticket
         // ---------------------------------------------------------------------

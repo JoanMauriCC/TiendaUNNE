@@ -167,7 +167,7 @@ namespace TiendaUNNE
             // Formato (expresiones regulares)
             if (!Validaciones.EsDniValido(m.DniCuit))
                 throw new ReglaNegocioException(
-                    "El DNI no tiene un formato válido. Usá solo números, sin puntos ni guiones (por ej. 30123456).");
+                    "El DNI tiene que tener exactamente 8 números, sin puntos ni guiones (por ej. 30123456).");
 
             if (!Validaciones.EsNombrePersonaValido(m.Nombre))
                 throw new ReglaNegocioException(

@@ -58,7 +58,7 @@ namespace TiendaUNNE
             // txtDni
             //
             this.txtDni.Location = new System.Drawing.Point(37, 96);
-            this.txtDni.MaxLength = 20;
+            this.txtDni.MaxLength = 8;
             this.txtDni.Name = "txtDni";
             this.txtDni.Size = new System.Drawing.Size(280, 23);
             this.txtDni.TabIndex = 2;

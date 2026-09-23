@@ -67,7 +67,9 @@ CREATE TABLE dbo.Persona
     activo            BIT            NOT NULL CONSTRAINT DF_Persona_activo DEFAULT (1),
 
     CONSTRAINT PK_Persona PRIMARY KEY (id_persona),
-    CONSTRAINT UQ_Persona_dni_cuit UNIQUE (dni_cuit)
+    CONSTRAINT UQ_Persona_dni_cuit UNIQUE (dni_cuit),
+    -- Solo DNI, exactamente 8 dígitos numéricos (no se admite CUIT/CUIL).
+    CONSTRAINT CK_Persona_dni_cuit CHECK (dni_cuit NOT LIKE '%[^0-9]%' AND LEN(dni_cuit) = 8)
 );
 GO
 
