@@ -104,7 +104,7 @@ namespace TiendaUNNE
             this.lblDniCuit.Name = "lblDniCuit";
             this.lblDniCuit.Size = new System.Drawing.Size(37, 15);
             this.lblDniCuit.TabIndex = 1;
-            this.lblDniCuit.Text = "DNI *";
+            this.lblDniCuit.Text = "&DNI *";
             //
             // txtDniCuit
             //
@@ -122,7 +122,7 @@ namespace TiendaUNNE
             this.lblNombre.Name = "lblNombre";
             this.lblNombre.Size = new System.Drawing.Size(56, 15);
             this.lblNombre.TabIndex = 3;
-            this.lblNombre.Text = "Nombre *";
+            this.lblNombre.Text = "&Nombre *";
             //
             // txtNombre
             //
@@ -140,7 +140,7 @@ namespace TiendaUNNE
             this.lblApellido.Name = "lblApellido";
             this.lblApellido.Size = new System.Drawing.Size(58, 15);
             this.lblApellido.TabIndex = 5;
-            this.lblApellido.Text = "Apellido *";
+            this.lblApellido.Text = "&Apellido *";
             //
             // txtApellido
             //
@@ -158,7 +158,7 @@ namespace TiendaUNNE
             this.lblDireccion.Name = "lblDireccion";
             this.lblDireccion.Size = new System.Drawing.Size(58, 15);
             this.lblDireccion.TabIndex = 7;
-            this.lblDireccion.Text = "Dirección";
+            this.lblDireccion.Text = "Di&rección";
             //
             // txtDireccion
             //
@@ -175,7 +175,7 @@ namespace TiendaUNNE
             this.lblTelefono.Name = "lblTelefono";
             this.lblTelefono.Size = new System.Drawing.Size(52, 15);
             this.lblTelefono.TabIndex = 9;
-            this.lblTelefono.Text = "Teléfono";
+            this.lblTelefono.Text = "&Teléfono";
             //
             // txtTelefono
             //
@@ -193,7 +193,7 @@ namespace TiendaUNNE
             this.lblEmail.Name = "lblEmail";
             this.lblEmail.Size = new System.Drawing.Size(39, 15);
             this.lblEmail.TabIndex = 11;
-            this.lblEmail.Text = "Email";
+            this.lblEmail.Text = "&Email";
             //
             // txtEmail
             //
@@ -211,7 +211,7 @@ namespace TiendaUNNE
             this.lblFechaNac.Name = "lblFechaNac";
             this.lblFechaNac.Size = new System.Drawing.Size(102, 15);
             this.lblFechaNac.TabIndex = 13;
-            this.lblFechaNac.Text = "Fecha nacimiento";
+            this.lblFechaNac.Text = "&Fecha nacimiento";
             //
             // dtpFechaNac
             //
@@ -229,7 +229,7 @@ namespace TiendaUNNE
             this.lblPassword.Name = "lblPassword";
             this.lblPassword.Size = new System.Drawing.Size(70, 15);
             this.lblPassword.TabIndex = 15;
-            this.lblPassword.Text = "Contraseña";
+            this.lblPassword.Text = "&Contraseña";
             //
             // txtPassword
             //
@@ -247,7 +247,7 @@ namespace TiendaUNNE
             this.lblPerfil.Name = "lblPerfil";
             this.lblPerfil.Size = new System.Drawing.Size(45, 15);
             this.lblPerfil.TabIndex = 17;
-            this.lblPerfil.Text = "Perfil *";
+            this.lblPerfil.Text = "&Perfil *";
             //
             // cboPerfil
             //
@@ -282,7 +282,7 @@ namespace TiendaUNNE
             this.btnGuardar.Name = "btnGuardar";
             this.btnGuardar.Size = new System.Drawing.Size(160, 40);
             this.btnGuardar.TabIndex = 20;
-            this.btnGuardar.Text = "Guardar usuario";
+            this.btnGuardar.Text = "&Guardar usuario";
             this.btnGuardar.UseVisualStyleBackColor = false;
             this.btnGuardar.Click += new System.EventHandler(this.btnGuardar_Click);
             //
@@ -298,7 +298,7 @@ namespace TiendaUNNE
             this.btnLimpiar.Name = "btnLimpiar";
             this.btnLimpiar.Size = new System.Drawing.Size(160, 40);
             this.btnLimpiar.TabIndex = 21;
-            this.btnLimpiar.Text = "Limpiar campos";
+            this.btnLimpiar.Text = "&Limpiar campos";
             this.btnLimpiar.UseVisualStyleBackColor = false;
             this.btnLimpiar.Click += new System.EventHandler(this.btnLimpiar_Click);
             //
@@ -309,7 +309,7 @@ namespace TiendaUNNE
             this.lblBuscar.Name = "lblBuscar";
             this.lblBuscar.Size = new System.Drawing.Size(45, 15);
             this.lblBuscar.TabIndex = 22;
-            this.lblBuscar.Text = "Buscar";
+            this.lblBuscar.Text = "&Buscar";
             //
             // txtBuscar
             //

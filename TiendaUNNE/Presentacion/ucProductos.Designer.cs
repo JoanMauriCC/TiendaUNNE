@@ -95,7 +95,7 @@ namespace TiendaUNNE
             this.lblNombre.Name = "lblNombre";
             this.lblNombre.Size = new System.Drawing.Size(56, 15);
             this.lblNombre.TabIndex = 1;
-            this.lblNombre.Text = "Nombre *";
+            this.lblNombre.Text = "&Nombre *";
             //
             // txtNombre
             //
@@ -112,7 +112,7 @@ namespace TiendaUNNE
             this.lblCategoria.Name = "lblCategoria";
             this.lblCategoria.Size = new System.Drawing.Size(66, 15);
             this.lblCategoria.TabIndex = 3;
-            this.lblCategoria.Text = "Categoría *";
+            this.lblCategoria.Text = "&Categoría *";
             //
             // cboCategoria
             //
@@ -130,7 +130,7 @@ namespace TiendaUNNE
             this.lblPrecioVenta.Name = "lblPrecioVenta";
             this.lblPrecioVenta.Size = new System.Drawing.Size(88, 15);
             this.lblPrecioVenta.TabIndex = 5;
-            this.lblPrecioVenta.Text = "Precio de venta";
+            this.lblPrecioVenta.Text = "&Precio de venta";
             //
             // numPrecioVenta
             //
@@ -150,7 +150,7 @@ namespace TiendaUNNE
             this.lblStock.Name = "lblStock";
             this.lblStock.Size = new System.Drawing.Size(35, 15);
             this.lblStock.TabIndex = 7;
-            this.lblStock.Text = "Stock";
+            this.lblStock.Text = "&Stock";
             //
             // numStock
             //
@@ -170,7 +170,7 @@ namespace TiendaUNNE
             this.lblStockMinimo.Name = "lblStockMinimo";
             this.lblStockMinimo.Size = new System.Drawing.Size(78, 15);
             this.lblStockMinimo.TabIndex = 9;
-            this.lblStockMinimo.Text = "Stock mínimo";
+            this.lblStockMinimo.Text = "Stock &mínimo";
             //
             // numStockMinimo
             //
@@ -190,7 +190,7 @@ namespace TiendaUNNE
             this.lblDescripcion.Name = "lblDescripcion";
             this.lblDescripcion.Size = new System.Drawing.Size(69, 15);
             this.lblDescripcion.TabIndex = 11;
-            this.lblDescripcion.Text = "Descripción";
+            this.lblDescripcion.Text = "&Descripción";
             //
             // txtDescripcion
             //
@@ -224,7 +224,7 @@ namespace TiendaUNNE
             this.btnGuardar.Name = "btnGuardar";
             this.btnGuardar.Size = new System.Drawing.Size(160, 40);
             this.btnGuardar.TabIndex = 14;
-            this.btnGuardar.Text = "Guardar producto";
+            this.btnGuardar.Text = "&Guardar producto";
             this.btnGuardar.UseVisualStyleBackColor = false;
             this.btnGuardar.Click += new System.EventHandler(this.btnGuardar_Click);
             //
@@ -240,7 +240,7 @@ namespace TiendaUNNE
             this.btnLimpiar.Name = "btnLimpiar";
             this.btnLimpiar.Size = new System.Drawing.Size(160, 40);
             this.btnLimpiar.TabIndex = 15;
-            this.btnLimpiar.Text = "Limpiar campos";
+            this.btnLimpiar.Text = "&Limpiar campos";
             this.btnLimpiar.UseVisualStyleBackColor = false;
             this.btnLimpiar.Click += new System.EventHandler(this.btnLimpiar_Click);
             //
@@ -251,7 +251,7 @@ namespace TiendaUNNE
             this.lblBuscar.Name = "lblBuscar";
             this.lblBuscar.Size = new System.Drawing.Size(45, 15);
             this.lblBuscar.TabIndex = 16;
-            this.lblBuscar.Text = "Buscar";
+            this.lblBuscar.Text = "&Buscar";
             //
             // txtBuscar
             //

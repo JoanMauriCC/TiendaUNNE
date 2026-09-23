@@ -93,7 +93,7 @@ namespace TiendaUNNE
             this.lblMontoInicial.Name = "lblMontoInicial";
             this.lblMontoInicial.Size = new System.Drawing.Size(79, 15);
             this.lblMontoInicial.TabIndex = 2;
-            this.lblMontoInicial.Text = "Monto inicial";
+            this.lblMontoInicial.Text = "&Monto inicial";
             //
             // numMontoInicial
             //
@@ -114,7 +114,7 @@ namespace TiendaUNNE
             this.btnAbrirCaja.Name = "btnAbrirCaja";
             this.btnAbrirCaja.Size = new System.Drawing.Size(220, 38);
             this.btnAbrirCaja.TabIndex = 4;
-            this.btnAbrirCaja.Text = "Abrir caja";
+            this.btnAbrirCaja.Text = "&Abrir caja";
             this.btnAbrirCaja.UseVisualStyleBackColor = true;
             this.btnAbrirCaja.Click += new System.EventHandler(this.btnAbrirCaja_Click);
             //
@@ -192,7 +192,7 @@ namespace TiendaUNNE
             this.btnCobrar.Name = "btnCobrar";
             this.btnCobrar.Size = new System.Drawing.Size(174, 46);
             this.btnCobrar.TabIndex = 2;
-            this.btnCobrar.Text = "Cobrar";
+            this.btnCobrar.Text = "C&obrar";
             this.btnCobrar.UseVisualStyleBackColor = true;
             this.btnCobrar.Click += new System.EventHandler(this.btnCobrar_Click);
             //
@@ -202,7 +202,7 @@ namespace TiendaUNNE
             this.btnQuitar.Name = "btnQuitar";
             this.btnQuitar.Size = new System.Drawing.Size(174, 32);
             this.btnQuitar.TabIndex = 3;
-            this.btnQuitar.Text = "Quitar renglón";
+            this.btnQuitar.Text = "&Quitar renglón";
             this.btnQuitar.UseVisualStyleBackColor = true;
             this.btnQuitar.Click += new System.EventHandler(this.btnQuitar_Click);
             //
@@ -212,7 +212,7 @@ namespace TiendaUNNE
             this.btnCancelarVenta.Name = "btnCancelarVenta";
             this.btnCancelarVenta.Size = new System.Drawing.Size(174, 32);
             this.btnCancelarVenta.TabIndex = 4;
-            this.btnCancelarVenta.Text = "Cancelar venta";
+            this.btnCancelarVenta.Text = "Cancelar &venta";
             this.btnCancelarVenta.UseVisualStyleBackColor = true;
             this.btnCancelarVenta.Click += new System.EventHandler(this.btnCancelarVenta_Click);
             //
@@ -246,7 +246,7 @@ namespace TiendaUNNE
             this.btnBuscar.Name = "btnBuscar";
             this.btnBuscar.Size = new System.Drawing.Size(80, 25);
             this.btnBuscar.TabIndex = 1;
-            this.btnBuscar.Text = "Buscar";
+            this.btnBuscar.Text = "&Buscar";
             this.btnBuscar.UseVisualStyleBackColor = true;
             this.btnBuscar.Click += new System.EventHandler(this.btnBuscar_Click);
             //
@@ -266,7 +266,7 @@ namespace TiendaUNNE
             this.lblCantidad.Name = "lblCantidad";
             this.lblCantidad.Size = new System.Drawing.Size(58, 15);
             this.lblCantidad.TabIndex = 3;
-            this.lblCantidad.Text = "Cantidad";
+            this.lblCantidad.Text = "&Cantidad";
             //
             // numCantidad
             //
@@ -286,7 +286,7 @@ namespace TiendaUNNE
             this.btnAgregar.Name = "btnAgregar";
             this.btnAgregar.Size = new System.Drawing.Size(110, 25);
             this.btnAgregar.TabIndex = 5;
-            this.btnAgregar.Text = "Agregar al ticket";
+            this.btnAgregar.Text = "A&gregar al ticket";
             this.btnAgregar.UseVisualStyleBackColor = true;
             this.btnAgregar.Click += new System.EventHandler(this.btnAgregar_Click);
             //
@@ -325,7 +325,7 @@ namespace TiendaUNNE
             this.btnCerrarCaja.Name = "btnCerrarCaja";
             this.btnCerrarCaja.Size = new System.Drawing.Size(126, 28);
             this.btnCerrarCaja.TabIndex = 1;
-            this.btnCerrarCaja.Text = "Cerrar caja";
+            this.btnCerrarCaja.Text = "Ce&rrar caja";
             this.btnCerrarCaja.UseVisualStyleBackColor = true;
             this.btnCerrarCaja.Click += new System.EventHandler(this.btnCerrarCaja_Click);
             //

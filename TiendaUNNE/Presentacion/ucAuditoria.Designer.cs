@@ -56,7 +56,7 @@ namespace TiendaUNNE
             this.lblTabla.Name = "lblTabla";
             this.lblTabla.Size = new System.Drawing.Size(36, 15);
             this.lblTabla.TabIndex = 0;
-            this.lblTabla.Text = "Tabla";
+            this.lblTabla.Text = "&Tabla";
             //
             // cboTabla
             //
@@ -74,7 +74,7 @@ namespace TiendaUNNE
             this.lblDesde.Name = "lblDesde";
             this.lblDesde.Size = new System.Drawing.Size(41, 15);
             this.lblDesde.TabIndex = 2;
-            this.lblDesde.Text = "Desde";
+            this.lblDesde.Text = "&Desde";
             //
             // dtpDesde
             //
@@ -92,7 +92,7 @@ namespace TiendaUNNE
             this.lblHasta.Name = "lblHasta";
             this.lblHasta.Size = new System.Drawing.Size(37, 15);
             this.lblHasta.TabIndex = 4;
-            this.lblHasta.Text = "Hasta";
+            this.lblHasta.Text = "&Hasta";
             //
             // dtpHasta
             //
@@ -109,7 +109,7 @@ namespace TiendaUNNE
             this.btnFiltrar.Name = "btnFiltrar";
             this.btnFiltrar.Size = new System.Drawing.Size(90, 26);
             this.btnFiltrar.TabIndex = 6;
-            this.btnFiltrar.Text = "Filtrar";
+            this.btnFiltrar.Text = "&Filtrar";
             this.btnFiltrar.UseVisualStyleBackColor = true;
             this.btnFiltrar.Click += new System.EventHandler(this.btnFiltrar_Click);
             //
@@ -119,7 +119,7 @@ namespace TiendaUNNE
             this.btnLimpiar.Name = "btnLimpiar";
             this.btnLimpiar.Size = new System.Drawing.Size(120, 26);
             this.btnLimpiar.TabIndex = 7;
-            this.btnLimpiar.Text = "Limpiar filtros";
+            this.btnLimpiar.Text = "&Limpiar filtros";
             this.btnLimpiar.UseVisualStyleBackColor = true;
             this.btnLimpiar.Click += new System.EventHandler(this.btnLimpiar_Click);
             //
@@ -130,7 +130,7 @@ namespace TiendaUNNE
             this.btnActualizar.Name = "btnActualizar";
             this.btnActualizar.Size = new System.Drawing.Size(140, 26);
             this.btnActualizar.TabIndex = 8;
-            this.btnActualizar.Text = "Actualizar listado";
+            this.btnActualizar.Text = "&Actualizar listado";
             this.btnActualizar.UseVisualStyleBackColor = true;
             this.btnActualizar.Click += new System.EventHandler(this.btnActualizar_Click);
             //

@@ -61,7 +61,7 @@ namespace TiendaUNNE
             this.lblMedioPago.Name = "lblMedioPago";
             this.lblMedioPago.Size = new System.Drawing.Size(84, 15);
             this.lblMedioPago.TabIndex = 2;
-            this.lblMedioPago.Text = "Medio de pago";
+            this.lblMedioPago.Text = "&Medio de pago";
             //
             // cboMedioPago
             //
@@ -78,7 +78,7 @@ namespace TiendaUNNE
             this.lblImporte.Name = "lblImporte";
             this.lblImporte.Size = new System.Drawing.Size(48, 15);
             this.lblImporte.TabIndex = 4;
-            this.lblImporte.Text = "Importe";
+            this.lblImporte.Text = "&Importe";
             //
             // numImporte
             //
@@ -97,7 +97,7 @@ namespace TiendaUNNE
             this.btnAgregarPago.Name = "btnAgregarPago";
             this.btnAgregarPago.Size = new System.Drawing.Size(90, 25);
             this.btnAgregarPago.TabIndex = 6;
-            this.btnAgregarPago.Text = "Agregar";
+            this.btnAgregarPago.Text = "&Agregar";
             this.btnAgregarPago.UseVisualStyleBackColor = true;
             this.btnAgregarPago.Click += new System.EventHandler(this.btnAgregarPago_Click);
             //
@@ -125,7 +125,7 @@ namespace TiendaUNNE
             this.btnQuitarPago.Name = "btnQuitarPago";
             this.btnQuitarPago.Size = new System.Drawing.Size(110, 26);
             this.btnQuitarPago.TabIndex = 8;
-            this.btnQuitarPago.Text = "Quitar pago";
+            this.btnQuitarPago.Text = "&Quitar pago";
             this.btnQuitarPago.UseVisualStyleBackColor = true;
             this.btnQuitarPago.Click += new System.EventHandler(this.btnQuitarPago_Click);
             //
@@ -155,7 +155,7 @@ namespace TiendaUNNE
             this.btnConfirmar.Name = "btnConfirmar";
             this.btnConfirmar.Size = new System.Drawing.Size(194, 38);
             this.btnConfirmar.TabIndex = 11;
-            this.btnConfirmar.Text = "Confirmar venta";
+            this.btnConfirmar.Text = "&Confirmar venta";
             this.btnConfirmar.UseVisualStyleBackColor = true;
             this.btnConfirmar.Click += new System.EventHandler(this.btnConfirmar_Click);
             //
@@ -165,7 +165,7 @@ namespace TiendaUNNE
             this.btnCancelar.Name = "btnCancelar";
             this.btnCancelar.Size = new System.Drawing.Size(110, 30);
             this.btnCancelar.TabIndex = 12;
-            this.btnCancelar.Text = "Cancelar";
+            this.btnCancelar.Text = "Cance&lar";
             this.btnCancelar.UseVisualStyleBackColor = true;
             this.btnCancelar.Click += new System.EventHandler(this.btnCancelar_Click);
             //

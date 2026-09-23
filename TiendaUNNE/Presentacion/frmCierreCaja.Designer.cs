@@ -118,7 +118,7 @@ namespace TiendaUNNE
             this.lblDeclaradoTitulo.Name = "lblDeclaradoTitulo";
             this.lblDeclaradoTitulo.Size = new System.Drawing.Size(163, 15);
             this.lblDeclaradoTitulo.TabIndex = 8;
-            this.lblDeclaradoTitulo.Text = "Efectivo contado en la caja";
+            this.lblDeclaradoTitulo.Text = "&Efectivo contado en la caja";
             //
             // numDeclarado
             //
@@ -151,7 +151,7 @@ namespace TiendaUNNE
             this.lblObservaciones.Name = "lblObservaciones";
             this.lblObservaciones.Size = new System.Drawing.Size(146, 15);
             this.lblObservaciones.TabIndex = 11;
-            this.lblObservaciones.Text = "Observaciones (opcional)";
+            this.lblObservaciones.Text = "&Observaciones (opcional)";
             //
             // txtObservaciones
             //
@@ -169,7 +169,7 @@ namespace TiendaUNNE
             this.btnCerrar.Name = "btnCerrar";
             this.btnCerrar.Size = new System.Drawing.Size(154, 34);
             this.btnCerrar.TabIndex = 13;
-            this.btnCerrar.Text = "Cerrar caja";
+            this.btnCerrar.Text = "&Cerrar caja";
             this.btnCerrar.UseVisualStyleBackColor = true;
             this.btnCerrar.Click += new System.EventHandler(this.btnCerrar_Click);
             //
@@ -179,7 +179,7 @@ namespace TiendaUNNE
             this.btnCancelar.Name = "btnCancelar";
             this.btnCancelar.Size = new System.Drawing.Size(110, 30);
             this.btnCancelar.TabIndex = 14;
-            this.btnCancelar.Text = "Cancelar";
+            this.btnCancelar.Text = "Cance&lar";
             this.btnCancelar.UseVisualStyleBackColor = true;
             this.btnCancelar.Click += new System.EventHandler(this.btnCancelar_Click);
             //

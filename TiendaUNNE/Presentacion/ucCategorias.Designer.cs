@@ -51,16 +51,17 @@ namespace TiendaUNNE
             this.panelFormulario.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelFormulario.Location = new System.Drawing.Point(0, 0);
             this.panelFormulario.Name = "panelFormulario";
-            this.panelFormulario.Size = new System.Drawing.Size(844, 92);
+            this.panelFormulario.Size = new System.Drawing.Size(844, 98);
             this.panelFormulario.TabIndex = 0;
             //
             // lblTituloForm
             //
-            this.lblTituloForm.AutoSize = true;
-            this.lblTituloForm.Font = new System.Drawing.Font("Segoe UI", 10.5F, System.Drawing.FontStyle.Bold);
-            this.lblTituloForm.Location = new System.Drawing.Point(12, 8);
+            this.lblTituloForm.AutoEllipsis = true;
+            this.lblTituloForm.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
+            this.lblTituloForm.Location = new System.Drawing.Point(12, 6);
             this.lblTituloForm.Name = "lblTituloForm";
-            this.lblTituloForm.Size = new System.Drawing.Size(130, 20);
+            this.lblTituloForm.Size = new System.Drawing.Size(500, 24);
+            this.lblTituloForm.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.lblTituloForm.TabIndex = 0;
             this.lblTituloForm.Text = "Nueva categoría";
             //
@@ -71,7 +72,7 @@ namespace TiendaUNNE
             this.lblNombre.Name = "lblNombre";
             this.lblNombre.Size = new System.Drawing.Size(56, 15);
             this.lblNombre.TabIndex = 1;
-            this.lblNombre.Text = "Nombre *";
+            this.lblNombre.Text = "&Nombre *";
             //
             // txtNombre
             //
@@ -88,7 +89,7 @@ namespace TiendaUNNE
             this.lblDescripcion.Name = "lblDescripcion";
             this.lblDescripcion.Size = new System.Drawing.Size(69, 15);
             this.lblDescripcion.TabIndex = 3;
-            this.lblDescripcion.Text = "Descripción";
+            this.lblDescripcion.Text = "&Descripción";
             //
             // txtDescripcion
             //
@@ -100,22 +101,34 @@ namespace TiendaUNNE
             //
             // btnGuardar
             //
-            this.btnGuardar.Location = new System.Drawing.Point(606, 50);
+            this.btnGuardar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(59)))), ((int)(((byte)(130)))), ((int)(((byte)(246)))));
+            this.btnGuardar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnGuardar.FlatAppearance.BorderSize = 0;
+            this.btnGuardar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGuardar.Font = new System.Drawing.Font("Segoe UI", 10.5F, System.Drawing.FontStyle.Bold);
+            this.btnGuardar.ForeColor = System.Drawing.Color.White;
+            this.btnGuardar.Location = new System.Drawing.Point(474, 46);
             this.btnGuardar.Name = "btnGuardar";
-            this.btnGuardar.Size = new System.Drawing.Size(84, 30);
+            this.btnGuardar.Size = new System.Drawing.Size(160, 40);
             this.btnGuardar.TabIndex = 5;
-            this.btnGuardar.Text = "Guardar";
-            this.btnGuardar.UseVisualStyleBackColor = true;
+            this.btnGuardar.Text = "&Guardar categoría";
+            this.btnGuardar.UseVisualStyleBackColor = false;
             this.btnGuardar.Click += new System.EventHandler(this.btnGuardar_Click);
             //
             // btnLimpiar
             //
-            this.btnLimpiar.Location = new System.Drawing.Point(698, 50);
+            this.btnLimpiar.BackColor = System.Drawing.Color.White;
+            this.btnLimpiar.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnLimpiar.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(204)))), ((int)(((byte)(210)))));
+            this.btnLimpiar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnLimpiar.Font = new System.Drawing.Font("Segoe UI", 10.5F);
+            this.btnLimpiar.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(48)))), ((int)(((byte)(54)))));
+            this.btnLimpiar.Location = new System.Drawing.Point(642, 46);
             this.btnLimpiar.Name = "btnLimpiar";
-            this.btnLimpiar.Size = new System.Drawing.Size(84, 30);
+            this.btnLimpiar.Size = new System.Drawing.Size(160, 40);
             this.btnLimpiar.TabIndex = 6;
-            this.btnLimpiar.Text = "Limpiar";
-            this.btnLimpiar.UseVisualStyleBackColor = true;
+            this.btnLimpiar.Text = "&Limpiar campos";
+            this.btnLimpiar.UseVisualStyleBackColor = false;
             this.btnLimpiar.Click += new System.EventHandler(this.btnLimpiar_Click);
             //
             // panelBarra
@@ -127,7 +140,7 @@ namespace TiendaUNNE
             this.panelBarra.Controls.Add(this.btnBaja);
             this.panelBarra.Controls.Add(this.btnActualizar);
             this.panelBarra.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panelBarra.Location = new System.Drawing.Point(0, 92);
+            this.panelBarra.Location = new System.Drawing.Point(0, 98);
             this.panelBarra.Name = "panelBarra";
             this.panelBarra.Size = new System.Drawing.Size(844, 52);
             this.panelBarra.TabIndex = 1;
@@ -139,7 +152,7 @@ namespace TiendaUNNE
             this.lblBuscar.Name = "lblBuscar";
             this.lblBuscar.Size = new System.Drawing.Size(45, 15);
             this.lblBuscar.TabIndex = 0;
-            this.lblBuscar.Text = "Buscar";
+            this.lblBuscar.Text = "&Buscar";
             //
             // txtBuscar
             //
@@ -158,7 +171,7 @@ namespace TiendaUNNE
             this.rdoActivas.Size = new System.Drawing.Size(84, 32);
             this.rdoActivas.TabIndex = 2;
             this.rdoActivas.TabStop = true;
-            this.rdoActivas.Text = "Activas";
+            this.rdoActivas.Text = "&Activas";
             this.rdoActivas.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.rdoActivas.UseVisualStyleBackColor = true;
             //
@@ -169,7 +182,7 @@ namespace TiendaUNNE
             this.rdoInactivas.Name = "rdoInactivas";
             this.rdoInactivas.Size = new System.Drawing.Size(84, 32);
             this.rdoInactivas.TabIndex = 3;
-            this.rdoInactivas.Text = "Inactivas";
+            this.rdoInactivas.Text = "&Inactivas";
             this.rdoInactivas.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.rdoInactivas.UseVisualStyleBackColor = true;
             this.rdoInactivas.CheckedChanged += new System.EventHandler(this.rdoInactivas_CheckedChanged);
@@ -181,7 +194,7 @@ namespace TiendaUNNE
             this.btnBaja.Name = "btnBaja";
             this.btnBaja.Size = new System.Drawing.Size(110, 32);
             this.btnBaja.TabIndex = 4;
-            this.btnBaja.Text = "Dar de baja";
+            this.btnBaja.Text = "Dar de ba&ja";
             this.btnBaja.UseVisualStyleBackColor = true;
             this.btnBaja.Click += new System.EventHandler(this.btnBaja_Click);
             //
@@ -191,7 +204,7 @@ namespace TiendaUNNE
             this.btnActualizar.Name = "btnActualizar";
             this.btnActualizar.Size = new System.Drawing.Size(110, 32);
             this.btnActualizar.TabIndex = 5;
-            this.btnActualizar.Text = "Actualizar";
+            this.btnActualizar.Text = "Ac&tualizar";
             this.btnActualizar.UseVisualStyleBackColor = true;
             this.btnActualizar.Click += new System.EventHandler(this.btnActualizar_Click);
             //
@@ -203,7 +216,7 @@ namespace TiendaUNNE
             this.dgvCategorias.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvCategorias.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvCategorias.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.dgvCategorias.Location = new System.Drawing.Point(0, 144);
+            this.dgvCategorias.Location = new System.Drawing.Point(0, 150);
             this.dgvCategorias.MultiSelect = false;
             this.dgvCategorias.Name = "dgvCategorias";
             this.dgvCategorias.ReadOnly = true;

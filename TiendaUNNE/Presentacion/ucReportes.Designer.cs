@@ -74,7 +74,7 @@ namespace TiendaUNNE
             this.btnVentas.Name = "btnVentas";
             this.btnVentas.Size = new System.Drawing.Size(110, 30);
             this.btnVentas.TabIndex = 0;
-            this.btnVentas.Text = "Ventas";
+            this.btnVentas.Text = "&Ventas";
             this.btnVentas.UseVisualStyleBackColor = false;
             this.btnVentas.Click += new System.EventHandler(this.btnVentas_Click);
             //
@@ -85,7 +85,7 @@ namespace TiendaUNNE
             this.btnProductos.Name = "btnProductos";
             this.btnProductos.Size = new System.Drawing.Size(110, 30);
             this.btnProductos.TabIndex = 1;
-            this.btnProductos.Text = "Productos";
+            this.btnProductos.Text = "&Productos";
             this.btnProductos.UseVisualStyleBackColor = false;
             this.btnProductos.Click += new System.EventHandler(this.btnProductos_Click);
             //
@@ -96,7 +96,7 @@ namespace TiendaUNNE
             this.btnRecaudacion.Name = "btnRecaudacion";
             this.btnRecaudacion.Size = new System.Drawing.Size(120, 30);
             this.btnRecaudacion.TabIndex = 2;
-            this.btnRecaudacion.Text = "Recaudación";
+            this.btnRecaudacion.Text = "&Recaudación";
             this.btnRecaudacion.UseVisualStyleBackColor = false;
             this.btnRecaudacion.Click += new System.EventHandler(this.btnRecaudacion_Click);
             //
@@ -108,7 +108,7 @@ namespace TiendaUNNE
             this.lblDesde.Name = "lblDesde";
             this.lblDesde.Size = new System.Drawing.Size(42, 15);
             this.lblDesde.TabIndex = 3;
-            this.lblDesde.Text = "Desde:";
+            this.lblDesde.Text = "&Desde:";
             //
             // dtpDesde
             //
@@ -127,7 +127,7 @@ namespace TiendaUNNE
             this.lblHasta.Name = "lblHasta";
             this.lblHasta.Size = new System.Drawing.Size(37, 15);
             this.lblHasta.TabIndex = 5;
-            this.lblHasta.Text = "Hasta:";
+            this.lblHasta.Text = "&Hasta:";
             //
             // dtpHasta
             //
@@ -145,7 +145,7 @@ namespace TiendaUNNE
             this.btnAplicar.Name = "btnAplicar";
             this.btnAplicar.Size = new System.Drawing.Size(96, 30);
             this.btnAplicar.TabIndex = 7;
-            this.btnAplicar.Text = "Aplicar";
+            this.btnAplicar.Text = "&Aplicar";
             this.btnAplicar.UseVisualStyleBackColor = true;
             this.btnAplicar.Click += new System.EventHandler(this.btnAplicar_Click);
             //

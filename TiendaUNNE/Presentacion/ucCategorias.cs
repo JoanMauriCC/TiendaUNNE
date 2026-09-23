@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace TiendaUNNE
@@ -19,6 +20,11 @@ namespace TiendaUNNE
 
         private const int Margen = 12;
         private const int Gap = 12;
+
+        // Colores del título: neutro para un alta, ámbar para avisar que se está
+        // modificando algo que ya existe.
+        private static readonly Color ColorTituloAlta = Color.FromArgb(45, 48, 54);
+        private static readonly Color ColorTituloEdicion = Color.FromArgb(217, 119, 6);
 
         public ucCategorias()
         {
@@ -47,6 +53,11 @@ namespace TiendaUNNE
         {
             int ancho = panelFormulario.ClientSize.Width;
             if (ancho <= 0) return;
+
+            // El título va arriba de todo y puede usar el ancho completo; se recorta con
+            // "…" si el texto de edición es más largo.
+            lblTituloForm.Left = Margen;
+            lblTituloForm.Width = Math.Max(120, ancho - 2 * Margen);
 
             btnLimpiar.Left = ancho - Margen - btnLimpiar.Width;
             btnGuardar.Left = btnLimpiar.Left - 8 - btnGuardar.Width;
@@ -83,12 +94,38 @@ namespace TiendaUNNE
         // Formulario: alta / edición
         // -----------------------------------------------------------------
 
+        /// <summary>
+        /// Hace evidente en qué modo está el formulario: el título, su color y los dos
+        /// botones cuentan lo mismo. Mientras se edita, el segundo botón se llama
+        /// "Nueva categoría", que es lo que hace: sale de la edición y deja todo listo
+        /// para un alta.
+        /// </summary>
+        private void ActualizarModoFormulario()
+        {
+            if (EsAlta)
+            {
+                lblTituloForm.Text = "Nueva categoría";
+                lblTituloForm.ForeColor = ColorTituloAlta;
+                btnGuardar.Text = "Guardar categoría";
+                btnLimpiar.Text = "Limpiar campos";
+            }
+            else
+            {
+                lblTituloForm.Text = string.Format(
+                    "Editando: {0}   ·   Para cargar una nueva tocá «Nueva categoría»",
+                    _original.Nombre);
+                lblTituloForm.ForeColor = ColorTituloEdicion;
+                btnGuardar.Text = "Guardar cambios";
+                btnLimpiar.Text = "Nueva categoría";
+            }
+        }
+
         /// <summary>Deja el formulario listo para cargar una categoría nueva y sin nada seleccionado.</summary>
         private void LimpiarFormulario()
         {
             _original = null;
 
-            lblTituloForm.Text = "Nueva categoría";
+            ActualizarModoFormulario();
             txtNombre.Clear();
             txtDescripcion.Clear();
 
@@ -110,7 +147,7 @@ namespace TiendaUNNE
         {
             _original = m;
 
-            lblTituloForm.Text = "Editar categoría";
+            ActualizarModoFormulario();
             txtNombre.Text = m.Nombre;
             txtDescripcion.Text = m.Descripcion;
         }
