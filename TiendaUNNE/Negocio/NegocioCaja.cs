@@ -5,16 +5,13 @@ namespace TiendaUNNE
     /// <summary>
     /// Reglas del turno de caja: cuándo se puede abrir, cuándo cerrar y cómo se calcula
     /// el arqueo. El turno se guarda en Caja_sesion, así que sobrevive al cierre del
-    /// programa. Lo único que todavía vive en memoria es el efectivo cobrado durante el
-    /// turno: se va a calcular desde las ventas cuando estas se guarden en la base.
+    /// programa, y el efectivo cobrado durante el turno se calcula desde las ventas guardadas.
     /// </summary>
     public static class NegocioCaja
     {
         public const decimal MontoMaximo = 10000000m;
         public const int LargoMaximoObservaciones = 300;
         public const string FormatoImporte = "N2";
-
-        private static decimal _efectivoCobrado;
 
         /// <summary>Sesión abierta, o null si la caja está cerrada.</summary>
         public static CajaSesion ObtenerSesionAbierta()
@@ -39,13 +36,13 @@ namespace TiendaUNNE
                 throw new ReglaNegocioException("La caja ya está abierta.");
             }
 
-            _efectivoCobrado = 0;
             return ServicioCaja.ObtenerSesionAbierta(idCaja);
         }
 
         /// <summary>
         /// Arma las cuentas del cierre: monto inicial + efectivo cobrado durante el
         /// turno es lo que debería haber, y la diferencia contra lo contado a mano.
+        /// Lee las ventas de la base, así que conviene calcularlo una vez y no en cada tecla.
         /// </summary>
         public static ArqueoCaja CalcularArqueo(CajaSesion sesion, decimal montoDeclarado)
         {
@@ -55,7 +52,7 @@ namespace TiendaUNNE
             {
                 IdCajaSesion = sesion.IdCajaSesion,
                 MontoInicial = sesion.MontoInicial,
-                VentasEnEfectivo = _efectivoCobrado,
+                VentasEnEfectivo = ServicioCaja.ObtenerEfectivoCobrado(sesion.IdCajaSesion),
                 MontoDeclarado = montoDeclarado
             };
         }
@@ -81,14 +78,7 @@ namespace TiendaUNNE
             if (filas == 0)
                 throw new ReglaNegocioException("La caja ya estaba cerrada o no existe.");
 
-            _efectivoCobrado = 0;
             return arqueo;
-        }
-
-        /// <summary>Suma al turno el efectivo que quedó en el cajón por una venta.</summary>
-        internal static void RegistrarEfectivoCobrado(decimal importe)
-        {
-            _efectivoCobrado += importe;
         }
 
         /// <summary>El sistema trabaja con la primera caja activa que haya cargada.</summary>

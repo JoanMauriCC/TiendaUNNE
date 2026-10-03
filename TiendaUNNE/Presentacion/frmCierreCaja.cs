@@ -16,6 +16,10 @@ namespace TiendaUNNE
 
         private readonly CajaSesion _sesion;
 
+        // Se calcula una vez al abrir, porque lee las ventas de la base; después solo
+        // cambia lo contado a mano.
+        private ArqueoCaja _arqueo;
+
         public frmCierreCaja(CajaSesion sesion)
         {
             InitializeComponent();
@@ -26,14 +30,14 @@ namespace TiendaUNNE
         {
             try
             {
-                ArqueoCaja arqueo = NegocioCaja.CalcularArqueo(_sesion, 0);
+                _arqueo = NegocioCaja.CalcularArqueo(_sesion, 0);
 
-                lblMontoInicial.Text = arqueo.MontoInicial.ToString(NegocioCaja.FormatoImporte);
-                lblVentas.Text = arqueo.VentasEnEfectivo.ToString(NegocioCaja.FormatoImporte);
-                lblEsperado.Text = arqueo.EfectivoEsperado.ToString(NegocioCaja.FormatoImporte);
+                lblMontoInicial.Text = _arqueo.MontoInicial.ToString(NegocioCaja.FormatoImporte);
+                lblVentas.Text = _arqueo.VentasEnEfectivo.ToString(NegocioCaja.FormatoImporte);
+                lblEsperado.Text = _arqueo.EfectivoEsperado.ToString(NegocioCaja.FormatoImporte);
 
                 // Se propone lo esperado: si el cajón cuadra, el cajero confirma y listo.
-                numDeclarado.Value = Math.Min(arqueo.EfectivoEsperado, numDeclarado.Maximum);
+                numDeclarado.Value = Math.Min(_arqueo.EfectivoEsperado, numDeclarado.Maximum);
 
                 MostrarDiferencia();
             }
@@ -60,11 +64,11 @@ namespace TiendaUNNE
 
         private void MostrarDiferencia()
         {
-            ArqueoCaja arqueo = NegocioCaja.CalcularArqueo(_sesion, numDeclarado.Value);
+            _arqueo.MontoDeclarado = numDeclarado.Value;
 
             lblDiferencia.Text = "Diferencia: " +
-                arqueo.Diferencia.ToString(NegocioCaja.FormatoImporte);
-            lblDiferencia.ForeColor = arqueo.Diferencia == 0
+                _arqueo.Diferencia.ToString(NegocioCaja.FormatoImporte);
+            lblDiferencia.ForeColor = _arqueo.Diferencia == 0
                 ? ColorDiferenciaOk
                 : ColorDiferenciaMal;
         }

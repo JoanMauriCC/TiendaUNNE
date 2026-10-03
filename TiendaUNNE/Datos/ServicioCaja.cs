@@ -66,6 +66,29 @@ WHERE s.id_caja = @id_caja AND s.estado = 'ABIERTA';";
         }
 
         /// <summary>
+        /// Total cobrado en efectivo durante ese turno, según los pagos de sus ventas
+        /// emitidas. Las ventas anuladas no suman.
+        /// </summary>
+        public static decimal ObtenerEfectivoCobrado(int idCajaSesion)
+        {
+            const string sql = @"
+SELECT ISNULL(SUM(vp.importe), 0)
+FROM        dbo.Venta_pago     vp
+INNER JOIN  dbo.Venta_cabecera vc ON vc.id_venta      = vp.id_venta
+INNER JOIN  dbo.Medio_pago     mp ON mp.id_medio_pago = vp.id_medio_pago
+WHERE vc.id_caja_sesion = @id_caja_sesion
+  AND vc.estado         = 'EMITIDA'
+  AND mp.es_efectivo    = 1;";
+
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand(sql, cn))
+            {
+                cmd.Parameters.Add("@id_caja_sesion", SqlDbType.Int).Value = idCajaSesion;
+                return (decimal)cmd.ExecuteScalar();
+            }
+        }
+
+        /// <summary>
         /// Abre un turno y devuelve su id. El índice único filtrado UQ_CajaSesion_abierta
         /// impide dos turnos abiertos en la misma caja: si ya había uno, lanza
         /// DuplicadoException.

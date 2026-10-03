@@ -148,10 +148,7 @@ namespace TiendaUNNE
             List<PagoVenta> pagos = PagosSinVuelto(venta);
 
             // El punto de venta es la caja: cada caja numera sus tickets desde 1.
-            long numero = ServicioVenta.Registrar(venta, pagos, idTipoTicket, venta.IdCaja, ConceptoCobro);
-
-            NegocioCaja.RegistrarEfectivoCobrado(pagos.Where(p => p.EsEfectivo).Sum(p => p.Importe));
-            return numero;
+            return ServicioVenta.Registrar(venta, pagos, idTipoTicket, venta.IdCaja, ConceptoCobro);
         }
 
         /// <summary>No se cobra contra un turno que otro puesto ya cerró.</summary>
