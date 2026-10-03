@@ -54,6 +54,7 @@
     <Compile Include="Entidades\ModelosCaja.cs" />
     <Compile Include="Entidades\ModelosCategoria.cs" />
     <Compile Include="Entidades\ModelosProducto.cs" />
+    <Compile Include="Entidades\ModelosReporte.cs" />
     <Compile Include="Entidades\ModelosUsuario.cs" />
     <Compile Include="Entidades\ModelosVenta.cs" />
     <Compile Include="Entidades\UsuarioLogueado.cs" />
@@ -67,6 +68,7 @@
     <Compile Include="Datos\ServicioCategoria.cs" />
     <Compile Include="Datos\ServicioMedioPago.cs" />
     <Compile Include="Datos\ServicioPerfil.cs" />
+    <Compile Include="Datos\ServicioReporte.cs" />
     <Compile Include="Datos\ServicioProducto.cs" />
     <Compile Include="Datos\ServicioUsuario.cs" />
     <Compile Include="Datos\ServicioVenta.cs" />
@@ -79,6 +81,7 @@
     <Compile Include="Negocio\NegocioCategoria.cs" />
     <Compile Include="Negocio\NegocioPerfil.cs" />
     <Compile Include="Negocio\NegocioProducto.cs" />
+    <Compile Include="Negocio\NegocioReporte.cs" />
     <Compile Include="Negocio\NegocioUsuario.cs" />
     <Compile Include="Negocio\NegocioSeguridad.cs" />
     <Compile Include="Negocio\NegocioVenta.cs" />

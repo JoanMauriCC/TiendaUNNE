@@ -7,9 +7,8 @@ namespace TiendaUNNE
 {
     /// <summary>
     /// Sección de Reportes: ventas, productos y recaudación para el rango de fechas
-    /// que elige el usuario (Desde/Hasta). Por ahora es solo la vista: muestra datos
-    /// de ejemplo fijos y no consulta la base de datos. Cuando se conecte, el rango
-    /// elegido acá es el que hay que pasarle a la capa Negocio.
+    /// que elige el usuario (Desde/Hasta). Ventas ya sale de la base a través de
+    /// NegocioReporte; Productos y Recaudación todavía muestran datos de ejemplo fijos.
     /// </summary>
     public partial class ucReportes : UserControl
     {
@@ -90,50 +89,65 @@ namespace TiendaUNNE
             DateTime desde = dtpDesde.Value.Date;
             DateTime hasta = dtpHasta.Value.Date;
 
-            if (desde > hasta)
+            ReporteVista vista;
+            try
             {
-                MessageBox.Show("La fecha \"Desde\" no puede ser posterior a \"Hasta\".",
-                    "Rango de fechas inválido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Cursor = Cursors.WaitCursor;
+                NegocioReporte.ValidarRango(desde, hasta);
+
+                // Productos y Recaudación todavía no consultan la base: un rango de un solo
+                // día muestra el ejemplo con detalle fino (por hora); uno más amplio, el agregado.
+                vista = _tipo == TipoReporte.Ventas
+                    ? NegocioReporte.Ventas(desde, hasta)
+                    : Convertir(ObtenerEjemplo(_tipo, desde == hasta), desde, hasta);
+            }
+            catch (ReglaNegocioException ex)
+            {
+                MessageBox.Show(ex.Message, "Rango de fechas inválido",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
-            // Mientras la pantalla no consulte la base, un rango de un solo día muestra
-            // el ejemplo con detalle fino (por hora); un rango más amplio, el agregado.
-            bool esUnSoloDia = desde == hasta;
-            ReporteEjemplo r = ObtenerEjemplo(_tipo, esUnSoloDia);
+            catch (Exception)
+            {
+                MessageBox.Show("No se pudo generar el reporte.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
 
             PintarBoton(btnVentas, _tipo == TipoReporte.Ventas);
             PintarBoton(btnProductos, _tipo == TipoReporte.Productos);
             PintarBoton(btnRecaudacion, _tipo == TipoReporte.Recaudacion);
 
-            lblIndTitulo1.Text = r.Indicadores[0, 0];
-            lblIndValor1.Text = r.Indicadores[0, 1];
-            lblIndTitulo2.Text = r.Indicadores[1, 0];
-            lblIndValor2.Text = r.Indicadores[1, 1];
-            lblIndTitulo3.Text = r.Indicadores[2, 0];
-            lblIndValor3.Text = r.Indicadores[2, 1];
+            lblIndTitulo1.Text = vista.Indicadores[0].Titulo;
+            lblIndValor1.Text = vista.Indicadores[0].Valor;
+            lblIndTitulo2.Text = vista.Indicadores[1].Titulo;
+            lblIndValor2.Text = vista.Indicadores[1].Valor;
+            lblIndTitulo3.Text = vista.Indicadores[2].Titulo;
+            lblIndValor3.Text = vista.Indicadores[2].Valor;
 
-            lblTituloGrafico.Text = r.TituloGrafico;
+            lblTituloGrafico.Text = vista.TituloGrafico;
             Series serie = _grafico.Series["datos"];
             serie.Points.Clear();
-            for (int i = 0; i < r.Etiquetas.Length; i++)
-                serie.Points.AddXY(r.Etiquetas[i], r.Valores[i]);
+            for (int i = 0; i < vista.Etiquetas.Count; i++)
+                serie.Points.AddXY(vista.Etiquetas[i], vista.Valores[i]);
 
             dgvDetalle.Rows.Clear();
             dgvDetalle.Columns.Clear();
-            for (int i = 0; i < r.Columnas.Length; i++)
+            for (int i = 0; i < vista.Columnas.Count; i++)
             {
-                int indice = dgvDetalle.Columns.Add("col" + i, r.Columnas[i]);
+                int indice = dgvDetalle.Columns.Add("col" + i, vista.Columnas[i]);
                 if (i > 0)
                     dgvDetalle.Columns[indice].DefaultCellStyle.Alignment =
                         DataGridViewContentAlignment.MiddleRight;
             }
-            foreach (string[] fila in r.Filas)
+            foreach (string[] fila in vista.Filas)
                 dgvDetalle.Rows.Add(fila);
 
-            lblAviso.Text = string.Format(
-                "Datos de ejemplo del {0:dd/MM/yyyy} al {1:dd/MM/yyyy}: la pantalla todavía no está conectada a la base de datos.",
-                desde, hasta);
+            lblAviso.Text = vista.Descripcion;
         }
 
         private static void PintarBoton(Button boton, bool activo)
@@ -155,6 +169,26 @@ namespace TiendaUNNE
             public double[] Valores;
             public string[] Columnas;
             public string[][] Filas;
+        }
+
+        private static ReporteVista Convertir(ReporteEjemplo e, DateTime desde, DateTime hasta)
+        {
+            var vista = new ReporteVista
+            {
+                TituloGrafico = e.TituloGrafico,
+                Descripcion = string.Format(
+                    "Datos de ejemplo del {0:dd/MM/yyyy} al {1:dd/MM/yyyy}: este reporte todavía no está conectado a la base de datos.",
+                    desde, hasta)
+            };
+
+            for (int i = 0; i < 3; i++)
+                vista.Indicadores.Add(new IndicadorReporte(e.Indicadores[i, 0], e.Indicadores[i, 1]));
+
+            vista.Etiquetas.AddRange(e.Etiquetas);
+            vista.Valores.AddRange(e.Valores);
+            vista.Columnas.AddRange(e.Columnas);
+            vista.Filas.AddRange(e.Filas);
+            return vista;
         }
 
         private static ReporteEjemplo ObtenerEjemplo(TipoReporte tipo, bool esHoy)
