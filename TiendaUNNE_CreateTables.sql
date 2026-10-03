@@ -412,6 +412,22 @@ INSERT INTO dbo.Perfil (nombre, descripcion) VALUES
     ('Cajero',        'Operación de caja y registro de ventas');
 GO
 
+-- Lo mínimo que necesita la caja para operar: una caja, los medios de pago y el
+-- tipo de comprobante de los tickets. Sin estas filas no se puede abrir la caja
+-- ni cobrar.
+INSERT INTO dbo.Caja (nombre, descripcion) VALUES
+    (N'Caja 1', N'Caja principal del local');
+
+INSERT INTO dbo.Medio_pago (nombre, requiere_referencia, es_efectivo) VALUES
+    (N'Efectivo',           0, 1),
+    (N'Tarjeta de débito',  1, 0),
+    (N'Tarjeta de crédito', 1, 0),
+    (N'Transferencia',      1, 0);
+
+INSERT INTO dbo.Tipo_comprobante (codigo, nombre, letra, signo) VALUES
+    (N'TKT', N'Ticket', NULL, 1);
+GO
+
 -- El usuario administrador inicial lo crea la aplicación en el primer arranque
 -- (clase Negocio\NegocioArranque.cs):  DNI = 00000000  /  contraseña = Admin.1234
 -- Cambiar esa contraseña después del primer ingreso.
