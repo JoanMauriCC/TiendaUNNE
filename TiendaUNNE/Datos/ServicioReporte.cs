@@ -94,6 +94,59 @@ ORDER BY SUM(d.cantidad) DESC, p.nombre;",
                 new SqlParameter("@cantidad", SqlDbType.Int) { Value = cantidad });
         }
 
+        /// <summary>Una fila: Total cobrado y cuánto de eso fue Efectivo (según los pagos).</summary>
+        public static DataTable ResumenRecaudacion(DateTime desde, DateTime hasta)
+        {
+            return Consultar(@"
+SELECT ISNULL(SUM(vp.importe), 0)                                                  AS Total,
+       ISNULL(SUM(CASE WHEN mp.es_efectivo = 1 THEN vp.importe ELSE 0 END), 0)     AS Efectivo
+FROM        dbo.Venta_pago     vp
+INNER JOIN  dbo.Venta_cabecera vc ON vc.id_venta      = vp.id_venta
+INNER JOIN  dbo.Medio_pago     mp ON mp.id_medio_pago = vp.id_medio_pago
+WHERE vc.estado = 'EMITIDA' AND vc.fecha_hora >= @desde AND vc.fecha_hora < @hasta;",
+                desde, hasta);
+        }
+
+        /// <summary>Medio, Pagos (cuántos) e Importe cobrado con cada medio, del que más al que menos.</summary>
+        public static DataTable RecaudacionPorMedio(DateTime desde, DateTime hasta)
+        {
+            return Consultar(@"
+SELECT mp.nombre AS Medio, COUNT(*) AS Pagos, SUM(vp.importe) AS Importe
+FROM        dbo.Venta_pago     vp
+INNER JOIN  dbo.Venta_cabecera vc ON vc.id_venta      = vp.id_venta
+INNER JOIN  dbo.Medio_pago     mp ON mp.id_medio_pago = vp.id_medio_pago
+WHERE vc.estado = 'EMITIDA' AND vc.fecha_hora >= @desde AND vc.fecha_hora < @hasta
+GROUP BY mp.id_medio_pago, mp.nombre
+ORDER BY SUM(vp.importe) DESC, mp.nombre;",
+                desde, hasta);
+        }
+
+        /// <summary>Fecha e Importe cobrado de cada día en que hubo cobros.</summary>
+        public static DataTable RecaudacionPorDia(DateTime desde, DateTime hasta)
+        {
+            return Consultar(@"
+SELECT CAST(vc.fecha_hora AS DATE) AS Fecha, SUM(vp.importe) AS Importe
+FROM        dbo.Venta_pago     vp
+INNER JOIN  dbo.Venta_cabecera vc ON vc.id_venta = vp.id_venta
+WHERE vc.estado = 'EMITIDA' AND vc.fecha_hora >= @desde AND vc.fecha_hora < @hasta
+GROUP BY CAST(vc.fecha_hora AS DATE)
+ORDER BY Fecha;",
+                desde, hasta);
+        }
+
+        /// <summary>Anio, Mes e Importe cobrado de cada mes en que hubo cobros.</summary>
+        public static DataTable RecaudacionPorMes(DateTime desde, DateTime hasta)
+        {
+            return Consultar(@"
+SELECT YEAR(vc.fecha_hora) AS Anio, MONTH(vc.fecha_hora) AS Mes, SUM(vp.importe) AS Importe
+FROM        dbo.Venta_pago     vp
+INNER JOIN  dbo.Venta_cabecera vc ON vc.id_venta = vp.id_venta
+WHERE vc.estado = 'EMITIDA' AND vc.fecha_hora >= @desde AND vc.fecha_hora < @hasta
+GROUP BY YEAR(vc.fecha_hora), MONTH(vc.fecha_hora)
+ORDER BY Anio, Mes;",
+                desde, hasta);
+        }
+
         private static DataTable Consultar(string sql, DateTime desde, DateTime hasta,
                                            params SqlParameter[] otrosParametros)
         {

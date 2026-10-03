@@ -20,7 +20,7 @@ namespace TiendaUNNE
         /// <summary>Cuántos productos muestra el gráfico de los más vendidos.</summary>
         public const int CantidadMasVendidos = 5;
 
-        private const int LargoMaximoEtiqueta = 16;
+        private const int LargoMaximoEtiqueta = 18;
 
         public static void ValidarRango(DateTime desde, DateTime hasta)
         {
@@ -187,6 +187,80 @@ namespace TiendaUNNE
             }
 
             return reporte;
+        }
+
+        // ---------------------------------------------------------------------
+        // Recaudación
+        // ---------------------------------------------------------------------
+
+        /// <summary>
+        /// Lo cobrado en las ventas emitidas entre dos fechas, ambas incluidas. La tabla siempre
+        /// separa lo cobrado por medio de pago. El gráfico, con un solo día, muestra esos mismos
+        /// medios; con un rango, la recaudación día por día o mes por mes (mismo criterio que Ventas).
+        /// </summary>
+        public static ReporteVista Recaudacion(DateTime desde, DateTime hasta)
+        {
+            ValidarRango(desde, hasta);
+
+            DateTime inicio = desde.Date;
+            DateTime fin = hasta.Date.AddDays(1);   // "hasta" cuenta el día completo
+
+            DataRow resumen = ServicioReporte.ResumenRecaudacion(inicio, fin).Rows[0];
+            decimal total = Convert.ToDecimal(resumen["Total"]);
+            decimal efectivo = Convert.ToDecimal(resumen["Efectivo"]);
+
+            var reporte = new ReporteVista
+            {
+                Descripcion = string.Format("Cobrado en ventas emitidas del {0:dd/MM/yyyy} al {1:dd/MM/yyyy}.{2}",
+                    desde, hasta, total == 0 ? " No hay cobros en este período." : string.Empty)
+            };
+
+            reporte.Indicadores.Add(new IndicadorReporte("Recaudado", Importe(total)));
+            reporte.Indicadores.Add(new IndicadorReporte("En efectivo", Importe(efectivo)));
+            reporte.Indicadores.Add(new IndicadorReporte("Otros medios", Importe(total - efectivo)));
+
+            reporte.Columnas.AddRange(new[] { "Medio de pago", "Pagos", "Importe" });
+            DataTable porMedio = ServicioReporte.RecaudacionPorMedio(inicio, fin);
+            foreach (DataRow fila in porMedio.Rows)
+            {
+                reporte.Filas.Add(new[]
+                {
+                    Convert.ToString(fila["Medio"]),
+                    Convert.ToInt32(fila["Pagos"]).ToString("N0"),
+                    Importe(Convert.ToDecimal(fila["Importe"]))
+                });
+            }
+
+            int dias = (fin - inicio).Days;
+            if (dias == 1)
+            {
+                reporte.TituloGrafico = "Por medio de pago ($)";
+                foreach (DataRow fila in porMedio.Rows)
+                    AgregarPunto(reporte, Convert.ToString(fila["Medio"]), fila["Importe"]);
+            }
+            else if (dias <= DiasMaximosPorDia)
+            {
+                reporte.TituloGrafico = "Recaudación por día ($)";
+                foreach (DataRow fila in ServicioReporte.RecaudacionPorDia(inicio, fin).Rows)
+                    AgregarPunto(reporte, Convert.ToDateTime(fila["Fecha"]).ToString("dd/MM"), fila["Importe"]);
+            }
+            else
+            {
+                reporte.TituloGrafico = "Recaudación por mes ($)";
+                foreach (DataRow fila in ServicioReporte.RecaudacionPorMes(inicio, fin).Rows)
+                {
+                    var mes = new DateTime(Convert.ToInt32(fila["Anio"]), Convert.ToInt32(fila["Mes"]), 1);
+                    AgregarPunto(reporte, mes.ToString("MM/yy"), fila["Importe"]);
+                }
+            }
+
+            return reporte;
+        }
+
+        private static void AgregarPunto(ReporteVista reporte, string etiqueta, object importe)
+        {
+            reporte.Etiquetas.Add(Abreviar(etiqueta));
+            reporte.Valores.Add(Convert.ToDouble(importe));
         }
 
         /// <summary>Un nombre largo se corta con «…» para que no se pise con el de al lado en el gráfico.</summary>

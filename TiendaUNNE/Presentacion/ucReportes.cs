@@ -7,8 +7,8 @@ namespace TiendaUNNE
 {
     /// <summary>
     /// Sección de Reportes: ventas, productos y recaudación para el rango de fechas
-    /// que elige el usuario (Desde/Hasta). Ventas y Productos ya salen de la base a través
-    /// de NegocioReporte; Recaudación todavía muestra datos de ejemplo fijos.
+    /// que elige el usuario (Desde/Hasta). Los tres reportes los arma NegocioReporte con
+    /// datos de la base: acá solo se elige cuál mostrar y se dibuja el resultado.
     /// </summary>
     public partial class ucReportes : UserControl
     {
@@ -95,8 +95,6 @@ namespace TiendaUNNE
                 Cursor = Cursors.WaitCursor;
                 NegocioReporte.ValidarRango(desde, hasta);
 
-                // Recaudación todavía no consulta la base: un rango de un solo día muestra el
-                // ejemplo con detalle fino (por hora); uno más amplio, el agregado.
                 switch (_tipo)
                 {
                     case TipoReporte.Ventas:
@@ -106,7 +104,7 @@ namespace TiendaUNNE
                         vista = NegocioReporte.Productos(desde, hasta);
                         break;
                     default:
-                        vista = Convertir(ObtenerEjemplo(_tipo, desde == hasta), desde, hasta);
+                        vista = NegocioReporte.Recaudacion(desde, hasta);
                         break;
                 }
             }
@@ -164,111 +162,6 @@ namespace TiendaUNNE
             boton.BackColor = activo ? ColorAcentoFondo : Color.White;
             boton.ForeColor = activo ? ColorAcento : ColorTexto;
             boton.FlatAppearance.BorderColor = activo ? ColorAcento : Color.FromArgb(214, 216, 220);
-        }
-
-        // -----------------------------------------------------------------
-        // Datos de ejemplo (se reemplazan cuando la vista se conecte a Negocio)
-        // -----------------------------------------------------------------
-
-        private sealed class ReporteEjemplo
-        {
-            public string[,] Indicadores;
-            public string TituloGrafico;
-            public string[] Etiquetas;
-            public double[] Valores;
-            public string[] Columnas;
-            public string[][] Filas;
-        }
-
-        private static ReporteVista Convertir(ReporteEjemplo e, DateTime desde, DateTime hasta)
-        {
-            var vista = new ReporteVista
-            {
-                TituloGrafico = e.TituloGrafico,
-                Descripcion = string.Format(
-                    "Datos de ejemplo del {0:dd/MM/yyyy} al {1:dd/MM/yyyy}: este reporte todavía no está conectado a la base de datos.",
-                    desde, hasta)
-            };
-
-            for (int i = 0; i < 3; i++)
-                vista.Indicadores.Add(new IndicadorReporte(e.Indicadores[i, 0], e.Indicadores[i, 1]));
-
-            vista.Etiquetas.AddRange(e.Etiquetas);
-            vista.Valores.AddRange(e.Valores);
-            vista.Columnas.AddRange(e.Columnas);
-            vista.Filas.AddRange(e.Filas);
-            return vista;
-        }
-
-        private static ReporteEjemplo ObtenerEjemplo(TipoReporte tipo, bool esHoy)
-        {
-            switch (tipo)
-            {
-                case TipoReporte.Recaudacion:
-                    return esHoy
-                        ? new ReporteEjemplo
-                        {
-                            Indicadores = new[,] { { "Recaudado", "$ 412.300" }, { "En efectivo", "$ 186.000" }, { "Otros medios", "$ 226.300" } },
-                            TituloGrafico = "Por medio de pago (miles de $)",
-                            Etiquetas = new[] { "Efectivo", "Débito", "Crédito", "Transf." },
-                            Valores = new double[] { 186, 121, 64, 41 },
-                            Columnas = new[] { "Medio de pago", "Pagos", "Importe" },
-                            Filas = new[]
-                            {
-                                new[] { "Efectivo", "9", "$ 186.000" },
-                                new[] { "Tarjeta de débito", "5", "$ 121.000" },
-                                new[] { "Tarjeta de crédito", "3", "$ 64.300" },
-                                new[] { "Transferencia", "1", "$ 41.000" }
-                            }
-                        }
-                        : new ReporteEjemplo
-                        {
-                            Indicadores = new[,] { { "Recaudado", "$ 9.874.500" }, { "En efectivo", "$ 4.120.000" }, { "Otros medios", "$ 5.754.500" } },
-                            TituloGrafico = "Recaudación mensual (millones de $)",
-                            Etiquetas = new[] { "Jun", "Jul", "Ago", "Sep" },
-                            Valores = new double[] { 7.9, 8.6, 9.1, 9.9 },
-                            Columnas = new[] { "Mes", "Ventas", "Total" },
-                            Filas = new[]
-                            {
-                                new[] { "Septiembre", "426", "$ 9.874.500" },
-                                new[] { "Agosto", "398", "$ 9.102.000" },
-                                new[] { "Julio", "371", "$ 8.640.300" },
-                                new[] { "Junio", "344", "$ 7.905.200" }
-                            }
-                        };
-
-                default:
-                    return esHoy
-                        ? new ReporteEjemplo
-                        {
-                            Indicadores = new[,] { { "Ventas", "18" }, { "Total vendido", "$ 412.300" }, { "Ticket promedio", "$ 22.905" } },
-                            TituloGrafico = "Ventas por hora",
-                            Etiquetas = new[] { "9h", "11h", "13h", "15h", "17h", "19h" },
-                            Valores = new double[] { 2, 5, 3, 1, 4, 3 },
-                            Columnas = new[] { "Venta", "Hora", "Total" },
-                            Filas = new[]
-                            {
-                                new[] { "Nº 118", "19:42", "$ 31.200" },
-                                new[] { "Nº 117", "19:10", "$ 12.500" },
-                                new[] { "Nº 116", "18:55", "$ 47.800" }
-                            }
-                        }
-                        : new ReporteEjemplo
-                        {
-                            Indicadores = new[,] { { "Ventas", "426" }, { "Total vendido", "$ 9.874.500" }, { "Ticket promedio", "$ 23.180" } },
-                            TituloGrafico = "Ventas por semana",
-                            Etiquetas = new[] { "Sem 1", "Sem 2", "Sem 3", "Sem 4" },
-                            Valores = new double[] { 98, 112, 121, 95 },
-                            Columnas = new[] { "Período", "Ventas", "Total" },
-                            Filas = new[]
-                            {
-                                new[] { "Semana 4", "95", "$ 2.205.000" },
-                                new[] { "Semana 3", "121", "$ 2.810.400" },
-                                new[] { "Semana 2", "112", "$ 2.598.000" },
-                                new[] { "Semana 1", "98", "$ 2.260.100" }
-                            }
-                        };
-            }
         }
     }
 }
