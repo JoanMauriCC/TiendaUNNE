@@ -21,6 +21,9 @@ namespace TiendaUNNE
         /// <summary>Vuelto que hay que devolverle al cliente.</summary>
         public decimal Vuelto { get; private set; }
 
+        /// <summary>Número de ticket que se le asignó a la venta confirmada.</summary>
+        public long NumeroTicket { get; private set; }
+
         private void frmCobro_Load(object sender, EventArgs e)
         {
             // Se empieza siempre de cero: si antes se abrió el cobro y se canceló,
@@ -128,10 +131,8 @@ namespace TiendaUNNE
             {
                 Cursor = Cursors.WaitCursor;
 
-                // El vuelto se guarda antes de confirmar, porque al confirmar
-                // los pagos se ajustan para que sumen exactamente el total.
                 Vuelto = NegocioVenta.CalcularVuelto(_venta);
-                NegocioVenta.ConfirmarVenta(_venta);
+                NumeroTicket = NegocioVenta.ConfirmarVenta(_venta);
 
                 DialogResult = DialogResult.OK;
                 Close();

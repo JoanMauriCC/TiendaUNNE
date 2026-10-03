@@ -39,6 +39,7 @@ namespace TiendaUNNE
     /// </summary>
     public sealed class VentaEditModel
     {
+        public int IdCaja { get; set; }
         public int IdCajaSesion { get; set; }
         public int IdUsuario { get; set; }
 

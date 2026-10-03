@@ -63,11 +63,13 @@
     <Compile Include="Datos\ServicioArranque.cs" />
     <Compile Include="Datos\ServicioAuditoria.cs" />
     <Compile Include="Datos\ServicioAutenticacion.cs" />
+    <Compile Include="Datos\ServicioCaja.cs" />
     <Compile Include="Datos\ServicioCategoria.cs" />
     <Compile Include="Datos\ServicioMedioPago.cs" />
     <Compile Include="Datos\ServicioPerfil.cs" />
     <Compile Include="Datos\ServicioProducto.cs" />
     <Compile Include="Datos\ServicioUsuario.cs" />
+    <Compile Include="Datos\ServicioVenta.cs" />
     <!-- ================= Capa Negocio ================= -->
     <Compile Include="Negocio\CamposIncompletosException.cs" />
     <Compile Include="Negocio\NegocioArranque.cs" />

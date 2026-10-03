@@ -8,8 +8,8 @@ namespace TiendaUNNE
     /// <summary>
     /// Reglas de la venta en caja: qué se puede agregar al ticket, cuánto stock hay,
     /// si los pagos alcanzan y cuánto vuelto corresponde.
-    /// Por ahora el cobro no se guarda en la base de datos: la venta se valida y se
-    /// suma al efectivo del turno en memoria, pero no se registra ni descuenta stock.
+    /// El cobro se guarda en la base (venta, renglones, pagos y movimientos de caja) en una
+    /// sola transacción. Todavía no descuenta stock.
     /// </summary>
     public static class NegocioVenta
     {
@@ -17,6 +17,14 @@ namespace TiendaUNNE
 
         public const string FormatoImporte = "N2";
         public const string FormatoCantidad = "N3";
+
+        /// <summary>El número de ticket se muestra con ceros a la izquierda: 00000012.</summary>
+        public const string FormatoNumeroTicket = "D8";
+
+        /// <summary>Código del tipo de comprobante que se emite al cobrar (Tipo_comprobante).</summary>
+        private const string CodigoTicket = "TKT";
+
+        private const string ConceptoCobro = "Cobro de venta";
 
         /// <summary>Como FormatoCantidad pero sin ceros de más: 1 se ve "1", no "1,000".</summary>
         public const string FormatoCantidadTicket = "#,##0.###";
@@ -32,6 +40,7 @@ namespace TiendaUNNE
 
             return new VentaEditModel
             {
+                IdCaja = sesion.IdCaja,
                 IdCajaSesion = sesion.IdCajaSesion,
                 IdUsuario = idUsuario
             };
@@ -123,14 +132,34 @@ namespace TiendaUNNE
         }
 
         /// <summary>
-        /// Valida el cobro, descuenta el vuelto y suma al turno el efectivo que queda
-        /// en el cajón. No escribe nada en la base de datos.
+        /// Valida el cobro y lo guarda en la base: la venta, sus renglones y los pagos, con el
+        /// vuelto ya descontado del efectivo. Devuelve el número de ticket asignado.
+        /// Si no se puede guardar, la venta queda como estaba y se puede reintentar.
         /// </summary>
-        public static void ConfirmarVenta(VentaEditModel venta)
+        public static long ConfirmarVenta(VentaEditModel venta)
         {
             ValidarParaCobrar(venta);
-            DescontarVuelto(venta);
-            NegocioCaja.RegistrarEfectivoCobrado(venta.EfectivoRecibido);
+            ValidarCajaAbierta(venta);
+
+            int idTipoTicket = ServicioVenta.ObtenerIdTipoComprobante(CodigoTicket)
+                ?? throw new ReglaNegocioException(
+                    "No está cargado el tipo de comprobante «Ticket» en la base de datos.");
+
+            List<PagoVenta> pagos = PagosSinVuelto(venta);
+
+            // El punto de venta es la caja: cada caja numera sus tickets desde 1.
+            long numero = ServicioVenta.Registrar(venta, pagos, idTipoTicket, venta.IdCaja, ConceptoCobro);
+
+            NegocioCaja.RegistrarEfectivoCobrado(pagos.Where(p => p.EsEfectivo).Sum(p => p.Importe));
+            return numero;
+        }
+
+        /// <summary>No se cobra contra un turno que otro puesto ya cerró.</summary>
+        private static void ValidarCajaAbierta(VentaEditModel venta)
+        {
+            CajaSesion abierta = NegocioCaja.ObtenerSesionAbierta();
+            if (abierta == null || abierta.IdCajaSesion != venta.IdCajaSesion)
+                throw new ReglaNegocioException("La caja de esta venta ya no está abierta.");
         }
 
         private static void ValidarParaCobrar(VentaEditModel venta)
@@ -162,15 +191,24 @@ namespace TiendaUNNE
         }
 
         /// <summary>
-        /// Baja del efectivo lo que se devuelve como vuelto, para que los pagos sumen
-        /// exactamente el total: en el cajón queda lo cobrado, no lo que entregó el cliente.
+        /// Copia de los pagos con el vuelto bajado del efectivo, para que sumen exactamente el
+        /// total: en el cajón queda lo cobrado, no lo que entregó el cliente. La venta no se
+        /// modifica, así un cobro que falla se puede reintentar tal cual estaba.
         /// </summary>
-        private static void DescontarVuelto(VentaEditModel venta)
+        private static List<PagoVenta> PagosSinVuelto(VentaEditModel venta)
         {
-            decimal vuelto = CalcularVuelto(venta);
-            if (vuelto <= 0) return;
+            List<PagoVenta> pagos = venta.Pagos.Select(p => new PagoVenta
+            {
+                IdMedioPago = p.IdMedioPago,
+                NombreMedioPago = p.NombreMedioPago,
+                EsEfectivo = p.EsEfectivo,
+                Importe = p.Importe,
+                Referencia = p.Referencia
+            }).ToList();
 
-            foreach (PagoVenta pago in venta.Pagos.Where(p => p.EsEfectivo).ToList())
+            decimal vuelto = CalcularVuelto(venta);
+
+            foreach (PagoVenta pago in pagos.Where(p => p.EsEfectivo))
             {
                 if (vuelto <= 0) break;
 
@@ -179,7 +217,8 @@ namespace TiendaUNNE
                 vuelto -= aDescontar;
             }
 
-            venta.Pagos.RemoveAll(p => p.Importe <= 0);
+            pagos.RemoveAll(p => p.Importe <= 0);
+            return pagos;
         }
     }
 }

@@ -264,7 +264,8 @@ namespace TiendaUNNE
                     return;
 
                 MessageBox.Show(
-                    "Cobro completado." +
+                    "Cobro completado. Ticket Nº " +
+                    cobro.NumeroTicket.ToString(NegocioVenta.FormatoNumeroTicket) + "." +
                     (cobro.Vuelto > 0
                         ? Environment.NewLine + Environment.NewLine + "Vuelto: " +
                           cobro.Vuelto.ToString(NegocioVenta.FormatoImporte)
