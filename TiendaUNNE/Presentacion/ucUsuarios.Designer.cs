@@ -115,6 +115,7 @@ namespace TiendaUNNE
             this.txtDniCuit.Size = new System.Drawing.Size(160, 23);
             this.txtDniCuit.TabIndex = 2;
             this.txtDniCuit.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtDniCuit_KeyPress);
+            this.txtDniCuit.TextChanged += new System.EventHandler(this.txtDniCuit_TextChanged);
             //
             // lblNombre
             //

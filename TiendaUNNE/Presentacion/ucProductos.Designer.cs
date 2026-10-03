@@ -143,6 +143,7 @@ namespace TiendaUNNE
             this.numPrecioVenta.TabIndex = 6;
             this.numPrecioVenta.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.numPrecioVenta.ThousandsSeparator = true;
+            this.numPrecioVenta.TextChanged += new System.EventHandler(this.numPrecioVenta_TextChanged);
             //
             // lblStock
             //

@@ -263,6 +263,20 @@ namespace TiendaUNNE
             }
         }
 
+        /// <summary>
+        /// Un NumericUpDown con Minimum en 0 bloquea el "-" al tipear, pero no al pegar:
+        /// si se pega un negativo, al perder el foco lo recorta solo a 0 sin avisar nada.
+        /// Acá se detecta antes de eso y se avisa, en vez de dejar que se pierda en silencio.
+        /// </summary>
+        private void numPrecioVenta_TextChanged(object sender, EventArgs e)
+        {
+            if (!numPrecioVenta.Text.Contains("-")) return;
+
+            MessageBox.Show("El precio no puede ser negativo. Ingresá un precio válido.",
+                "Precio inválido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            numPrecioVenta.Text = numPrecioVenta.Text.Replace("-", string.Empty);
+        }
+
         private ProductoEditModel ArmarModelo()
         {
             var categoria = cboCategoria.SelectedItem as CategoriaItem;

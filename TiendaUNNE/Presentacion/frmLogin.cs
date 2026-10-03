@@ -64,5 +64,10 @@ namespace TiendaUNNE
             lblError.Text = mensaje;
             lblError.Visible = true;
         }
+
+        private void lblTitulo_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }

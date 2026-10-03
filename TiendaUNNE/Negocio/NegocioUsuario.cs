@@ -54,6 +54,20 @@ namespace TiendaUNNE
             return usuario;
         }
 
+        /// <summary>
+        /// Para autocompletar el formulario: el usuario que tiene ese DNI, o null si el DNI
+        /// todavía no está completo (no cumple el formato) o nadie lo tiene. Con un DNI
+        /// incompleto no se consulta la base, así que se puede llamar en cada tecla.
+        /// </summary>
+        public static UsuarioEditModel BuscarPorDni(string dni)
+        {
+            if (!Validaciones.EsDniValido(dni))
+                return null;
+
+            int? idUsuario = ServicioUsuario.ObtenerIdPorDni(dni.Trim());
+            return idUsuario.HasValue ? ServicioUsuario.Obtener(idUsuario.Value) : null;
+        }
+
         // ---------------------------------------------------------------------
         // Alta y edición
         // ---------------------------------------------------------------------

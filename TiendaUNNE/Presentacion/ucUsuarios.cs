@@ -446,6 +446,29 @@ namespace TiendaUNNE
             e.Handled = !Validaciones.EsCaracterEmailValido(e.KeyChar);
         }
 
+        /// <summary>
+        /// Al completar un DNI que ya existe, carga a esa persona para editarla. Solo en un
+        /// alta: mientras se edita a alguien, cambiar el DNI no salta a otro usuario ni pisa
+        /// lo que se estaba editando.
+        /// </summary>
+        private void txtDniCuit_TextChanged(object sender, EventArgs e)
+        {
+            if (!EsAlta) return;
+
+            try
+            {
+                UsuarioEditModel existente = NegocioUsuario.BuscarPorDni(txtDniCuit.Text);
+                if (existente == null) return;
+
+                CargarEnFormulario(existente);
+                SeleccionarFilaPorId(existente.IdUsuario);
+            }
+            catch (Exception)
+            {
+                // El autocompletado es una ayuda: si falla, Guardar muestra el error real.
+            }
+        }
+
         // -----------------------------------------------------------------
         // Listado
         // -----------------------------------------------------------------

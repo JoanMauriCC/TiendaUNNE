@@ -89,6 +89,25 @@ WHERE u.id_usuario = @id;";
             }
         }
 
+        /// <summary>Id del usuario cuya persona tiene ese DNI, o null si nadie lo tiene.</summary>
+        public static int? ObtenerIdPorDni(string dni)
+        {
+            const string sql = @"
+SELECT u.id_usuario
+FROM        dbo.Usuario u
+INNER JOIN  dbo.Persona p ON p.id_persona = u.id_persona
+WHERE p.dni_cuit = @dni;";
+
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand(sql, cn))
+            {
+                cmd.Parameters.Add("@dni", SqlDbType.NVarChar, 20).Value = dni;
+
+                object id = cmd.ExecuteScalar();
+                return id == null ? (int?)null : (int)id;
+            }
+        }
+
         /// <summary>
         /// Consulta al stored procedure sp_ExisteEmailPersona si el email ya lo tiene
         /// otra persona. <paramref name="idPersonaExcluir"/> es la persona que se está

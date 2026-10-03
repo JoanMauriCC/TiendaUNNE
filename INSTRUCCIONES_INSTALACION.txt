@@ -1,0 +1,76 @@
+TiendaUNNE - Instrucciones de instalación y ejecución
+=======================================================
+
+REQUISITOS
+-----------
+- Visual Studio 2022 (o superior) con soporte para .NET Framework 4.7.2 y desarrollo de escritorio .NET.
+- SQL Server Express (o cualquier instancia local de SQL Server).
+- SQL Server Management Studio (SSMS), para correr los scripts.
+
+
+PASO 1: Crear la base de datos
+-------------------------------
+Abrir SQL Server Management Studio, conectarse a la instancia local
+(por defecto: ".\SQLEXPRESS", con Windows Authentication) y ejecutar,
+EN ESTE ORDEN, los siguientes archivos (Archivo > Abrir > Archivo... y F5):
+
+  1. TiendaUNNE_CreateTables.sql        (crea la base "TiendaUNNE" y las 15 tablas)
+  2. TiendaUNNE_StoredProcedures.sql    (crea el stored procedure sp_ExisteEmailPersona)
+
+Opcional, solo si querés ver productos y categorías de ejemplo para probar
+la pantalla de Caja:
+
+  3. TiendaUNNE_DatosDePrueba.sql
+
+Los archivos "TiendaUNNE_Migracion_*.sql" NO hace falta correrlos: son
+scripts para actualizar una base que ya tenía datos cargados con una
+versión vieja del sistema. Partiendo de cero, CreateTables.sql ya incluye
+todo lo que esos scripts agregan (DNI de 8 dígitos, login por DNI, columna
+stock_minimo, etc.).
+
+
+PASO 2: Revisar la cadena de conexión
+---------------------------------------
+Abrir el archivo:
+
+  TiendaUNNE\App.config
+
+Y verificar esta línea:
+
+  <add name="TiendaUNNE" providerName="System.Data.SqlClient"
+       connectionString="Data Source=.\SQLEXPRESS;Initial Catalog=TiendaUNNE;
+       Integrated Security=True;TrustServerCertificate=True;Connect Timeout=15" />
+
+"Data Source=.\SQLEXPRESS" tiene que coincidir con el nombre de tu instancia
+de SQL Server. Si la instalaste con otro nombre (por ejemplo solo "." para
+la instancia default, o "MSSQLLOCALDB"), hay que cambiar esa parte.
+
+
+PASO 3: Abrir y ejecutar el proyecto
+---------------------------------------
+1. Abrir el archivo "TiendaUNNE_TallerDeProgramacion2.slnx" con Visual Studio.
+2. Esperar a que restaure/compile (no usa paquetes NuGet externos, todo
+   viene incluido en .NET Framework).
+3. Ejecutar con F5.
+
+
+PASO 4: Iniciar sesión
+-------------------------
+La primera vez que se ejecuta el sistema, si la tabla Usuario está vacía,
+la aplicación crea sola un usuario administrador inicial:
+
+  DNI:         00000000
+  Contraseña:  Admin.1234
+
+Con eso ya se puede entrar y usar el sistema completo.
+
+
+PROBLEMAS COMUNES
+--------------------
+- "No se pudo conectar con la base de datos": revisar que SQL Server Express
+  esté corriendo (Servicios de Windows > "SQL Server (SQLEXPRESS)") y que el
+  nombre de instancia en App.config sea el correcto.
+
+- Error de certificado SSL al conectar desde SSMS: en la pantalla de
+  conexión, ir a "Options >>" > pestaña "Connection Properties" y tildar
+  "Trust server certificate".
