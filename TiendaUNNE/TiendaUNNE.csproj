@@ -64,6 +64,7 @@
     <Compile Include="Datos\ServicioAuditoria.cs" />
     <Compile Include="Datos\ServicioAutenticacion.cs" />
     <Compile Include="Datos\ServicioCategoria.cs" />
+    <Compile Include="Datos\ServicioMedioPago.cs" />
     <Compile Include="Datos\ServicioPerfil.cs" />
     <Compile Include="Datos\ServicioProducto.cs" />
     <Compile Include="Datos\ServicioUsuario.cs" />

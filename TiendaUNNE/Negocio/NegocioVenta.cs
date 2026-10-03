@@ -102,16 +102,7 @@ namespace TiendaUNNE
         // Cobro
         // ---------------------------------------------------------------------
 
-        public static List<MedioPagoItem> ListarMediosDePago()
-        {
-            return new List<MedioPagoItem>
-            {
-                new MedioPagoItem { Id = 1, Nombre = "Efectivo", EsEfectivo = true },
-                new MedioPagoItem { Id = 2, Nombre = "Tarjeta de débito" },
-                new MedioPagoItem { Id = 3, Nombre = "Tarjeta de crédito" },
-                new MedioPagoItem { Id = 4, Nombre = "Transferencia" }
-            };
-        }
+        public static List<MedioPagoItem> ListarMediosDePago() => ServicioMedioPago.ListarActivos();
 
         /// <summary>Lo que hay que devolverle al cliente si pagó de más.</summary>
         public static decimal CalcularVuelto(VentaEditModel venta)
