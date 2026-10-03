@@ -68,7 +68,34 @@ ORDER BY fecha_hora DESC;",
                 desde, hasta);
         }
 
-        private static DataTable Consultar(string sql, DateTime desde, DateTime hasta)
+        /// <summary>Una fila: Unidades vendidas y Distintos (cuántos productos distintos se vendieron).</summary>
+        public static DataTable ResumenProductosVendidos(DateTime desde, DateTime hasta)
+        {
+            return Consultar(@"
+SELECT ISNULL(SUM(d.cantidad), 0) AS Unidades, COUNT(DISTINCT d.id_producto) AS Distintos
+FROM        dbo.Venta_detalle  d
+INNER JOIN  dbo.Venta_cabecera c ON c.id_venta = d.id_venta
+WHERE c.estado = 'EMITIDA' AND c.fecha_hora >= @desde AND c.fecha_hora < @hasta;",
+                desde, hasta);
+        }
+
+        /// <summary>Producto y Unidades de los más vendidos; ante un empate, por orden alfabético.</summary>
+        public static DataTable ProductosMasVendidos(DateTime desde, DateTime hasta, int cantidad)
+        {
+            return Consultar(@"
+SELECT TOP (@cantidad) p.nombre AS Producto, SUM(d.cantidad) AS Unidades
+FROM        dbo.Venta_detalle  d
+INNER JOIN  dbo.Venta_cabecera c ON c.id_venta    = d.id_venta
+INNER JOIN  dbo.Producto       p ON p.id_producto = d.id_producto
+WHERE c.estado = 'EMITIDA' AND c.fecha_hora >= @desde AND c.fecha_hora < @hasta
+GROUP BY p.id_producto, p.nombre
+ORDER BY SUM(d.cantidad) DESC, p.nombre;",
+                desde, hasta,
+                new SqlParameter("@cantidad", SqlDbType.Int) { Value = cantidad });
+        }
+
+        private static DataTable Consultar(string sql, DateTime desde, DateTime hasta,
+                                           params SqlParameter[] otrosParametros)
         {
             var dt = new DataTable();
             using (var cn = Db.AbrirConexion())
@@ -76,6 +103,7 @@ ORDER BY fecha_hora DESC;",
             {
                 cmd.Parameters.Add("@desde", SqlDbType.DateTime2).Value = desde;
                 cmd.Parameters.Add("@hasta", SqlDbType.DateTime2).Value = hasta;
+                cmd.Parameters.AddRange(otrosParametros);
 
                 using (var da = new SqlDataAdapter(cmd))
                     da.Fill(dt);

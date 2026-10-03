@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace TiendaUNNE
 {
@@ -14,6 +16,11 @@ namespace TiendaUNNE
 
         /// <summary>Hasta cuántos días de rango se agrupa por día; más que eso, por mes.</summary>
         public const int DiasMaximosPorDia = 31;
+
+        /// <summary>Cuántos productos muestra el gráfico de los más vendidos.</summary>
+        public const int CantidadMasVendidos = 5;
+
+        private const int LargoMaximoEtiqueta = 16;
 
         public static void ValidarRango(DateTime desde, DateTime hasta)
         {
@@ -121,6 +128,78 @@ namespace TiendaUNNE
                 ventas.ToString("N0"),
                 Importe(Convert.ToDecimal(fila["Total"]))
             });
+        }
+
+        // ---------------------------------------------------------------------
+        // Productos
+        // ---------------------------------------------------------------------
+
+        /// <summary>
+        /// Qué se vendió entre dos fechas (unidades, productos distintos y los más vendidos) y
+        /// qué productos hay que reponer. El stock es el de hoy: no depende del rango, y qué
+        /// cuenta como «bajo» o «agotado» lo decide NegocioProducto, igual que en su pantalla.
+        /// </summary>
+        public static ReporteVista Productos(DateTime desde, DateTime hasta)
+        {
+            ValidarRango(desde, hasta);
+
+            DateTime inicio = desde.Date;
+            DateTime fin = hasta.Date.AddDays(1);   // "hasta" cuenta el día completo
+
+            DataRow resumen = ServicioReporte.ResumenProductosVendidos(inicio, fin).Rows[0];
+
+            List<DataRow> paraReponer = NegocioProducto.Listar(activos: true).AsEnumerable()
+                .Where(f => Convert.ToString(f["Estado"]).Length > 0)
+                .OrderBy(f => Convert.ToDecimal(f["Stock"]))
+                .ThenBy(f => Convert.ToString(f["Nombre"]))
+                .ToList();
+
+            var reporte = new ReporteVista
+            {
+                TituloGrafico = "Más vendidos (unidades)",
+                Descripcion = string.Format(
+                    "Ventas del {0:dd/MM/yyyy} al {1:dd/MM/yyyy}. La tabla muestra el stock de hoy, sin importar las fechas.",
+                    desde, hasta)
+            };
+
+            reporte.Indicadores.Add(new IndicadorReporte("Unidades vendidas",
+                Cantidad(Convert.ToDecimal(resumen["Unidades"]))));
+            reporte.Indicadores.Add(new IndicadorReporte("Productos distintos",
+                Convert.ToInt32(resumen["Distintos"]).ToString("N0")));
+            reporte.Indicadores.Add(new IndicadorReporte("Stock bajo o agotado",
+                paraReponer.Count.ToString("N0")));
+
+            foreach (DataRow fila in ServicioReporte.ProductosMasVendidos(inicio, fin, CantidadMasVendidos).Rows)
+            {
+                reporte.Etiquetas.Add(Abreviar(Convert.ToString(fila["Producto"])));
+                reporte.Valores.Add(Convert.ToDouble(fila["Unidades"]));
+            }
+
+            reporte.Columnas.AddRange(new[] { "Producto", "Stock", "Estado" });
+            foreach (DataRow fila in paraReponer)
+            {
+                reporte.Filas.Add(new[]
+                {
+                    Convert.ToString(fila["Nombre"]),
+                    Cantidad(Convert.ToDecimal(fila["Stock"])),
+                    Convert.ToString(fila["Estado"])
+                });
+            }
+
+            return reporte;
+        }
+
+        /// <summary>Un nombre largo se corta con «…» para que no se pise con el de al lado en el gráfico.</summary>
+        private static string Abreviar(string nombre)
+        {
+            return nombre.Length <= LargoMaximoEtiqueta
+                ? nombre
+                : nombre.Substring(0, LargoMaximoEtiqueta - 1) + "…";
+        }
+
+        private static string Cantidad(decimal valor)
+        {
+            return valor.ToString(NegocioVenta.FormatoCantidadTicket);
         }
 
         private static string Importe(decimal valor)

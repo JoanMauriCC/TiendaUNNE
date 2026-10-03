@@ -7,8 +7,8 @@ namespace TiendaUNNE
 {
     /// <summary>
     /// Sección de Reportes: ventas, productos y recaudación para el rango de fechas
-    /// que elige el usuario (Desde/Hasta). Ventas ya sale de la base a través de
-    /// NegocioReporte; Productos y Recaudación todavía muestran datos de ejemplo fijos.
+    /// que elige el usuario (Desde/Hasta). Ventas y Productos ya salen de la base a través
+    /// de NegocioReporte; Recaudación todavía muestra datos de ejemplo fijos.
     /// </summary>
     public partial class ucReportes : UserControl
     {
@@ -95,11 +95,20 @@ namespace TiendaUNNE
                 Cursor = Cursors.WaitCursor;
                 NegocioReporte.ValidarRango(desde, hasta);
 
-                // Productos y Recaudación todavía no consultan la base: un rango de un solo
-                // día muestra el ejemplo con detalle fino (por hora); uno más amplio, el agregado.
-                vista = _tipo == TipoReporte.Ventas
-                    ? NegocioReporte.Ventas(desde, hasta)
-                    : Convertir(ObtenerEjemplo(_tipo, desde == hasta), desde, hasta);
+                // Recaudación todavía no consulta la base: un rango de un solo día muestra el
+                // ejemplo con detalle fino (por hora); uno más amplio, el agregado.
+                switch (_tipo)
+                {
+                    case TipoReporte.Ventas:
+                        vista = NegocioReporte.Ventas(desde, hasta);
+                        break;
+                    case TipoReporte.Productos:
+                        vista = NegocioReporte.Productos(desde, hasta);
+                        break;
+                    default:
+                        vista = Convertir(ObtenerEjemplo(_tipo, desde == hasta), desde, hasta);
+                        break;
+                }
             }
             catch (ReglaNegocioException ex)
             {
@@ -195,24 +204,6 @@ namespace TiendaUNNE
         {
             switch (tipo)
             {
-                case TipoReporte.Productos:
-                    return new ReporteEjemplo
-                    {
-                        Indicadores = esHoy
-                            ? new[,] { { "Unidades vendidas", "41" }, { "Productos distintos", "12" }, { "Con stock bajo", "3" } }
-                            : new[,] { { "Unidades vendidas", "1.032" }, { "Productos distintos", "38" }, { "Con stock bajo", "3" } },
-                        TituloGrafico = "Más vendidos (unidades)",
-                        Etiquetas = new[] { "Remera", "Gorra", "Medias", "Buzo", "Short" },
-                        Valores = esHoy ? new double[] { 14, 9, 6, 7, 5 } : new double[] { 310, 204, 181, 140, 97 },
-                        Columnas = new[] { "Producto con stock bajo", "Stock" },
-                        Filas = new[]
-                        {
-                            new[] { "Buzo canguro", "2" },
-                            new[] { "Campera", "1" },
-                            new[] { "Gorra", "4" }
-                        }
-                    };
-
                 case TipoReporte.Recaudacion:
                     return esHoy
                         ? new ReporteEjemplo
