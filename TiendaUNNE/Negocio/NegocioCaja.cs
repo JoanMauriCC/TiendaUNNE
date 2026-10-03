@@ -28,7 +28,7 @@ namespace TiendaUNNE
 
             try
             {
-                ServicioCaja.AbrirSesion(idCaja, idUsuario, montoInicial);
+                ServicioCaja.AbrirSesion(idCaja, idUsuario, montoInicial, ResumenApertura(montoInicial));
             }
             catch (DuplicadoException)
             {
@@ -73,12 +73,38 @@ namespace TiendaUNNE
             ArqueoCaja arqueo = CalcularArqueo(sesion, montoDeclarado);
 
             int filas = ServicioCaja.CerrarSesion(sesion.IdCajaSesion, idUsuario,
-                arqueo.EfectivoEsperado, montoDeclarado, arqueo.Diferencia, notas);
+                arqueo.EfectivoEsperado, montoDeclarado, arqueo.Diferencia, notas,
+                ResumenAperturaDe(sesion), ResumenCierre(arqueo, notas));
 
             if (filas == 0)
                 throw new ReglaNegocioException("La caja ya estaba cerrada o no existe.");
 
             return arqueo;
+        }
+
+        // ---------------------------------------------------------------------
+        // Textos de auditoría
+        // ---------------------------------------------------------------------
+
+        private static string ResumenApertura(decimal montoInicial)
+        {
+            return "Apertura de caja; monto inicial = $ " + montoInicial.ToString(FormatoImporte);
+        }
+
+        /// <summary>Cómo estaba el turno antes de cerrarlo: lo que figura como valor anterior.</summary>
+        private static string ResumenAperturaDe(CajaSesion sesion)
+        {
+            return string.Format("Abierta desde {0:dd/MM/yyyy HH:mm} por {1}; monto inicial = $ {2}",
+                sesion.FechaApertura, sesion.UsuarioApertura, sesion.MontoInicial.ToString(FormatoImporte));
+        }
+
+        private static string ResumenCierre(ArqueoCaja arqueo, string observaciones)
+        {
+            return string.Format("Cerrada; esperado = $ {0}; contado = $ {1}; diferencia = $ {2}{3}",
+                arqueo.EfectivoEsperado.ToString(FormatoImporte),
+                arqueo.MontoDeclarado.ToString(FormatoImporte),
+                arqueo.Diferencia.ToString(FormatoImporte),
+                observaciones == null ? string.Empty : "; observaciones: " + observaciones);
         }
 
         /// <summary>El sistema trabaja con la primera caja activa que haya cargada.</summary>

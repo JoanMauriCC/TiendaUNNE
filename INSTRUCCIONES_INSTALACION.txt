@@ -29,6 +29,20 @@ todo lo que esos scripts agregan (DNI de 8 dígitos, login por DNI, columna
 stock_minimo, etc.).
 
 
+SI YA TENÍAS LA BASE CREADA (después de un "git pull")
+--------------------------------------------------------
+No ejecutar TiendaUNNE_CreateTables.sql: BORRA todas las tablas y sus datos.
+Para llevar la base a la versión actual SIN perder nada, ejecutar en SSMS, en orden:
+
+  1. TiendaUNNE_ActualizarBase.sql      (junta todas las migraciones; se puede
+                                         correr las veces que haga falta)
+  2. TiendaUNNE_StoredProcedures.sql
+  3. (opcional) TiendaUNNE_DatosDePrueba.sql   (categorías y productos de ejemplo)
+
+Leer lo que imprime el paso 1: si algún DNI cargado no tiene exactamente 8 dígitos
+lo avisa y deja ese paso pendiente; se corrige a mano y se vuelve a correr.
+
+
 PASO 2: Revisar la cadena de conexión
 ---------------------------------------
 Abrir el archivo:

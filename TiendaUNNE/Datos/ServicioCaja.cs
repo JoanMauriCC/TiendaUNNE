@@ -91,40 +91,63 @@ WHERE vc.id_caja_sesion = @id_caja_sesion
         /// <summary>
         /// Abre un turno y devuelve su id. El índice único filtrado UQ_CajaSesion_abierta
         /// impide dos turnos abiertos en la misma caja: si ya había uno, lanza
-        /// DuplicadoException.
+        /// DuplicadoException. El registro de auditoría (ALTA) se graba en la misma
+        /// transacción: o quedan los dos o ninguno.
         /// </summary>
-        public static int AbrirSesion(int idCaja, int idUsuario, decimal montoInicial)
+        public static int AbrirSesion(int idCaja, int idUsuario, decimal montoInicial,
+                                      string resumenNuevo)
         {
             const string sql = @"
 INSERT INTO dbo.Caja_sesion (id_caja, id_usuario_apertura, monto_inicial)
 VALUES (@id_caja, @id_usuario, @monto);
 SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
-            try
+            using (var cn = Db.AbrirConexion())
+            using (var tx = cn.BeginTransaction())
             {
-                using (var cn = Db.AbrirConexion())
-                using (var cmd = new SqlCommand(sql, cn))
+                try
                 {
-                    cmd.Parameters.Add("@id_caja", SqlDbType.Int).Value = idCaja;
-                    cmd.Parameters.Add("@id_usuario", SqlDbType.Int).Value = idUsuario;
-                    AgregarImporte(cmd, "@monto", montoInicial);
+                    int idSesion;
+                    using (var cmd = new SqlCommand(sql, cn, tx))
+                    {
+                        cmd.Parameters.Add("@id_caja", SqlDbType.Int).Value = idCaja;
+                        cmd.Parameters.Add("@id_usuario", SqlDbType.Int).Value = idUsuario;
+                        AgregarImporte(cmd, "@monto", montoInicial);
+                        idSesion = (int)cmd.ExecuteScalar();
+                    }
 
-                    return (int)cmd.ExecuteScalar();
+                    ServicioAuditoria.Registrar(
+                        "ALTA", "Caja_sesion", idSesion,
+                        valorAnterior: null,
+                        valorNuevo: resumenNuevo,
+                        idUsuario: idUsuario,
+                        cn: cn, tx: tx);
+
+                    tx.Commit();
+                    return idSesion;
                 }
-            }
-            catch (SqlException ex)
-            {
-                throw DuplicadoException.Traducir(ex);
+                catch (SqlException ex)
+                {
+                    tx.Rollback();
+                    throw DuplicadoException.Traducir(ex);
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
+                }
             }
         }
 
         /// <summary>
         /// Cierra el turno con las cuentas que calculó NegocioCaja. Devuelve la cantidad
-        /// de filas afectadas; 0 significa que ya estaba cerrado o que no existe.
+        /// de filas afectadas; 0 significa que ya estaba cerrado o que no existe. Si cerró,
+        /// el registro de auditoría (MODIFICACION) se graba en la misma transacción.
         /// </summary>
         public static int CerrarSesion(int idCajaSesion, int idUsuarioCierre,
                                        decimal montoFinalSistema, decimal montoFinalDeclarado,
-                                       decimal diferencia, string observaciones)
+                                       decimal diferencia, string observaciones,
+                                       string resumenAnterior, string resumenNuevo)
         {
             const string sql = @"
 UPDATE dbo.Caja_sesion
@@ -138,17 +161,39 @@ SET estado                = 'CERRADA',
 WHERE id_caja_sesion = @id AND estado = 'ABIERTA';";
 
             using (var cn = Db.AbrirConexion())
-            using (var cmd = new SqlCommand(sql, cn))
+            using (var tx = cn.BeginTransaction())
             {
-                cmd.Parameters.Add("@id", SqlDbType.Int).Value = idCajaSesion;
-                cmd.Parameters.Add("@id_usuario", SqlDbType.Int).Value = idUsuarioCierre;
-                AgregarImporte(cmd, "@sistema", montoFinalSistema);
-                AgregarImporte(cmd, "@declarado", montoFinalDeclarado);
-                AgregarImporte(cmd, "@diferencia", diferencia);
-                cmd.Parameters.Add("@observaciones", SqlDbType.NVarChar, 300).Value =
-                    (object)observaciones ?? DBNull.Value;
+                try
+                {
+                    int filas;
+                    using (var cmd = new SqlCommand(sql, cn, tx))
+                    {
+                        cmd.Parameters.Add("@id", SqlDbType.Int).Value = idCajaSesion;
+                        cmd.Parameters.Add("@id_usuario", SqlDbType.Int).Value = idUsuarioCierre;
+                        AgregarImporte(cmd, "@sistema", montoFinalSistema);
+                        AgregarImporte(cmd, "@declarado", montoFinalDeclarado);
+                        AgregarImporte(cmd, "@diferencia", diferencia);
+                        cmd.Parameters.Add("@observaciones", SqlDbType.NVarChar, 300).Value =
+                            (object)observaciones ?? DBNull.Value;
+                        filas = cmd.ExecuteNonQuery();
+                    }
 
-                return cmd.ExecuteNonQuery();
+                    if (filas > 0)
+                    {
+                        ServicioAuditoria.Registrar(
+                            "MODIFICACION", "Caja_sesion", idCajaSesion,
+                            resumenAnterior, resumenNuevo, idUsuarioCierre,
+                            cn, tx);
+                    }
+
+                    tx.Commit();
+                    return filas;
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
+                }
             }
         }
 
