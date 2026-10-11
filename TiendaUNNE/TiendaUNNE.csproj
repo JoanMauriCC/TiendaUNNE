@@ -102,6 +102,9 @@
     <Compile Include="Presentacion\TarjetaAccion.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Presentacion\TarjetaProducto.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Presentacion\AtajosTeclado.cs" />
     <Compile Include="Presentacion\FiltroGrilla.cs" />
     <Compile Include="Presentacion\ucReportes.cs">
@@ -112,6 +115,9 @@
     </Compile>
     <Compile Include="Presentacion\ucCaja.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Presentacion\ucCaja.Apertura.cs">
+      <DependentUpon>ucCaja.cs</DependentUpon>
     </Compile>
     <Compile Include="Presentacion\ucCaja.Designer.cs">
       <DependentUpon>ucCaja.cs</DependentUpon>

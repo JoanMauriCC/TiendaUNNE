@@ -24,6 +24,40 @@ namespace TiendaUNNE
             }
         }
 
+        /// <summary>
+        /// Primera caja activa con el efectivo que se contó al cerrar su último turno,
+        /// o null si no hay ninguna caja cargada.
+        /// </summary>
+        public static DatosApertura ObtenerDatosApertura()
+        {
+            const string sql = @"
+SELECT TOP 1 c.id_caja, c.nombre,
+       (SELECT TOP 1 s.monto_final_declarado
+        FROM   dbo.Caja_sesion s
+        WHERE  s.id_caja = c.id_caja AND s.estado = 'CERRADA'
+        ORDER BY s.fecha_cierre DESC, s.id_caja_sesion DESC) AS cierre_anterior
+FROM   dbo.Caja c
+WHERE  c.activo = 1
+ORDER BY c.id_caja;";
+
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand(sql, cn))
+            using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
+            {
+                if (!dr.Read())
+                    return null;
+
+                return new DatosApertura
+                {
+                    IdCaja = (int)dr["id_caja"],
+                    NombreCaja = (string)dr["nombre"],
+                    CierreAnterior = dr["cierre_anterior"] == DBNull.Value
+                        ? (decimal?)null
+                        : (decimal)dr["cierre_anterior"]
+                };
+            }
+        }
+
         /// <summary>Turno abierto de esa caja, o null si la caja está cerrada.</summary>
         public static CajaSesion ObtenerSesionAbierta(int idCaja)
         {

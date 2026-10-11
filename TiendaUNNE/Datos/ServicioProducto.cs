@@ -52,27 +52,28 @@ ORDER BY p.nombre;";
         }
 
         /// <summary>
-        /// Productos activos cuyo nombre contiene el texto buscado, con su precio y
-        /// stock libre para ese ticket: el stock menos lo que reservaron los OTROS tickets en curso
-        /// (lo del propio ticket sí cuenta como disponible). Lo usa la caja para armar el ticket.
+        /// Todos los productos activos con su categoría, para el catálogo de la caja. El stock que
+        /// devuelve es el libre para ese ticket: el stock menos lo que reservaron los OTROS tickets
+        /// en curso (lo del propio ticket sí cuenta como disponible).
         /// </summary>
-        public static List<ProductoVentaItem> BuscarParaVenta(string texto, Guid token)
+        public static List<ProductoVentaItem> ListarParaVenta(Guid token)
         {
             const string sql = @"
-SELECT TOP 50 p.id_producto, p.nombre, p.precio_venta,
-       CASE WHEN p.stock - o.Reservado > 0 THEN p.stock - o.Reservado ELSE 0 END AS stock
+SELECT p.id_producto, p.nombre, c.nombre AS categoria, p.precio_venta, p.stock_minimo,
+       CASE WHEN p.stock - o.Reservado > 0 THEN p.stock - o.Reservado ELSE 0 END AS stock,
+       o.Reservado AS reservado_otros
 FROM   dbo.Producto p
+INNER JOIN dbo.Categoria c ON c.id_categoria = p.id_categoria
 CROSS APPLY (SELECT ISNULL(SUM(rs.cantidad), 0) AS Reservado
              FROM   dbo.Reserva_stock rs
              WHERE  rs.id_producto = p.id_producto AND rs.token <> @token AND rs.vence > GETDATE()) o
-WHERE  p.activo = 1 AND p.nombre LIKE @texto
+WHERE  p.activo = 1
 ORDER BY p.nombre;";
 
             var lista = new List<ProductoVentaItem>();
             using (var cn = Db.AbrirConexion())
             using (var cmd = new SqlCommand(sql, cn))
             {
-                cmd.Parameters.Add("@texto", SqlDbType.NVarChar, 150).Value = "%" + texto + "%";
                 cmd.Parameters.Add("@token", SqlDbType.UniqueIdentifier).Value = token;
 
                 using (var dr = cmd.ExecuteReader())
@@ -83,8 +84,11 @@ ORDER BY p.nombre;";
                         {
                             IdProducto = (int)dr["id_producto"],
                             Nombre = (string)dr["nombre"],
+                            Categoria = (string)dr["categoria"],
                             PrecioVenta = (decimal)dr["precio_venta"],
-                            Stock = (decimal)dr["stock"]
+                            Stock = (decimal)dr["stock"],
+                            StockMinimo = (decimal)dr["stock_minimo"],
+                            ReservadoPorOtros = (decimal)dr["reservado_otros"]
                         });
                     }
                 }

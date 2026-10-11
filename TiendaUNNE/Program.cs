@@ -15,6 +15,7 @@ namespace TiendaUNNE
             try
             {
                 NegocioArranque.AsegurarAdministradorInicial();
+                NegocioArranque.AsegurarDatosDeCaja();
             }
             catch (Exception ex)
             {

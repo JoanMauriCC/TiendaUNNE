@@ -9,8 +9,16 @@ namespace TiendaUNNE
     {
         public int IdProducto { get; set; }
         public string Nombre { get; set; }
+        public string Categoria { get; set; }
         public decimal PrecioVenta { get; set; }
+
+        /// <summary>Stock libre para este ticket: el del depósito menos lo reservado por otros tickets.</summary>
         public decimal Stock { get; set; }
+
+        public decimal StockMinimo { get; set; }
+
+        /// <summary>Lo que tienen reservado otros tickets en curso (informativo).</summary>
+        public decimal ReservadoPorOtros { get; set; }
     }
 
     /// <summary>Un renglón del ticket. El precio queda congelado al momento de agregarlo.</summary>

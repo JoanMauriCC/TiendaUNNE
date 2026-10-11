@@ -13,6 +13,15 @@ namespace TiendaUNNE
         private const string PerfilAdministrador = "Administrador";
         private const string DescripcionPerfilAdministrador = "Acceso total al sistema";
 
+        /// <summary>
+        /// Deja cargados los datos básicos de la caja (Caja 1, medios de pago y comprobante Ticket)
+        /// si faltan, para que el sistema se pueda usar sin tocar la base de datos.
+        /// </summary>
+        public static void AsegurarDatosDeCaja()
+        {
+            ServicioArranque.AsegurarDatosDeCaja();
+        }
+
         public static void AsegurarAdministradorInicial()
         {
             // Si ya hay usuarios, el sistema está inicializado y no se toca nada.

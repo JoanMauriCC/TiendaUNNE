@@ -14,6 +14,16 @@ namespace TiendaUNNE
         public decimal MontoInicial { get; set; }
     }
 
+    /// <summary>Lo que hace falta mostrar antes de abrir la caja: cuál es y con cuánto cerró el turno anterior.</summary>
+    public sealed class DatosApertura
+    {
+        public int IdCaja { get; set; }
+        public string NombreCaja { get; set; }
+
+        /// <summary>Efectivo contado al cerrar el último turno de esta caja, o null si nunca se cerró uno.</summary>
+        public decimal? CierreAnterior { get; set; }
+    }
+
     /// <summary>
     /// Cuentas del cierre de caja: cuánto efectivo debería haber según el sistema,
     /// cuánto se contó realmente y la diferencia entre ambos.

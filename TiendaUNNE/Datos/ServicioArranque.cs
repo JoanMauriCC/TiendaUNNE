@@ -17,6 +17,34 @@ namespace TiendaUNNE
                 return (int)cmd.ExecuteScalar();
         }
 
+        /// <summary>
+        /// Carga lo mínimo para poder vender si falta: la primera caja, los medios de pago y el
+        /// tipo de comprobante «Ticket». Solo agrega lo que no existe, así que se puede llamar
+        /// en cada arranque sin pisar nada de lo que se haya configurado.
+        /// </summary>
+        public static void AsegurarDatosDeCaja()
+        {
+            const string sql = @"
+IF NOT EXISTS (SELECT 1 FROM dbo.Caja)
+    INSERT INTO dbo.Caja (nombre, descripcion)
+    VALUES (N'Caja 1', N'Caja principal del local');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Medio_pago)
+    INSERT INTO dbo.Medio_pago (nombre, requiere_referencia, es_efectivo) VALUES
+        (N'Efectivo',           0, 1),
+        (N'Tarjeta de débito',  1, 0),
+        (N'Tarjeta de crédito', 1, 0),
+        (N'Transferencia',      1, 0);
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Tipo_comprobante WHERE codigo = N'TKT')
+    INSERT INTO dbo.Tipo_comprobante (codigo, nombre, letra, signo)
+    VALUES (N'TKT', N'Ticket', NULL, 1);";
+
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand(sql, cn))
+                cmd.ExecuteNonQuery();
+        }
+
         /// <summary>Devuelve el id del perfil con ese nombre, creándolo si todavía no existe.</summary>
         public static int ObtenerOCrearPerfil(string nombre, string descripcion)
         {

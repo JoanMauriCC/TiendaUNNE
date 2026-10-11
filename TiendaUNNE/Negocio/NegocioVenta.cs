@@ -49,17 +49,84 @@ namespace TiendaUNNE
         }
 
         /// <summary>
-        /// Busca en el catálogo (solo lectura). El stock que devuelve es el libre para este ticket:
-        /// descuenta lo que tienen reservado los demás tickets.
+        /// Catálogo completo de productos activos (solo lectura). El stock de cada uno es el libre
+        /// para este ticket: descuenta lo que tienen reservado los demás tickets.
         /// </summary>
-        public static List<ProductoVentaItem> BuscarProductos(VentaEditModel venta, string texto)
+        public static List<ProductoVentaItem> ListarCatalogo(VentaEditModel venta)
         {
             if (venta == null) throw new ArgumentNullException(nameof(venta));
 
-            if (string.IsNullOrWhiteSpace(texto))
-                return new List<ProductoVentaItem>();
+            return ServicioProducto.ListarParaVenta(venta.Token);
+        }
 
-            return ServicioProducto.BuscarParaVenta(texto.Trim(), venta.Token);
+        /// <summary>Categorías que tienen algún producto en el catálogo, en orden alfabético.</summary>
+        public static List<string> CategoriasDelCatalogo(IEnumerable<ProductoVentaItem> catalogo)
+        {
+            return catalogo.Select(p => p.Categoria)
+                .Distinct(StringComparer.CurrentCultureIgnoreCase)
+                .OrderBy(c => c, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Productos que se muestran con el texto y la categoría elegidos. <paramref name="categoria"/>
+        /// en null muestra todas. El texto no distingue mayúsculas ni tildes.
+        /// </summary>
+        public static List<ProductoVentaItem> FiltrarCatalogo(
+            IEnumerable<ProductoVentaItem> catalogo, VentaEditModel venta,
+            string texto, string categoria, bool ocultarSinStock)
+        {
+            string buscado = Normalizar(texto);
+
+            return catalogo
+                .Where(p => categoria == null ||
+                            string.Equals(p.Categoria, categoria, StringComparison.CurrentCultureIgnoreCase))
+                .Where(p => !ocultarSinStock || Disponible(venta, p) > 0)
+                .Where(p => buscado.Length == 0 || Normalizar(p.Nombre).Contains(buscado))
+                .ToList();
+        }
+
+        /// <summary>Lo que todavía se puede agregar de ese producto: su stock libre menos lo ya cargado en el ticket.</summary>
+        public static decimal Disponible(VentaEditModel venta, ProductoVentaItem producto)
+        {
+            RenglonVenta renglon = venta == null
+                ? null
+                : venta.Renglones.FirstOrDefault(r => r.IdProducto == producto.IdProducto);
+
+            decimal libre = producto.Stock - (renglon == null ? 0 : renglon.Cantidad);
+            return libre > 0 ? libre : 0;
+        }
+
+        /// <summary>Quita una unidad del renglón; si era la última, lo saca del ticket.</summary>
+        public static void RestarUnaUnidad(VentaEditModel venta, int indice)
+        {
+            if (venta == null) throw new ArgumentNullException(nameof(venta));
+
+            if (indice < 0 || indice >= venta.Renglones.Count)
+                throw new ReglaNegocioException("Elegí un renglón del ticket.");
+
+            RenglonVenta renglon = venta.Renglones[indice];
+
+            if (renglon.Cantidad <= 1)
+            {
+                QuitarRenglon(venta, indice);
+                return;
+            }
+
+            ServicioReserva.Reservar(venta.Token, renglon.IdProducto, renglon.Cantidad - 1, venta.IdUsuario);
+            renglon.Cantidad -= 1;
+        }
+
+        private static string Normalizar(string texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto)) return string.Empty;
+
+            string descompuesto = texto.Trim().ToLowerInvariant().Normalize(System.Text.NormalizationForm.FormD);
+            var sb = new System.Text.StringBuilder(descompuesto.Length);
+            foreach (char c in descompuesto)
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                    sb.Append(c);
+            return sb.ToString();
         }
 
         /// <summary>

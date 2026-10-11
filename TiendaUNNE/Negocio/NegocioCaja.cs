@@ -13,22 +13,50 @@ namespace TiendaUNNE
         public const int LargoMaximoObservaciones = 300;
         public const string FormatoImporte = "N2";
 
-        /// <summary>Sesión abierta, o null si la caja está cerrada.</summary>
+        /// <summary>
+        /// Sesión abierta, o null si la caja está cerrada. Si todavía no hay ninguna caja cargada
+        /// tampoco hay turno abierto: se muestra como cerrada y el aviso sale recién al intentar abrirla.
+        /// </summary>
         public static CajaSesion ObtenerSesionAbierta()
-            => ServicioCaja.ObtenerSesionAbierta(IdCajaDelSistema());
+        {
+            int? idCaja = ServicioCaja.ObtenerIdCajaActiva();
+            return idCaja.HasValue ? ServicioCaja.ObtenerSesionAbierta(idCaja.Value) : null;
+        }
 
-        public static CajaSesion AbrirCaja(decimal montoInicial, int idUsuario)
+        /// <summary>Caja que se va a abrir y con cuánto cerró el turno anterior; null si no hay caja cargada.</summary>
+        public static DatosApertura PrepararApertura() => ServicioCaja.ObtenerDatosApertura();
+
+        /// <summary>
+        /// Abre el turno con el efectivo declarado. Si no coincide con lo que quedó al cerrar el turno
+        /// anterior hay que dejar anotado el motivo; ese texto queda en la auditoría de la apertura.
+        /// </summary>
+        public static CajaSesion AbrirCaja(decimal montoInicial, int idUsuario, string observaciones)
         {
             ValidarMonto(montoInicial, "El monto inicial");
 
-            int idCaja = IdCajaDelSistema();
+            string notas = string.IsNullOrWhiteSpace(observaciones) ? null : observaciones.Trim();
+            if (notas != null && notas.Length > LargoMaximoObservaciones)
+                throw new ReglaNegocioException(
+                    "Las observaciones no pueden superar los " + LargoMaximoObservaciones + " caracteres.");
+
+            DatosApertura datos = ServicioCaja.ObtenerDatosApertura()
+                ?? throw new ReglaNegocioException("No hay ninguna caja configurada en el sistema.");
+
+            int idCaja = datos.IdCaja;
 
             if (ServicioCaja.ObtenerSesionAbierta(idCaja) != null)
                 throw new ReglaNegocioException("La caja ya está abierta.");
 
+            decimal? anterior = datos.CierreAnterior;
+            if (anterior.HasValue && anterior.Value != montoInicial && notas == null)
+                throw new ReglaNegocioException(string.Format(
+                    "El monto no coincide con el cierre anterior ($ {0}). Anotá el motivo en las observaciones.",
+                    anterior.Value.ToString(FormatoImporte)));
+
             try
             {
-                ServicioCaja.AbrirSesion(idCaja, idUsuario, montoInicial, ResumenApertura(montoInicial));
+                ServicioCaja.AbrirSesion(idCaja, idUsuario, montoInicial,
+                    ResumenApertura(montoInicial, anterior, notas));
             }
             catch (DuplicadoException)
             {
@@ -86,9 +114,19 @@ namespace TiendaUNNE
         // Textos de auditoría
         // ---------------------------------------------------------------------
 
-        private static string ResumenApertura(decimal montoInicial)
+        private static string ResumenApertura(decimal montoInicial, decimal? cierreAnterior, string observaciones)
         {
-            return "Apertura de caja; monto inicial = $ " + montoInicial.ToString(FormatoImporte);
+            string texto = "Apertura de caja; monto inicial = $ " + montoInicial.ToString(FormatoImporte);
+
+            if (cierreAnterior.HasValue)
+                texto += string.Format("; cierre anterior = $ {0}; diferencia = $ {1}",
+                    cierreAnterior.Value.ToString(FormatoImporte),
+                    (montoInicial - cierreAnterior.Value).ToString(FormatoImporte));
+
+            if (observaciones != null)
+                texto += "; observaciones: " + observaciones;
+
+            return texto;
         }
 
         /// <summary>Cómo estaba el turno antes de cerrarlo: lo que figura como valor anterior.</summary>
