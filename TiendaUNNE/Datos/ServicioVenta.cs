@@ -47,6 +47,7 @@ WHERE  codigo = @codigo AND activo = 1;";
                     long numero = SiguienteNumero(cn, tx, idTipoComprobante, puntoVenta);
                     int idVenta = InsertarCabecera(cn, tx, venta, idTipoComprobante, puntoVenta, numero);
                     InsertarRenglones(cn, tx, idVenta, venta.Renglones);
+                    DescontarStock(cn, tx, venta);
                     InsertarPagos(cn, tx, venta, idVenta, pagos, conceptoCaja);
 
                     tx.Commit();
@@ -129,6 +130,59 @@ VALUES
                     AgregarDecimal(cmd, "@subtotal", r.Subtotal, 12, 2);
                     cmd.ExecuteNonQuery();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Descuenta del stock lo vendido y borra las reservas del ticket, en la misma transacción
+        /// que la venta. Se bloquea la fila del producto y se comprueba que, además de alcanzar el
+        /// stock, no se pise lo que otros tickets tienen reservado.
+        /// </summary>
+        private static void DescontarStock(SqlConnection cn, SqlTransaction tx, VentaEditModel venta)
+        {
+            const string sqlLeer = @"
+SELECT p.stock,
+       (SELECT ISNULL(SUM(rs.cantidad), 0)
+        FROM   dbo.Reserva_stock rs
+        WHERE  rs.id_producto = p.id_producto AND rs.token <> @token AND rs.vence > GETDATE())
+FROM   dbo.Producto p WITH (UPDLOCK, HOLDLOCK)
+WHERE  p.id_producto = @producto;";
+
+            const string sqlDescontar = @"
+UPDATE dbo.Producto SET stock = stock - @cantidad WHERE id_producto = @producto;";
+
+            const string sqlLiberar = @"
+DELETE FROM dbo.Reserva_stock WHERE token = @token;";
+
+            foreach (RenglonVenta r in venta.Renglones)
+            {
+                decimal libre;
+                using (var cmd = new SqlCommand(sqlLeer, cn, tx))
+                {
+                    cmd.Parameters.Add("@producto", SqlDbType.Int).Value = r.IdProducto;
+                    cmd.Parameters.Add("@token", SqlDbType.UniqueIdentifier).Value = venta.Token;
+
+                    using (var dr = cmd.ExecuteReader())
+                    {
+                        libre = dr.Read() ? dr.GetDecimal(0) - dr.GetDecimal(1) : 0;
+                    }
+                }
+
+                if (r.Cantidad > libre)
+                    throw new StockInsuficienteException(r.IdProducto, libre > 0 ? libre : 0);
+
+                using (var cmd = new SqlCommand(sqlDescontar, cn, tx))
+                {
+                    cmd.Parameters.Add("@producto", SqlDbType.Int).Value = r.IdProducto;
+                    AgregarDecimal(cmd, "@cantidad", r.Cantidad, 12, 3);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            using (var cmd = new SqlCommand(sqlLiberar, cn, tx))
+            {
+                cmd.Parameters.Add("@token", SqlDbType.UniqueIdentifier).Value = venta.Token;
+                cmd.ExecuteNonQuery();
             }
         }
 

@@ -377,12 +377,16 @@ namespace TiendaUNNE
             SetHeader("PrecioVenta", "Precio venta");
             SetHeader("Stock", "Stock");
             SetHeader("StockMinimo", "Stock mínimo");
+            SetHeader("Reservado", "Reservado");
+            SetHeader("Disponible", "Disponible");
             SetHeader("Estado", "Estado");
             SetHeader("Activo", "Activo");
 
             SetFormatoNumerico("PrecioVenta", NegocioProducto.FormatoPrecio);
             SetFormatoNumerico("Stock", NegocioProducto.FormatoStock);
             SetFormatoNumerico("StockMinimo", NegocioProducto.FormatoStock);
+            SetFormatoNumerico("Reservado", NegocioProducto.FormatoStock);
+            SetFormatoNumerico("Disponible", NegocioProducto.FormatoStock);
 
             // Estado va pegado al stock mínimo, no al final de la grilla.
             if (dgvProductos.Columns.Contains("Estado") && dgvProductos.Columns.Contains("StockMinimo"))

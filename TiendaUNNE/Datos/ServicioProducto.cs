@@ -28,9 +28,14 @@ SELECT  p.id_producto    AS IdProducto,
         c.nombre         AS Categoria,
         p.precio_venta   AS PrecioVenta,
         p.stock          AS Stock,
+        r.Reservado      AS Reservado,
+        CASE WHEN p.stock - r.Reservado > 0 THEN p.stock - r.Reservado ELSE 0 END AS Disponible,
         p.stock_minimo   AS StockMinimo,
         p.activo         AS Activo
 FROM        dbo.Producto  p
+CROSS APPLY (SELECT ISNULL(SUM(rs.cantidad), 0) AS Reservado
+             FROM   dbo.Reserva_stock rs
+             WHERE  rs.id_producto = p.id_producto AND rs.vence > GETDATE()) r
 INNER JOIN  dbo.Categoria c ON c.id_categoria = p.id_categoria
 WHERE p.activo = @activo
 ORDER BY p.nombre;";
@@ -48,21 +53,27 @@ ORDER BY p.nombre;";
 
         /// <summary>
         /// Productos activos cuyo nombre contiene el texto buscado, con su precio y
-        /// stock actual. Lo usa la caja para armar el ticket.
+        /// stock libre para ese ticket: el stock menos lo que reservaron los OTROS tickets en curso
+        /// (lo del propio ticket sí cuenta como disponible). Lo usa la caja para armar el ticket.
         /// </summary>
-        public static List<ProductoVentaItem> BuscarParaVenta(string texto)
+        public static List<ProductoVentaItem> BuscarParaVenta(string texto, Guid token)
         {
             const string sql = @"
-SELECT TOP 50 id_producto, nombre, precio_venta, stock
-FROM   dbo.Producto
-WHERE  activo = 1 AND nombre LIKE @texto
-ORDER BY nombre;";
+SELECT TOP 50 p.id_producto, p.nombre, p.precio_venta,
+       CASE WHEN p.stock - o.Reservado > 0 THEN p.stock - o.Reservado ELSE 0 END AS stock
+FROM   dbo.Producto p
+CROSS APPLY (SELECT ISNULL(SUM(rs.cantidad), 0) AS Reservado
+             FROM   dbo.Reserva_stock rs
+             WHERE  rs.id_producto = p.id_producto AND rs.token <> @token AND rs.vence > GETDATE()) o
+WHERE  p.activo = 1 AND p.nombre LIKE @texto
+ORDER BY p.nombre;";
 
             var lista = new List<ProductoVentaItem>();
             using (var cn = Db.AbrirConexion())
             using (var cmd = new SqlCommand(sql, cn))
             {
                 cmd.Parameters.Add("@texto", SqlDbType.NVarChar, 150).Value = "%" + texto + "%";
+                cmd.Parameters.Add("@token", SqlDbType.UniqueIdentifier).Value = token;
 
                 using (var dr = cmd.ExecuteReader())
                 {

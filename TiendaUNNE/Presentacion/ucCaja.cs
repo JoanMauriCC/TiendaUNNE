@@ -15,9 +15,22 @@ namespace TiendaUNNE
         private CajaSesion _sesion;
         private VentaEditModel _venta;
 
+        // Cada 5 minutos se renuevan las reservas del ticket abierto (vencen a los 30).
+        private readonly Timer _timerReservas = new Timer { Interval = 5 * 60 * 1000 };
+
         public ucCaja()
         {
             InitializeComponent();
+
+            _timerReservas.Tick += (s, e) => NegocioVenta.RenovarReservas(_venta);
+            _timerReservas.Start();
+
+            // Al salir de la sección o cerrar la aplicación, el stock reservado vuelve a estar libre.
+            Disposed += (s, e) =>
+            {
+                _timerReservas.Dispose();
+                NegocioVenta.LiberarReservas(_venta);
+            };
         }
 
         private void ucCaja_Load(object sender, EventArgs e)
@@ -108,6 +121,7 @@ namespace TiendaUNNE
 
         private void IniciarVenta()
         {
+            NegocioVenta.LiberarReservas(_venta);   // suelta lo que tuviera el ticket anterior
             _venta = NegocioVenta.NuevaVenta(_sesion, SesionActual.Usuario.IdUsuario);
             txtBuscar.Clear();
             cboProducto.DataSource = null;
@@ -167,7 +181,7 @@ namespace TiendaUNNE
             {
                 Cursor = Cursors.WaitCursor;
 
-                List<ProductoVentaItem> resultados = NegocioVenta.BuscarProductos(txtBuscar.Text);
+                List<ProductoVentaItem> resultados = NegocioVenta.BuscarProductos(_venta, txtBuscar.Text);
 
                 cboProducto.DataSource = null;
                 cboProducto.DataSource = resultados;
@@ -199,7 +213,7 @@ namespace TiendaUNNE
 
             lblInfoProducto.Text = producto == null
                 ? string.Empty
-                : string.Format("{0}  ·  stock {1}",
+                : string.Format("{0}  ·  disponible {1}",
                     producto.PrecioVenta.ToString(NegocioVenta.FormatoImporte),
                     producto.Stock.ToString(NegocioVenta.FormatoCantidad));
         }

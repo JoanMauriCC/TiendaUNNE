@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -39,6 +40,9 @@ namespace TiendaUNNE
     /// </summary>
     public sealed class VentaEditModel
     {
+        /// <summary>Identifica este ticket en las reservas de stock; cada ticket nuevo tiene el suyo.</summary>
+        public Guid Token { get; } = Guid.NewGuid();
+
         public int IdCaja { get; set; }
         public int IdCajaSesion { get; set; }
         public int IdUsuario { get; set; }

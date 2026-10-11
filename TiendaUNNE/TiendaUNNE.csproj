@@ -73,6 +73,8 @@
     <Compile Include="Datos\ServicioPerfil.cs" />
     <Compile Include="Datos\ServicioReporte.cs" />
     <Compile Include="Datos\ServicioProducto.cs" />
+    <Compile Include="Datos\ServicioReserva.cs" />
+    <Compile Include="Datos\StockInsuficienteException.cs" />
     <Compile Include="Datos\ServicioUsuario.cs" />
     <Compile Include="Datos\ServicioVenta.cs" />
     <!-- ================= Capa Negocio ================= -->

@@ -196,6 +196,29 @@ CREATE TABLE dbo.Producto
 GO
 
 -------------------------------------------------------------------------------
+-- 7b. Reserva_stock  (stock apartado por los tickets en curso; vence solo)
+--     Una fila por ticket (token) y producto. Stock libre = stock - reservas vigentes.
+-------------------------------------------------------------------------------
+CREATE TABLE dbo.Reserva_stock
+(
+    id_reserva   INT              IDENTITY(1,1) NOT NULL,
+    token        UNIQUEIDENTIFIER NOT NULL,                 -- identifica el ticket en curso
+    id_producto  INT              NOT NULL,
+    id_usuario   INT              NOT NULL,                 -- quién tiene el ticket abierto
+    cantidad     DECIMAL(12,3)    NOT NULL,
+    creada       DATETIME2(0)     NOT NULL CONSTRAINT DF_Reserva_stock_creada DEFAULT (GETDATE()),
+    vence        DATETIME2(0)     NOT NULL,
+
+    CONSTRAINT PK_Reserva_stock PRIMARY KEY (id_reserva),
+    CONSTRAINT UQ_Reserva_stock_token_producto UNIQUE (token, id_producto),
+    CONSTRAINT FK_Reserva_stock_Producto FOREIGN KEY (id_producto) REFERENCES dbo.Producto (id_producto),
+    CONSTRAINT FK_Reserva_stock_Usuario  FOREIGN KEY (id_usuario)  REFERENCES dbo.Usuario (id_usuario),
+    CONSTRAINT CK_Reserva_stock_cantidad CHECK (cantidad > 0)
+);
+CREATE INDEX IX_Reserva_stock_producto ON dbo.Reserva_stock (id_producto, vence);
+GO
+
+-------------------------------------------------------------------------------
 -- 8. Caja  (puestos físicos de caja)
 -------------------------------------------------------------------------------
 CREATE TABLE dbo.Caja

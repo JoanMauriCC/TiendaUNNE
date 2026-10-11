@@ -9,7 +9,9 @@ namespace TiendaUNNE
     /// Reglas de la venta en caja: qué se puede agregar al ticket, cuánto stock hay,
     /// si los pagos alcanzan y cuánto vuelto corresponde.
     /// El cobro se guarda en la base (venta, renglones, pagos y movimientos de caja) en una
-    /// sola transacción. Todavía no descuenta stock.
+    /// sola transacción, que también descuenta el stock vendido.
+    /// Cada producto cargado en el ticket queda reservado (30 minutos, renovables) para que otra
+    /// caja o la tienda online no lo venda mientras tanto.
     /// </summary>
     public static class NegocioVenta
     {
@@ -46,13 +48,18 @@ namespace TiendaUNNE
             };
         }
 
-        /// <summary>Busca en el catálogo de productos (solo lectura, no modifica nada).</summary>
-        public static List<ProductoVentaItem> BuscarProductos(string texto)
+        /// <summary>
+        /// Busca en el catálogo (solo lectura). El stock que devuelve es el libre para este ticket:
+        /// descuenta lo que tienen reservado los demás tickets.
+        /// </summary>
+        public static List<ProductoVentaItem> BuscarProductos(VentaEditModel venta, string texto)
         {
+            if (venta == null) throw new ArgumentNullException(nameof(venta));
+
             if (string.IsNullOrWhiteSpace(texto))
                 return new List<ProductoVentaItem>();
 
-            return ServicioProducto.BuscarParaVenta(texto.Trim());
+            return ServicioProducto.BuscarParaVenta(texto.Trim(), venta.Token);
         }
 
         /// <summary>
@@ -82,6 +89,18 @@ namespace TiendaUNNE
                     "No hay stock suficiente de {0}. Disponible: {1}.",
                     producto.Nombre, producto.Stock.ToString(FormatoCantidad)));
 
+            // La reserva es la que decide: si otra caja se llevó el stock después de la búsqueda, falla acá.
+            try
+            {
+                ServicioReserva.Reservar(venta.Token, producto.IdProducto, cantidadFinal, venta.IdUsuario);
+            }
+            catch (StockInsuficienteException ex)
+            {
+                throw new ReglaNegocioException(string.Format(CultureInfo.CurrentCulture,
+                    "No hay stock suficiente de {0}. Disponible: {1}.",
+                    producto.Nombre, ex.Disponible.ToString(FormatoCantidad)));
+            }
+
             if (existente != null)
             {
                 existente.Cantidad = cantidadFinal;
@@ -104,7 +123,31 @@ namespace TiendaUNNE
             if (indice < 0 || indice >= venta.Renglones.Count)
                 throw new ReglaNegocioException("Elegí un renglón del ticket para quitar.");
 
+            int idProducto = venta.Renglones[indice].IdProducto;
             venta.Renglones.RemoveAt(indice);
+
+            ServicioReserva.Liberar(venta.Token, idProducto);
+        }
+
+        /// <summary>
+        /// Suelta las reservas del ticket (al cancelarlo o cerrar la pantalla). Si no se puede,
+        /// no pasa nada grave: las reservas vencen solas a los 30 minutos.
+        /// </summary>
+        public static void LiberarReservas(VentaEditModel venta)
+        {
+            if (venta == null || venta.EstaVacia) return;
+
+            try { ServicioReserva.LiberarTodas(venta.Token); }
+            catch (Exception) { }
+        }
+
+        /// <summary>Mantiene vigentes las reservas mientras el ticket se sigue usando.</summary>
+        public static void RenovarReservas(VentaEditModel venta)
+        {
+            if (venta == null || venta.EstaVacia) return;
+
+            try { ServicioReserva.Renovar(venta.Token); }
+            catch (Exception) { }
         }
 
         // ---------------------------------------------------------------------
@@ -148,7 +191,21 @@ namespace TiendaUNNE
             List<PagoVenta> pagos = PagosSinVuelto(venta);
 
             // El punto de venta es la caja: cada caja numera sus tickets desde 1.
-            return ServicioVenta.Registrar(venta, pagos, idTipoTicket, venta.IdCaja, ConceptoCobro);
+            try
+            {
+                return ServicioVenta.Registrar(venta, pagos, idTipoTicket, venta.IdCaja, ConceptoCobro);
+            }
+            catch (StockInsuficienteException ex)
+            {
+                string nombre = venta.Renglones
+                    .Where(r => r.IdProducto == ex.IdProducto)
+                    .Select(r => r.Descripcion)
+                    .FirstOrDefault() ?? "un producto del ticket";
+
+                throw new ReglaNegocioException(string.Format(CultureInfo.CurrentCulture,
+                    "No hay stock suficiente de {0}. Disponible: {1}. Ajustá el ticket y volvé a cobrar.",
+                    nombre, ex.Disponible.ToString(FormatoCantidad)));
+            }
         }
 
         /// <summary>No se cobra contra un turno que otro puesto ya cerró.</summary>
