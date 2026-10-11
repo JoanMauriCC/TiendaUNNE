@@ -516,6 +516,20 @@ namespace TiendaUNNE
         {
             if (_actualizandoGrilla) return;   // evita recargar el formulario en medio de un refresco
 
+            // El DataGridView se autoselecciona la primera fila la primera vez que se muestra en
+            // pantalla, sin que nadie la toque. Una elección de verdad (clic o flechas) siempre
+            // ocurre con la grilla en foco; si no lo está, no la eligió el usuario: se descarta,
+            // así el formulario queda en blanco y no se carga la primera categoría de la lista.
+            if (!dgvCategorias.Focused)
+            {
+                _actualizandoGrilla = true;
+                dgvCategorias.ClearSelection();
+                dgvCategorias.CurrentCell = null;
+                _actualizandoGrilla = false;
+                ActualizarBotones();
+                return;
+            }
+
             ActualizarBotones();
             CargarSeleccionEnFormulario();
         }
