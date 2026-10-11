@@ -57,6 +57,7 @@
     <Compile Include="Entidades\ModelosReporte.cs" />
     <Compile Include="Entidades\ModelosUsuario.cs" />
     <Compile Include="Entidades\ModelosVenta.cs" />
+    <Compile Include="Entidades\ModelosBackup.cs" />
     <Compile Include="Entidades\UsuarioLogueado.cs" />
     <!-- ================= Capa Datos ================= -->
     <Compile Include="Datos\Db.cs" />
@@ -64,6 +65,8 @@
     <Compile Include="Datos\ServicioArranque.cs" />
     <Compile Include="Datos\ServicioAuditoria.cs" />
     <Compile Include="Datos\ServicioAutenticacion.cs" />
+    <Compile Include="Datos\ServicioBackup.cs" />
+    <Compile Include="Datos\ErrorBackupException.cs" />
     <Compile Include="Datos\ServicioCaja.cs" />
     <Compile Include="Datos\ServicioCategoria.cs" />
     <Compile Include="Datos\ServicioMedioPago.cs" />
@@ -77,6 +80,7 @@
     <Compile Include="Negocio\NegocioArranque.cs" />
     <Compile Include="Negocio\NegocioAuditoria.cs" />
     <Compile Include="Negocio\NegocioAutenticacion.cs" />
+    <Compile Include="Negocio\NegocioBackup.cs" />
     <Compile Include="Negocio\NegocioCaja.cs" />
     <Compile Include="Negocio\NegocioCategoria.cs" />
     <Compile Include="Negocio\NegocioPerfil.cs" />
@@ -157,6 +161,18 @@
     </Compile>
     <Compile Include="Presentacion\ucAuditoria.Designer.cs">
       <DependentUpon>ucAuditoria.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Presentacion\ucBackup.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Presentacion\ucBackup.Designer.cs">
+      <DependentUpon>ucBackup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Presentacion\frmConfirmarRestauracion.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Presentacion\frmConfirmarRestauracion.Designer.cs">
+      <DependentUpon>frmConfirmarRestauracion.cs</DependentUpon>
     </Compile>
     <!-- ================= Raíz / Properties ================= -->
     <Compile Include="Program.cs" />

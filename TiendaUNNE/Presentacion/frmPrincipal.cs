@@ -137,6 +137,7 @@ namespace TiendaUNNE
                 case OpcionMenu.Auditoria: return "Auditoría";
                 case OpcionMenu.Reportes: return "Reportes";
                 case OpcionMenu.Caja: return "Caja";
+                case OpcionMenu.Backup: return "Backup";
                 default: return opcion.ToString();
             }
         }
@@ -187,6 +188,7 @@ namespace TiendaUNNE
                 case OpcionMenu.Auditoria: return new ucAuditoria();
                 case OpcionMenu.Reportes: return new ucReportes();
                 case OpcionMenu.Caja: return new ucCaja();
+                case OpcionMenu.Backup: return new ucBackup();
                 default: return CrearPanelInicio();
             }
         }
@@ -210,6 +212,7 @@ namespace TiendaUNNE
             AgregarTarjetaInicio(panel, OpcionMenu.Auditoria, IconoTarjeta.Auditoria, "Historial de cambios");
             AgregarTarjetaInicio(panel, OpcionMenu.Reportes, IconoTarjeta.Reportes, "Ventas y recaudación");
             AgregarTarjetaInicio(panel, OpcionMenu.Caja, IconoTarjeta.Caja, "Cobrar productos");
+            AgregarTarjetaInicio(panel, OpcionMenu.Backup, IconoTarjeta.Backup, "Copias de seguridad");
 
             panel.Dock = DockStyle.Fill;
 

@@ -13,7 +13,10 @@ namespace TiendaUNNE
         Alta,
         BajaProducto,
         AltaProducto,
-        Actualizar
+        Actualizar,
+        BackupCrear,
+        BackupRestaurar,
+        BackupCopiar
     }
 
     /// <summary>
@@ -114,6 +117,15 @@ namespace TiendaUNNE
             g.DrawLine(pen, caja.Left + 3, r.Y + 1, caja.Right - 3, r.Y + 1);
         }
 
+        /// <summary>Cilindro de base de datos en la parte izquierda, para dejar lugar a la flecha.</summary>
+        private static void DibujarBase(Graphics g, Pen pen, Rectangle r)
+        {
+            g.DrawEllipse(pen, r.X + 1, r.Y + 2, 14, 6);
+            g.DrawLine(pen, r.X + 1, r.Y + 5, r.X + 1, r.Y + 18);
+            g.DrawLine(pen, r.X + 15, r.Y + 5, r.X + 15, r.Y + 18);
+            g.DrawArc(pen, r.X + 1, r.Y + 15, 14, 6, 0, 180);
+        }
+
         private void DibujarIcono(Graphics g, Rectangle r, Color color)
         {
             using (var pen = new Pen(color, 1.8f) { LineJoin = LineJoin.Round, StartCap = LineCap.Round, EndCap = LineCap.Round })
@@ -165,6 +177,31 @@ namespace TiendaUNNE
                         g.DrawArc(pen, r.X + 1, r.Y + 1, r.Width - 2, r.Height - 2, -30, 260);
                         Point[] flecha = { new Point(r.Right - 6, r.Y + 1), new Point(r.Right + 1, r.Y + 6), new Point(r.Right - 8, r.Y + 8) };
                         g.FillPolygon(brush, flecha);
+                        break;
+
+                    case IconoAccion.BackupCrear:
+                        DibujarBase(g, pen, r);
+                        // flecha hacia abajo: la base "baja" a un archivo
+                        g.DrawLine(pen, r.X + 20, r.Y + 7, r.X + 20, r.Y + 21);
+                        g.DrawLines(pen, new[] { new Point(r.X + 16, r.Y + 17), new Point(r.X + 20, r.Y + 21), new Point(r.X + 24, r.Y + 17) });
+                        break;
+
+                    case IconoAccion.BackupRestaurar:
+                        DibujarBase(g, pen, r);
+                        // flecha hacia arriba: el archivo "vuelve" a la base
+                        g.DrawLine(pen, r.X + 20, r.Y + 7, r.X + 20, r.Y + 21);
+                        g.DrawLines(pen, new[] { new Point(r.X + 16, r.Y + 11), new Point(r.X + 20, r.Y + 7), new Point(r.X + 24, r.Y + 11) });
+                        break;
+
+                    case IconoAccion.BackupCopiar:
+                        g.DrawLines(pen, new[]
+                        {
+                            new Point(r.X + 1, r.Y + 21), new Point(r.X + 1, r.Y + 5), new Point(r.X + 9, r.Y + 5),
+                            new Point(r.X + 12, r.Y + 8), new Point(r.X + 23, r.Y + 8), new Point(r.X + 23, r.Y + 21),
+                            new Point(r.X + 1, r.Y + 21)
+                        });
+                        g.DrawLine(pen, r.X + 12, r.Y + 11, r.X + 12, r.Y + 18);
+                        g.DrawLines(pen, new[] { new Point(r.X + 9, r.Y + 15), new Point(r.X + 12, r.Y + 18), new Point(r.X + 15, r.Y + 15) });
                         break;
                 }
             }
