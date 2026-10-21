@@ -1,7 +1,12 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Windows.Forms.DataVisualization.Charting;
+using LiveChartsCore;
+using LiveChartsCore.Measure;
+using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore.SkiaSharpView.Painting;
+using LiveChartsCore.SkiaSharpView.WinForms;
+using SkiaSharp;
 
 namespace TiendaUNNE
 {
@@ -18,8 +23,16 @@ namespace TiendaUNNE
         private static readonly Color ColorAcentoFondo = Color.FromArgb(234, 242, 251);
         private static readonly Color ColorTexto = Color.FromArgb(45, 48, 54);
 
+        // Los mismos colores, en el formato que usa LiveCharts (SkiaSharp).
+        private static readonly SKColor AcentoGrafico = new SKColor(59, 130, 246);
+        private static readonly SKColor TextoGrafico = new SKColor(45, 48, 54);
+        private static readonly SKColor GrillaGrafico = new SKColor(235, 236, 240);
+        private const float TamanioTextoGrafico = 12f;
+        private const string FormatoValorGrafico = "#,##0.##";
+
         private TipoReporte _tipo = TipoReporte.Ventas;
-        private Chart _grafico;
+        private CartesianChart _grafico;
+        private Axis _ejeX;
 
         public ucReportes()
         {
@@ -38,25 +51,32 @@ namespace TiendaUNNE
 
         private void CrearGrafico()
         {
-            _grafico = new Chart { Dock = DockStyle.Fill, BackColor = Color.White };
-
-            var area = new ChartArea("principal") { BackColor = Color.White };
-            area.AxisX.MajorGrid.Enabled = false;
-            area.AxisX.Interval = 1;
-            area.AxisX.LabelStyle.Font = new Font("Segoe UI", 8.5f);
-            area.AxisX.LineColor = Color.FromArgb(214, 216, 220);
-            area.AxisY.MajorGrid.LineColor = Color.FromArgb(235, 236, 240);
-            area.AxisY.LabelStyle.Font = new Font("Segoe UI", 8.5f);
-            area.AxisY.LineColor = Color.FromArgb(214, 216, 220);
-            _grafico.ChartAreas.Add(area);
-
-            _grafico.Series.Add(new Series("datos")
+            _ejeX = new Axis
             {
-                ChartType = SeriesChartType.Column,
-                Color = ColorAcento,
-                IsValueShownAsLabel = true,
-                Font = new Font("Segoe UI", 8.5f)
-            });
+                TextSize = TamanioTextoGrafico,
+                LabelsPaint = new SolidColorPaint(TextoGrafico),
+                MinStep = 1,   // una etiqueta por barra, como antes
+                ShowSeparatorLines = false
+            };
+
+            _grafico = new CartesianChart
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White,
+                XAxes = new[] { _ejeX },
+                YAxes = new[]
+                {
+                    new Axis
+                    {
+                        TextSize = TamanioTextoGrafico,
+                        LabelsPaint = new SolidColorPaint(TextoGrafico),
+                        SeparatorsPaint = new SolidColorPaint(GrillaGrafico),
+                        Labeler = valor => valor.ToString(FormatoValorGrafico),
+                        MinLimit = 0,
+                        MinStep = 1    // sin divisiones de 0,2 cuando hay pocas ventas
+                    }
+                }
+            };
 
             panelGrafico.Controls.Add(_grafico);
             _grafico.BringToFront();   // así el gráfico ocupa el espacio que deja el título
@@ -137,10 +157,20 @@ namespace TiendaUNNE
             lblIndValor3.Text = vista.Indicadores[2].Valor;
 
             lblTituloGrafico.Text = vista.TituloGrafico;
-            Series serie = _grafico.Series["datos"];
-            serie.Points.Clear();
-            for (int i = 0; i < vista.Etiquetas.Count; i++)
-                serie.Points.AddXY(vista.Etiquetas[i], vista.Valores[i]);
+            _ejeX.Labels = vista.Etiquetas.ToArray();
+            _grafico.Series = new ISeries[]
+            {
+                new ColumnSeries<double>
+                {
+                    Name = vista.TituloGrafico,
+                    Values = vista.Valores.ToArray(),
+                    Fill = new SolidColorPaint(AcentoGrafico),
+                    DataLabelsPaint = new SolidColorPaint(TextoGrafico),
+                    DataLabelsSize = TamanioTextoGrafico,
+                    DataLabelsPosition = DataLabelsPosition.Top,
+                    DataLabelsFormatter = punto => punto.Coordinate.PrimaryValue.ToString(FormatoValorGrafico)
+                }
+            };
 
             dgvDetalle.Rows.Clear();
             dgvDetalle.Columns.Clear();
