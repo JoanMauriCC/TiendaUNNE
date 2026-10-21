@@ -66,6 +66,7 @@ namespace TiendaUNNE
             else
                 ArmarVentasPorMes(reporte, inicio, fin);
 
+            CompletarGraficos(reporte, enElTiempo: true);
             return reporte;
         }
 
@@ -186,6 +187,7 @@ namespace TiendaUNNE
                 });
             }
 
+            CompletarGraficos(reporte, enElTiempo: false);
             return reporte;
         }
 
@@ -254,7 +256,59 @@ namespace TiendaUNNE
                 }
             }
 
+            CompletarGraficos(reporte, enElTiempo: dias > 1);
             return reporte;
+        }
+
+        // ---------------------------------------------------------------------
+        // Tipos de gráfico
+        // ---------------------------------------------------------------------
+
+        /// <summary>Nombre de cada tipo de gráfico, como se ofrece en la pantalla.</summary>
+        public static string NombreGrafico(TipoGrafico tipo)
+        {
+            switch (tipo)
+            {
+                case TipoGrafico.Bastones: return "Bastones";
+                case TipoGrafico.Linea: return "Línea";
+                case TipoGrafico.Escalonado: return "Escalonado (acumulado)";
+                case TipoGrafico.Torta: return "Torta";
+                default: return "Barras";
+            }
+        }
+
+        /// <summary>
+        /// Decide qué gráficos tienen sentido y calcula lo que necesitan. Una serie en el tiempo
+        /// (por hora, día o mes) se puede ver como línea o acumulada en escalones; la torta no,
+        /// porque repartir el total entre días no dice nada. Al revés, datos por categoría
+        /// (productos, medios de pago) se reparten en una torta, pero no tienen un orden que
+        /// acumular ni que unir con una línea.
+        /// </summary>
+        private static void CompletarGraficos(ReporteVista reporte, bool enElTiempo)
+        {
+            reporte.TiposGrafico.Add(TipoGrafico.Barras);
+            reporte.TiposGrafico.Add(TipoGrafico.Bastones);
+            if (enElTiempo)
+            {
+                reporte.TiposGrafico.Add(TipoGrafico.Linea);
+                reporte.TiposGrafico.Add(TipoGrafico.Escalonado);
+            }
+            else
+            {
+                reporte.TiposGrafico.Add(TipoGrafico.Torta);
+            }
+
+            double acumulado = 0;
+            foreach (double valor in reporte.Valores)
+            {
+                acumulado += valor;
+                reporte.ValoresAcumulados.Add(acumulado);
+            }
+            reporte.TituloAcumulado = reporte.TituloGrafico + " - acumulado";
+
+            double total = reporte.Valores.Sum();
+            foreach (double valor in reporte.Valores)
+                reporte.Porcentajes.Add(total == 0 ? 0 : valor * 100 / total);
         }
 
         private static void AgregarPunto(ReporteVista reporte, string etiqueta, object importe)

@@ -38,7 +38,10 @@ namespace TiendaUNNE
             this.lblIndValor3 = new System.Windows.Forms.Label();
             this.tblCuerpo = new System.Windows.Forms.TableLayoutPanel();
             this.panelGrafico = new System.Windows.Forms.Panel();
+            this.panelTituloGrafico = new System.Windows.Forms.Panel();
             this.lblTituloGrafico = new System.Windows.Forms.Label();
+            this.lblTipoGrafico = new System.Windows.Forms.Label();
+            this.cboTipoGrafico = new System.Windows.Forms.ComboBox();
             this.dgvDetalle = new System.Windows.Forms.DataGridView();
             this.lblAviso = new System.Windows.Forms.Label();
             this.panelBarra.SuspendLayout();
@@ -48,6 +51,7 @@ namespace TiendaUNNE
             this.panelIndicador3.SuspendLayout();
             this.tblCuerpo.SuspendLayout();
             this.panelGrafico.SuspendLayout();
+            this.panelTituloGrafico.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvDetalle)).BeginInit();
             this.SuspendLayout();
             //
@@ -262,20 +266,48 @@ namespace TiendaUNNE
             // panelGrafico
             //
             this.panelGrafico.BackColor = System.Drawing.Color.White;
-            this.panelGrafico.Controls.Add(this.lblTituloGrafico);
+            this.panelGrafico.Controls.Add(this.panelTituloGrafico);
             this.panelGrafico.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelGrafico.Margin = new System.Windows.Forms.Padding(6);
             this.panelGrafico.Name = "panelGrafico";
             this.panelGrafico.Padding = new System.Windows.Forms.Padding(10);
             this.panelGrafico.TabIndex = 0;
             //
+            // panelTituloGrafico
+            //
+            this.panelTituloGrafico.Controls.Add(this.lblTituloGrafico);
+            this.panelTituloGrafico.Controls.Add(this.lblTipoGrafico);
+            this.panelTituloGrafico.Controls.Add(this.cboTipoGrafico);
+            this.panelTituloGrafico.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelTituloGrafico.Name = "panelTituloGrafico";
+            this.panelTituloGrafico.Size = new System.Drawing.Size(400, 28);
+            this.panelTituloGrafico.TabIndex = 0;
+            //
             // lblTituloGrafico
             //
-            this.lblTituloGrafico.Dock = System.Windows.Forms.DockStyle.Top;
+            this.lblTituloGrafico.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblTituloGrafico.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             this.lblTituloGrafico.Name = "lblTituloGrafico";
-            this.lblTituloGrafico.Size = new System.Drawing.Size(400, 24);
             this.lblTituloGrafico.TabIndex = 0;
+            this.lblTituloGrafico.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            //
+            // lblTipoGrafico
+            //
+            this.lblTipoGrafico.Dock = System.Windows.Forms.DockStyle.Right;
+            this.lblTipoGrafico.Name = "lblTipoGrafico";
+            this.lblTipoGrafico.Size = new System.Drawing.Size(100, 28);
+            this.lblTipoGrafico.TabIndex = 1;
+            this.lblTipoGrafico.Text = "&Tipo de gráfico:";
+            this.lblTipoGrafico.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            //
+            // cboTipoGrafico
+            //
+            this.cboTipoGrafico.Dock = System.Windows.Forms.DockStyle.Right;
+            this.cboTipoGrafico.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboTipoGrafico.Name = "cboTipoGrafico";
+            this.cboTipoGrafico.Size = new System.Drawing.Size(180, 23);
+            this.cboTipoGrafico.TabIndex = 2;
+            this.cboTipoGrafico.SelectedIndexChanged += new System.EventHandler(this.cboTipoGrafico_SelectedIndexChanged);
             //
             // dgvDetalle
             //
@@ -328,6 +360,7 @@ namespace TiendaUNNE
             this.panelIndicador3.PerformLayout();
             this.tblCuerpo.ResumeLayout(false);
             this.panelGrafico.ResumeLayout(false);
+            this.panelTituloGrafico.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvDetalle)).EndInit();
             this.ResumeLayout(false);
         }
@@ -355,7 +388,10 @@ namespace TiendaUNNE
         private System.Windows.Forms.Label lblIndValor3;
         private System.Windows.Forms.TableLayoutPanel tblCuerpo;
         private System.Windows.Forms.Panel panelGrafico;
+        private System.Windows.Forms.Panel panelTituloGrafico;
         private System.Windows.Forms.Label lblTituloGrafico;
+        private System.Windows.Forms.Label lblTipoGrafico;
+        private System.Windows.Forms.ComboBox cboTipoGrafico;
         private System.Windows.Forms.DataGridView dgvDetalle;
         private System.Windows.Forms.Label lblAviso;
     }
