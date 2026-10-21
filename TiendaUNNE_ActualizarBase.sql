@@ -9,6 +9,7 @@
      2. El login pasa a ser por DNI (se quita nombre_usuario de Usuario)
      3. El DNI tiene que tener exactamente 8 dígitos
      4. Datos iniciales de la caja (caja, medios de pago, tipo de comprobante)
+     5. Tabla Reserva_stock (stock apartado por los tickets en curso)
 
    NO borra ni modifica datos: cada paso se fija primero si ya está aplicado. Se
    puede correr las veces que haga falta; en una base que ya está al día no hace
@@ -148,6 +149,34 @@ WHERE NOT EXISTS (SELECT 1 FROM dbo.Medio_pago x WHERE x.nombre = m.nombre);
 IF NOT EXISTS (SELECT 1 FROM dbo.Tipo_comprobante WHERE codigo = N'TKT')
     INSERT INTO dbo.Tipo_comprobante (codigo, nombre, letra, signo)
     VALUES (N'TKT', N'Ticket', NULL, 1);
+GO
+
+-------------------------------------------------------------------------------
+-- 5. Tabla Reserva_stock (stock apartado por los tickets en curso)
+-------------------------------------------------------------------------------
+IF OBJECT_ID('dbo.Reserva_stock', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Reserva_stock
+    (
+        id_reserva   INT              IDENTITY(1,1) NOT NULL,
+        token        UNIQUEIDENTIFIER NOT NULL,
+        id_producto  INT              NOT NULL,
+        id_usuario   INT              NOT NULL,
+        cantidad     DECIMAL(12,3)    NOT NULL,
+        creada       DATETIME2(0)     NOT NULL CONSTRAINT DF_Reserva_stock_creada DEFAULT (GETDATE()),
+        vence        DATETIME2(0)     NOT NULL,
+
+        CONSTRAINT PK_Reserva_stock PRIMARY KEY (id_reserva),
+        CONSTRAINT UQ_Reserva_stock_token_producto UNIQUE (token, id_producto),
+        CONSTRAINT FK_Reserva_stock_Producto FOREIGN KEY (id_producto) REFERENCES dbo.Producto (id_producto),
+        CONSTRAINT FK_Reserva_stock_Usuario  FOREIGN KEY (id_usuario)  REFERENCES dbo.Usuario (id_usuario),
+        CONSTRAINT CK_Reserva_stock_cantidad CHECK (cantidad > 0)
+    );
+    CREATE INDEX IX_Reserva_stock_producto ON dbo.Reserva_stock (id_producto, vence);
+    PRINT '5. Tabla Reserva_stock creada.';
+END
+ELSE
+    PRINT '5. La tabla Reserva_stock ya existía.';
 GO
 
 IF OBJECT_ID('dbo.CK_Persona_dni_cuit', 'C') IS NULL

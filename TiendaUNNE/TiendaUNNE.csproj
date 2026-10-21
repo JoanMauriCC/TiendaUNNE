@@ -118,6 +118,7 @@
     </Compile>
     <Compile Include="Presentacion\ucCaja.Apertura.cs">
       <DependentUpon>ucCaja.cs</DependentUpon>
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Presentacion\ucCaja.Designer.cs">
       <DependentUpon>ucCaja.cs</DependentUpon>
