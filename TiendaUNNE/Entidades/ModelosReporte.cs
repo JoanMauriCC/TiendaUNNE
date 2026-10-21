@@ -22,6 +22,7 @@ namespace TiendaUNNE
         Bastones,
         Linea,
         Escalonado,
+        Ojiva,
         Torta
     }
 

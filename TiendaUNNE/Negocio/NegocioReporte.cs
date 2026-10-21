@@ -272,6 +272,7 @@ namespace TiendaUNNE
                 case TipoGrafico.Bastones: return "Bastones";
                 case TipoGrafico.Linea: return "Línea";
                 case TipoGrafico.Escalonado: return "Escalonado (acumulado)";
+                case TipoGrafico.Ojiva: return "Ojiva (acumulado)";
                 case TipoGrafico.Torta: return "Torta";
                 default: return "Barras";
             }
@@ -279,7 +280,8 @@ namespace TiendaUNNE
 
         /// <summary>
         /// Decide qué gráficos tienen sentido y calcula lo que necesitan. Una serie en el tiempo
-        /// (por hora, día o mes) se puede ver como línea o acumulada en escalones; la torta no,
+        /// (por hora, día o mes) se puede ver como línea o acumulada (en escalones o como ojiva,
+        /// que une los acumulados con rectas); la torta no,
         /// porque repartir el total entre días no dice nada. Al revés, datos por categoría
         /// (productos, medios de pago) se reparten en una torta, pero no tienen un orden que
         /// acumular ni que unir con una línea.
@@ -292,6 +294,7 @@ namespace TiendaUNNE
             {
                 reporte.TiposGrafico.Add(TipoGrafico.Linea);
                 reporte.TiposGrafico.Add(TipoGrafico.Escalonado);
+                reporte.TiposGrafico.Add(TipoGrafico.Ojiva);
             }
             else
             {

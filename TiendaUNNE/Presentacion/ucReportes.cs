@@ -244,7 +244,8 @@ namespace TiendaUNNE
 
             var tipo = (TipoGrafico)cboTipoGrafico.SelectedValue;
 
-            lblTituloGrafico.Text = tipo == TipoGrafico.Escalonado ? _vista.TituloAcumulado : _vista.TituloGrafico;
+            bool acumulado = tipo == TipoGrafico.Escalonado || tipo == TipoGrafico.Ojiva;
+            lblTituloGrafico.Text = acumulado ? _vista.TituloAcumulado : _vista.TituloGrafico;
             _grafico.Visible = tipo != TipoGrafico.Torta;
             _torta.Visible = tipo == TipoGrafico.Torta;
 
@@ -256,6 +257,12 @@ namespace TiendaUNNE
 
             _ejeX.Labels = _vista.Etiquetas.ToArray();
             _ejeX.LabelsRotation = _vista.Etiquetas.Any(e => e.Length > LargoEtiquetaHorizontal) ? RotacionEtiquetas : 0;
+
+            // Medio casillero de aire a cada lado: así la línea no pega contra los bordes y
+            // los números del primer y el último punto no quedan cortados.
+            int puntos = _vista.Etiquetas.Count;
+            _ejeX.MinLimit = puntos > 0 ? -0.5 : (double?)null;
+            _ejeX.MaxLimit = puntos > 0 ? puntos - 0.5 : (double?)null;
             _grafico.Series = new[] { CrearSerie(tipo) };
         }
 
@@ -264,9 +271,10 @@ namespace TiendaUNNE
             switch (tipo)
             {
                 case TipoGrafico.Linea:
+                case TipoGrafico.Ojiva:   // la ojiva es la línea de los valores acumulados
                     return new LineSeries<double>
                     {
-                        Values = _vista.Valores.ToArray(),
+                        Values = (tipo == TipoGrafico.Ojiva ? _vista.ValoresAcumulados : _vista.Valores).ToArray(),
                         Stroke = new SolidColorPaint(AcentoGrafico, 3),
                         Fill = null,
                         GeometrySize = 8,
