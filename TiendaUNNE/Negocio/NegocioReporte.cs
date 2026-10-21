@@ -53,6 +53,7 @@ namespace TiendaUNNE
                     desde, hasta, cantidad == 0 ? " No hay ventas en este período." : string.Empty)
             };
 
+            Encabezar(reporte, "Ventas", desde, hasta);
             reporte.Indicadores.Add(new IndicadorReporte("Ventas", cantidad.ToString("N0")));
             reporte.Indicadores.Add(new IndicadorReporte("Total vendido", Importe(total)));
             reporte.Indicadores.Add(new IndicadorReporte("Ticket promedio",
@@ -163,6 +164,7 @@ namespace TiendaUNNE
                     desde, hasta)
             };
 
+            Encabezar(reporte, "Productos", desde, hasta);
             reporte.Indicadores.Add(new IndicadorReporte("Unidades vendidas",
                 Cantidad(Convert.ToDecimal(resumen["Unidades"]))));
             reporte.Indicadores.Add(new IndicadorReporte("Productos distintos",
@@ -217,6 +219,7 @@ namespace TiendaUNNE
                     desde, hasta, total == 0 ? " No hay cobros en este período." : string.Empty)
             };
 
+            Encabezar(reporte, "Recaudación", desde, hasta);
             reporte.Indicadores.Add(new IndicadorReporte("Recaudado", Importe(total)));
             reporte.Indicadores.Add(new IndicadorReporte("En efectivo", Importe(efectivo)));
             reporte.Indicadores.Add(new IndicadorReporte("Otros medios", Importe(total - efectivo)));
@@ -258,6 +261,15 @@ namespace TiendaUNNE
 
             CompletarGraficos(reporte, enElTiempo: dias > 1);
             return reporte;
+        }
+
+        /// <summary>Título, período y nombre de archivo, iguales para los tres reportes.</summary>
+        private static void Encabezar(ReporteVista reporte, string nombre, DateTime desde, DateTime hasta)
+        {
+            reporte.Titulo = "Reporte de " + nombre.ToLower();
+            reporte.Periodo = string.Format("Del {0:dd/MM/yyyy} al {1:dd/MM/yyyy}", desde, hasta);
+            reporte.NombreArchivo = string.Format("Reporte_{0}_{1:yyyy-MM-dd}_al_{2:yyyy-MM-dd}.pdf",
+                nombre, desde, hasta);
         }
 
         // ---------------------------------------------------------------------

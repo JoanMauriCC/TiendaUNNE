@@ -68,7 +68,8 @@ PASO 3: Abrir y ejecutar el proyecto
 ---------------------------------------
 1. Abrir el archivo "TiendaUNNE_TallerDeProgramacion2.slnx" con Visual Studio.
 2. Esperar a que restaure/compile. La primera vez Visual Studio descarga solo
-   (por NuGet) la librería de gráficos LiveCharts: hace falta conexión a internet.
+   (por NuGet) las librerías LiveCharts (gráficos) y PDFsharp/MigraDoc (exportar
+   reportes a PDF): hace falta conexión a internet.
    Si no la descarga, clic derecho en la solución > "Restaurar paquetes NuGet".
 3. Ejecutar con F5.
 

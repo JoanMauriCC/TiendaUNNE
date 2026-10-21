@@ -32,6 +32,13 @@ namespace TiendaUNNE
     /// </summary>
     public sealed class ReporteVista
     {
+        /// <summary>Encabezado del PDF: qué reporte es y de qué período.</summary>
+        public string Titulo { get; set; }
+        public string Periodo { get; set; }
+
+        /// <summary>Nombre que se propone al guardar el PDF.</summary>
+        public string NombreArchivo { get; set; }
+
         public List<IndicadorReporte> Indicadores { get; } = new List<IndicadorReporte>();
 
         public string TituloGrafico { get; set; }

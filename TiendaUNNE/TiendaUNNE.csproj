@@ -50,6 +50,9 @@
     <PackageReference Include="LiveChartsCore.SkiaSharpView.WinForms">
       <Version>2.0.5</Version>
     </PackageReference>
+    <PackageReference Include="PDFsharp-MigraDoc-GDI">
+      <Version>6.2.4</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <!-- ================= Capa Entidades ================= -->
@@ -111,6 +114,7 @@
     </Compile>
     <Compile Include="Presentacion\AtajosTeclado.cs" />
     <Compile Include="Presentacion\FiltroGrilla.cs" />
+    <Compile Include="Presentacion\ExportadorPdfReporte.cs" />
     <Compile Include="Presentacion\ucReportes.cs">
       <SubType>UserControl</SubType>
     </Compile>

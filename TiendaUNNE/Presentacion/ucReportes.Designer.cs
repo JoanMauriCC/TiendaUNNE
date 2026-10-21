@@ -43,7 +43,9 @@ namespace TiendaUNNE
             this.lblTipoGrafico = new System.Windows.Forms.Label();
             this.cboTipoGrafico = new System.Windows.Forms.ComboBox();
             this.dgvDetalle = new System.Windows.Forms.DataGridView();
+            this.panelPie = new System.Windows.Forms.Panel();
             this.lblAviso = new System.Windows.Forms.Label();
+            this.btnExportarPdf = new System.Windows.Forms.Button();
             this.panelBarra.SuspendLayout();
             this.tblIndicadores.SuspendLayout();
             this.panelIndicador1.SuspendLayout();
@@ -52,6 +54,7 @@ namespace TiendaUNNE
             this.tblCuerpo.SuspendLayout();
             this.panelGrafico.SuspendLayout();
             this.panelTituloGrafico.SuspendLayout();
+            this.panelPie.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvDetalle)).BeginInit();
             this.SuspendLayout();
             //
@@ -326,15 +329,35 @@ namespace TiendaUNNE
             this.dgvDetalle.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvDetalle.TabIndex = 1;
             //
+            // panelPie
+            //
+            this.panelPie.Controls.Add(this.lblAviso);
+            this.panelPie.Controls.Add(this.btnExportarPdf);
+            this.panelPie.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panelPie.Name = "panelPie";
+            this.panelPie.Padding = new System.Windows.Forms.Padding(0, 4, 6, 4);
+            this.panelPie.Size = new System.Drawing.Size(800, 40);
+            this.panelPie.TabIndex = 3;
+            //
+            // btnExportarPdf
+            //
+            this.btnExportarPdf.Dock = System.Windows.Forms.DockStyle.Right;
+            this.btnExportarPdf.Name = "btnExportarPdf";
+            this.btnExportarPdf.Size = new System.Drawing.Size(120, 32);
+            this.btnExportarPdf.TabIndex = 1;
+            this.btnExportarPdf.Text = "&Exportar PDF";
+            this.btnExportarPdf.UseVisualStyleBackColor = true;
+            this.btnExportarPdf.Click += new System.EventHandler(this.btnExportarPdf_Click);
+            //
             // lblAviso
             //
-            this.lblAviso.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.lblAviso.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblAviso.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(120)))), ((int)(((byte)(125)))), ((int)(((byte)(135)))));
             this.lblAviso.Location = new System.Drawing.Point(0, 538);
             this.lblAviso.Name = "lblAviso";
             this.lblAviso.Padding = new System.Windows.Forms.Padding(6, 0, 0, 0);
             this.lblAviso.Size = new System.Drawing.Size(800, 22);
-            this.lblAviso.TabIndex = 3;
+            this.lblAviso.TabIndex = 0;
             this.lblAviso.Text = "Datos de ejemplo: la pantalla todavía no está conectada a la base de datos.";
             this.lblAviso.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             //
@@ -343,7 +366,7 @@ namespace TiendaUNNE
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tblCuerpo);
-            this.Controls.Add(this.lblAviso);
+            this.Controls.Add(this.panelPie);
             this.Controls.Add(this.tblIndicadores);
             this.Controls.Add(this.panelBarra);
             this.Name = "ucReportes";
@@ -361,6 +384,7 @@ namespace TiendaUNNE
             this.tblCuerpo.ResumeLayout(false);
             this.panelGrafico.ResumeLayout(false);
             this.panelTituloGrafico.ResumeLayout(false);
+            this.panelPie.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvDetalle)).EndInit();
             this.ResumeLayout(false);
         }
@@ -393,6 +417,8 @@ namespace TiendaUNNE
         private System.Windows.Forms.Label lblTipoGrafico;
         private System.Windows.Forms.ComboBox cboTipoGrafico;
         private System.Windows.Forms.DataGridView dgvDetalle;
+        private System.Windows.Forms.Panel panelPie;
         private System.Windows.Forms.Label lblAviso;
+        private System.Windows.Forms.Button btnExportarPdf;
     }
 }

@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using LiveChartsCore;
 using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
+using LiveChartsCore.SkiaSharpView.SKCharts;
 using LiveChartsCore.SkiaSharpView.WinForms;
 using SkiaSharp;
 
@@ -46,6 +49,10 @@ namespace TiendaUNNE
         private const int LargoEtiquetaHorizontal = 8;
         private const double RotacionEtiquetas = 30;
 
+        /// <summary>Tamaño en píxeles de la imagen del gráfico en el PDF (ocupa el ancho de la hoja).</summary>
+        private const int AnchoImagenPdf = 850;
+        private const int AltoImagenPdf = 460;
+
         private TipoReporte _tipo = TipoReporte.Ventas;
         private ReporteVista _vista;
         private bool _cargandoTipos;
@@ -71,31 +78,14 @@ namespace TiendaUNNE
 
         private void CrearGrafico()
         {
-            _ejeX = new Axis
-            {
-                TextSize = TamanioTextoGrafico,
-                LabelsPaint = new SolidColorPaint(TextoGrafico),
-                MinStep = 1,   // una etiqueta por barra, como antes
-                ShowSeparatorLines = false
-            };
+            _ejeX = NuevoEjeX();
 
             _grafico = new CartesianChart
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.White,
                 XAxes = new[] { _ejeX },
-                YAxes = new[]
-                {
-                    new Axis
-                    {
-                        TextSize = TamanioTextoGrafico,
-                        LabelsPaint = new SolidColorPaint(TextoGrafico),
-                        SeparatorsPaint = new SolidColorPaint(GrillaGrafico),
-                        Labeler = valor => valor.ToString(FormatoValorGrafico),
-                        MinLimit = 0,
-                        MinStep = 1    // sin divisiones de 0,2 cuando hay pocas ventas
-                    }
-                }
+                YAxes = new[] { NuevoEjeY() }
             };
 
             _torta = new PieChart
@@ -129,6 +119,62 @@ namespace TiendaUNNE
         {
             if (!_cargandoTipos)
                 DibujarGrafico();
+        }
+
+        /// <summary>
+        /// Guarda en PDF lo que se está viendo: el mismo reporte, con el gráfico elegido.
+        /// No vuelve a consultar la base.
+        /// </summary>
+        private void btnExportarPdf_Click(object sender, EventArgs e)
+        {
+            if (_vista == null) return;
+
+            string ruta;
+            using (var dialogo = new SaveFileDialog
+            {
+                Title = "Exportar reporte a PDF",
+                Filter = "Documento PDF (*.pdf)|*.pdf",
+                FileName = _vista.NombreArchivo
+            })
+            {
+                if (dialogo.ShowDialog(this) != DialogResult.OK) return;
+                ruta = dialogo.FileName;
+            }
+
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                string usuario = SesionActual.HaySesion ? SesionActual.Usuario.NombreCompleto : null;
+                ExportadorPdfReporte.Guardar(_vista, lblTituloGrafico.Text, ImagenDelGrafico(), usuario, ruta);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                MessageBox.Show("No se pudo guardar el PDF. Si el archivo está abierto en otro programa, " +
+                                "cerralo; si no, probá guardarlo en otra carpeta.",
+                    "Exportar PDF", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("No se pudo generar el PDF.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
+
+            if (MessageBox.Show("El reporte se guardó en PDF.\n\n¿Querés abrirlo?", "Exportar PDF",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+            {
+                try { Process.Start(ruta); }
+                catch (Exception)
+                {
+                    MessageBox.Show("No hay ningún programa para abrir PDF. El archivo quedó en:\n" + ruta,
+                        "Exportar PDF", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
         }
 
         private void CambiarTipo(TipoReporte tipo)
@@ -255,15 +301,45 @@ namespace TiendaUNNE
                 return;
             }
 
-            _ejeX.Labels = _vista.Etiquetas.ToArray();
-            _ejeX.LabelsRotation = _vista.Etiquetas.Any(e => e.Length > LargoEtiquetaHorizontal) ? RotacionEtiquetas : 0;
+            ConfigurarEjeX(_ejeX);
+            _grafico.Series = new[] { CrearSerie(tipo) };
+        }
+
+        private static Axis NuevoEjeX()
+        {
+            return new Axis
+            {
+                TextSize = TamanioTextoGrafico,
+                LabelsPaint = new SolidColorPaint(TextoGrafico),
+                MinStep = 1,   // una etiqueta por barra, como antes
+                ShowSeparatorLines = false
+            };
+        }
+
+        private static Axis NuevoEjeY()
+        {
+            return new Axis
+            {
+                TextSize = TamanioTextoGrafico,
+                LabelsPaint = new SolidColorPaint(TextoGrafico),
+                SeparatorsPaint = new SolidColorPaint(GrillaGrafico),
+                Labeler = valor => valor.ToString(FormatoValorGrafico),
+                MinLimit = 0,
+                MinStep = 1    // sin divisiones de 0,2 cuando hay pocas ventas
+            };
+        }
+
+        /// <summary>Etiquetas del reporte actual en el eje de abajo.</summary>
+        private void ConfigurarEjeX(Axis eje)
+        {
+            eje.Labels = _vista.Etiquetas.ToArray();
+            eje.LabelsRotation = _vista.Etiquetas.Any(e => e.Length > LargoEtiquetaHorizontal) ? RotacionEtiquetas : 0;
 
             // Medio casillero de aire a cada lado: así la línea no pega contra los bordes y
             // los números del primer y el último punto no quedan cortados.
             int puntos = _vista.Etiquetas.Count;
-            _ejeX.MinLimit = puntos > 0 ? -0.5 : (double?)null;
-            _ejeX.MaxLimit = puntos > 0 ? puntos - 0.5 : (double?)null;
-            _grafico.Series = new[] { CrearSerie(tipo) };
+            eje.MinLimit = puntos > 0 ? -0.5 : (double?)null;
+            eje.MaxLimit = puntos > 0 ? puntos - 0.5 : (double?)null;
         }
 
         private ISeries CrearSerie(TipoGrafico tipo)
@@ -311,6 +387,48 @@ namespace TiendaUNNE
                         DataLabelsPosition = DataLabelsPosition.Top,
                         DataLabelsFormatter = punto => punto.Coordinate.PrimaryValue.ToString(FormatoValorGrafico)
                     };
+            }
+        }
+
+        /// <summary>
+        /// El gráfico que se está viendo, dibujado aparte (sin pantalla) como imagen PNG para el
+        /// PDF. Se arma con series y ejes nuevos: los de la pantalla pueden estar a mitad de una
+        /// animación y la foto saldría incompleta. Tamaño fijo, así el PDF no depende de la ventana.
+        /// </summary>
+        private byte[] ImagenDelGrafico()
+        {
+            var tipo = (TipoGrafico)cboTipoGrafico.SelectedValue;
+
+            InMemorySkiaSharpChart copia;
+            if (tipo == TipoGrafico.Torta)
+            {
+                copia = new SKPieChart
+                {
+                    Series = CrearPorciones(),
+                    LegendPosition = LegendPosition.Right,
+                    LegendTextPaint = new SolidColorPaint(TextoGrafico),
+                    LegendTextSize = TamanioTextoGrafico
+                };
+            }
+            else
+            {
+                Axis ejeX = NuevoEjeX();
+                ConfigurarEjeX(ejeX);
+                copia = new SKCartesianChart
+                {
+                    Series = new[] { CrearSerie(tipo) },
+                    XAxes = new[] { ejeX },
+                    YAxes = new[] { NuevoEjeY() }
+                };
+            }
+            copia.Width = AnchoImagenPdf;
+            copia.Height = AltoImagenPdf;
+            copia.Background = SKColors.White;
+
+            using (var salida = new MemoryStream())
+            {
+                copia.SaveImage(salida, SKEncodedImageFormat.Png, 100);
+                return salida.ToArray();
             }
         }
 
