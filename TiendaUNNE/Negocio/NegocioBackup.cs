@@ -22,6 +22,14 @@ namespace TiendaUNNE
     {
         public const string PalabraConfirmacion = "RESTAURAR";
 
+        /// <summary>
+        /// Cómo figura la restauración en la auditoría. Se usa una acción que ya existe
+        /// (MODIFICACION) y no una nueva: la copia restaurada trae su propia tabla de auditoría,
+        /// y en las copias hechas antes de un cambio así la acción nueva no existiría.
+        /// </summary>
+        public const string TablaAuditoria = "Base de datos";
+        private const string AccionAuditoria = "MODIFICACION";
+
         /// <summary>Intentos para dar bien las dos llaves antes de que se cancele la restauración.</summary>
         public const int IntentosLlaves = 3;
 
@@ -232,18 +240,21 @@ namespace TiendaUNNE
         /// la regla vale aunque alguien llame a este método sin pasar por la ventana), que el
         /// archivo sea de esta base y esté íntegro, y guarda una copia automática del estado
         /// actual. Después de esto la aplicación tiene que reiniciarse.
+        /// Devuelve false si la base se restauró pero no se pudo dejar el registro en la auditoría.
         /// </summary>
-        public static void Restaurar(string nombreArchivo, string confirmacion, LlavesRestauracion llaves)
+        public static bool Restaurar(string nombreArchivo, string confirmacion, LlavesRestauracion llaves)
         {
             ExigirAdministrador();
 
             if (!ConfirmacionValida(confirmacion))
                 throw new ReglaNegocioException("Para restaurar tenés que escribir " + PalabraConfirmacion + ".");
 
-            VerificarLlaves(llaves);
+            UsuarioLogueado autorizo = VerificarLlaves(llaves);
+            UsuarioLogueado restauro = SesionActual.Usuario;
 
             string ruta = RutaDeCopia(nombreArchivo);
             string carpeta = ObtenerCarpeta();
+            string copiaPrevia;
 
             try
             {
@@ -254,13 +265,48 @@ namespace TiendaUNNE
                 ServicioBackup.VerificarArchivo(ruta);
 
                 // Red de seguridad: si fue un error, esta copia permite volver atrás.
-                CrearArchivo("yyyy-MM-dd_HHmmss", SufijoPrevio);
+                copiaPrevia = CrearArchivo("yyyy-MM-dd_HHmmss", SufijoPrevio);
 
                 ServicioBackup.Restaurar(ruta);
             }
             catch (ErrorBackupException ex)
             {
                 throw Traducir(ex, carpeta);
+            }
+
+            return RegistrarRestauracion(nombreArchivo, copiaPrevia, restauro, autorizo);
+        }
+
+        /// <summary>
+        /// Deja en la auditoría quién restauró, quién autorizó y qué copia. Se escribe DESPUÉS de
+        /// restaurar, en la base que quedó: si se escribiera antes, la restauración lo borraría
+        /// junto con todo lo demás. Puede que quien restauró no exista en esa copia vieja (lo
+        /// crearon después): entonces el registro queda sin usuario, pero con los nombres en el texto.
+        /// </summary>
+        private static bool RegistrarRestauracion(string copia, string copiaPrevia,
+                                                  UsuarioLogueado restauro, UsuarioLogueado autorizo)
+        {
+            string anterior = string.Format(
+                "Base al {0:dd/MM/yyyy HH:mm:ss}; antes de restaurar se guardó en {1}",
+                DateTime.Now, copiaPrevia);
+            string nuevo = string.Format(
+                "RESTAURACIÓN de la copia {0}. Llave 1 (restauró): {1} ({2}). Llave 2 (autorizó): {3} ({4})",
+                copia, restauro.NombreCompleto, restauro.Rol, autorizo.NombreCompleto, autorizo.Rol);
+
+            try
+            {
+                int? idUsuario = ServicioAutenticacion.ObtenerCredencialesPorId(restauro.IdUsuario) != null
+                    ? restauro.IdUsuario
+                    : (int?)null;
+
+                ServicioAuditoria.Registrar(AccionAuditoria, TablaAuditoria, null, anterior, nuevo, idUsuario);
+                return true;
+            }
+            catch (Exception)
+            {
+                // La base ya está restaurada: un problema con el registro no la tiene que deshacer
+                // ni hacer creer que falló. La pantalla avisa que no quedó registrado.
+                return false;
             }
         }
 

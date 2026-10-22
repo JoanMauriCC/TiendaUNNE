@@ -24,7 +24,8 @@ namespace TiendaUNNE
         /// <summary>Tablas sobre las que el sistema registra movimientos.</summary>
         public static List<string> TablasAuditables()
         {
-            return new List<string> { TodasLasTablas, "Usuario", "Categoria", "Producto", "Caja_sesion" };
+            return new List<string> { TodasLasTablas, "Usuario", "Categoria", "Producto", "Caja_sesion",
+                                      NegocioBackup.TablaAuditoria };
         }
 
         /// <summary>

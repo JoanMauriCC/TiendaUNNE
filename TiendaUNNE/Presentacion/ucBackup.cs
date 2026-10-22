@@ -243,10 +243,11 @@ namespace TiendaUNNE
                 llaves = dialogo.Llaves;
             }
 
+            bool registrada;
             try
             {
                 Cursor = Cursors.WaitCursor;
-                NegocioBackup.Restaurar(nombre, confirmacion, llaves);
+                registrada = NegocioBackup.Restaurar(nombre, confirmacion, llaves);
             }
             catch (ReglaNegocioException ex)
             {
@@ -267,8 +268,9 @@ namespace TiendaUNNE
 
             // La base cambió por debajo de la aplicación (el usuario con sesión abierta puede ni
             // existir en esa copia): lo único seguro es volver a empezar desde el login.
-            MessageBox.Show("La copia se restauró correctamente. La aplicación se va a reiniciar.",
-                "Backup", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("La copia se restauró correctamente. La aplicación se va a reiniciar." +
+                (registrada ? string.Empty : "\n\nAtención: no se pudo dejar la restauración registrada en la auditoría."),
+                "Backup", MessageBoxButtons.OK, registrada ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
 
             NegocioAutenticacion.CerrarSesion();
             Application.Restart();
