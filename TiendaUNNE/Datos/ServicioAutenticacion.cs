@@ -11,13 +11,7 @@ namespace TiendaUNNE
     /// </summary>
     public static class ServicioAutenticacion
     {
-        /// <summary>
-        /// Trae las credenciales guardadas del usuario cuya Persona tiene ese DNI,
-        /// o null si no existe ninguno.
-        /// </summary>
-        public static CredencialesUsuario ObtenerCredenciales(string dni)
-        {
-            const string sql = @"
+        private const string SelectCredenciales = @"
 SELECT  u.id_usuario,
         u.id_persona,
         u.id_perfil,
@@ -31,35 +25,59 @@ SELECT  u.id_usuario,
 FROM        dbo.Usuario u
 INNER JOIN  dbo.Persona p  ON p.id_persona = u.id_persona
 INNER JOIN  dbo.Perfil  pf ON pf.id_perfil = u.id_perfil
-WHERE p.dni_cuit = @dni;";
+";
 
+        /// <summary>
+        /// Trae las credenciales guardadas del usuario cuya Persona tiene ese DNI,
+        /// o null si no existe ninguno.
+        /// </summary>
+        public static CredencialesUsuario ObtenerCredenciales(string dni)
+        {
             using (var cn = Db.AbrirConexion())
-            using (var cmd = new SqlCommand(sql, cn))
+            using (var cmd = new SqlCommand(SelectCredenciales + "WHERE p.dni_cuit = @dni;", cn))
             {
                 cmd.Parameters.Add("@dni", SqlDbType.NVarChar, 20).Value = dni;
+                return LeerCredenciales(cmd);
+            }
+        }
 
-                using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
+        /// <summary>
+        /// Lo mismo, buscando por id de usuario: sirve para volver a pedirle la contraseña
+        /// a quien ya tiene la sesión abierta. Null si no existe.
+        /// </summary>
+        public static CredencialesUsuario ObtenerCredencialesPorId(int idUsuario)
+        {
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand(SelectCredenciales + "WHERE u.id_usuario = @id;", cn))
+            {
+                cmd.Parameters.Add("@id", SqlDbType.Int).Value = idUsuario;
+                return LeerCredenciales(cmd);
+            }
+        }
+
+        private static CredencialesUsuario LeerCredenciales(SqlCommand cmd)
+        {
+            using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
+            {
+                if (!dr.Read())
+                    return null;
+
+                return new CredencialesUsuario
                 {
-                    if (!dr.Read())
-                        return null;
-
-                    return new CredencialesUsuario
+                    HashPassword = (byte[])dr["hash_password"],
+                    Salt = dr["salt"] == DBNull.Value ? null : (byte[])dr["salt"],
+                    Activo = (bool)dr["activo"],
+                    Bloqueado = (bool)dr["bloqueado"],
+                    Usuario = new UsuarioLogueado
                     {
-                        HashPassword = (byte[])dr["hash_password"],
-                        Salt = dr["salt"] == DBNull.Value ? null : (byte[])dr["salt"],
-                        Activo = (bool)dr["activo"],
-                        Bloqueado = (bool)dr["bloqueado"],
-                        Usuario = new UsuarioLogueado
-                        {
-                            IdUsuario = (int)dr["id_usuario"],
-                            IdPersona = (int)dr["id_persona"],
-                            IdPerfil = (int)dr["id_perfil"],
-                            NombreCompleto = (string)dr["nombre_completo"],
-                            Nombre = (string)dr["nombre"],
-                            Rol = (string)dr["rol"]
-                        }
-                    };
-                }
+                        IdUsuario = (int)dr["id_usuario"],
+                        IdPersona = (int)dr["id_persona"],
+                        IdPerfil = (int)dr["id_perfil"],
+                        NombreCompleto = (string)dr["nombre_completo"],
+                        Nombre = (string)dr["nombre"],
+                        Rol = (string)dr["rol"]
+                    }
+                };
             }
         }
 

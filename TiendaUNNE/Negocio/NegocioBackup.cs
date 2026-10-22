@@ -14,11 +14,27 @@ namespace TiendaUNNE
     ///     la carpeta de copias, nunca escribir una ruta: se valida el nombre con una expresión
     ///     regular y así no hay forma de salir de la carpeta ni de pasar rutas de red;
     ///   - restaurar exige haber escrito la palabra de confirmación y hace antes una copia de
-    ///     seguridad automática del estado actual, por si fue un error.
+    ///     seguridad automática del estado actual, por si fue un error;
+    ///   - restaurar exige además dos llaves (regla de las dos personas): la contraseña de quien
+    ///     tiene la sesión abierta y la de otro Administrador o Supervisor, verificadas juntas.
     /// </summary>
     public static class NegocioBackup
     {
         public const string PalabraConfirmacion = "RESTAURAR";
+
+        /// <summary>Intentos para dar bien las dos llaves antes de que se cancele la restauración.</summary>
+        public const int IntentosLlaves = 3;
+
+        /// <summary>Quiénes pueden girar la segunda llave.</summary>
+        private static readonly string[] RolesSegundaLlave = { "Administrador", "Supervisor" };
+
+        /// <summary>
+        /// Un solo mensaje para cualquier llave que falle, como en el login: si dijéramos cuál
+        /// falló, le estaríamos dando una pista a quien está probando contraseñas.
+        /// </summary>
+        private const string LlavesInvalidas =
+            "Alguna de las dos llaves no es válida. Revisá las contraseñas y que la segunda " +
+            "persona sea Administrador o Supervisor.";
         public const string TipoManual = "Manual";
         public const string TipoPrevio = "Antes de restaurar";
 
@@ -162,16 +178,69 @@ namespace TiendaUNNE
             => string.Equals((texto ?? string.Empty).Trim(), PalabraConfirmacion, StringComparison.Ordinal);
 
         /// <summary>
-        /// Reemplaza TODA la base por la copia indicada. Antes comprueba que el archivo sea de
-        /// esta base y esté íntegro, y guarda una copia automática del estado actual.
-        /// Después de esto la aplicación tiene que reiniciarse.
+        /// Regla de las dos personas. Llave 1: quien tiene la sesión abierta vuelve a escribir su
+        /// contraseña (así no alcanza con encontrar la sesión de un administrador abierta).
+        /// Llave 2: otra persona, Administrador o Supervisor, activa y no bloqueada, da su DNI y
+        /// contraseña (así una sola persona no puede restaurar por su cuenta). Se verifican las
+        /// dos siempre, aunque la primera falle, para no delatar cuál estaba mal.
+        /// Devuelve el usuario que giró la segunda llave.
         /// </summary>
-        public static void Restaurar(string nombreArchivo, string confirmacion)
+        public static UsuarioLogueado VerificarLlaves(LlavesRestauracion llaves)
+        {
+            ExigirAdministrador();
+
+            if (llaves == null
+                || string.IsNullOrEmpty(llaves.PasswordPropia)
+                || string.IsNullOrWhiteSpace(llaves.DniSegundo)
+                || string.IsNullOrEmpty(llaves.PasswordSegundo))
+                throw new ReglaNegocioException(
+                    "Completá las dos llaves: tu contraseña, y el DNI y la contraseña de la otra persona.");
+
+            UsuarioLogueado actual = SesionActual.Usuario;
+
+            CredencialesUsuario propia = ServicioAutenticacion.ObtenerCredencialesPorId(actual.IdUsuario);
+            CredencialesUsuario segunda = ServicioAutenticacion.ObtenerCredenciales(llaves.DniSegundo.Trim());
+
+            // No es un secreto: quien escribe su propio DNI ya sabe que es el suyo.
+            if (segunda != null && segunda.Usuario.IdUsuario == actual.IdUsuario)
+                throw new ReglaNegocioException(
+                    "La segunda llave tiene que ser de otra persona, no de quien tiene la sesión abierta.");
+
+            bool llave1 = EsLlaveValida(propia, llaves.PasswordPropia);
+            bool llave2 = EsLlaveValida(segunda, llaves.PasswordSegundo)
+                          && Array.Exists(RolesSegundaLlave,
+                                 r => string.Equals(r, segunda.Usuario.Rol, StringComparison.OrdinalIgnoreCase));
+
+            if (!llave1 || !llave2)
+                throw new ReglaNegocioException(LlavesInvalidas);
+
+            return segunda.Usuario;
+        }
+
+        /// <summary>Las mismas condiciones que para iniciar sesión.</summary>
+        private static bool EsLlaveValida(CredencialesUsuario credenciales, string password)
+        {
+            return credenciales != null
+                && credenciales.Activo
+                && !credenciales.Bloqueado
+                && PasswordHasher.Verificar(password, credenciales.HashPassword, credenciales.Salt);
+        }
+
+        /// <summary>
+        /// Reemplaza TODA la base por la copia indicada. Antes comprueba la palabra de
+        /// confirmación y las dos llaves (otra vez, aunque la pantalla ya las haya verificado:
+        /// la regla vale aunque alguien llame a este método sin pasar por la ventana), que el
+        /// archivo sea de esta base y esté íntegro, y guarda una copia automática del estado
+        /// actual. Después de esto la aplicación tiene que reiniciarse.
+        /// </summary>
+        public static void Restaurar(string nombreArchivo, string confirmacion, LlavesRestauracion llaves)
         {
             ExigirAdministrador();
 
             if (!ConfirmacionValida(confirmacion))
                 throw new ReglaNegocioException("Para restaurar tenés que escribir " + PalabraConfirmacion + ".");
+
+            VerificarLlaves(llaves);
 
             string ruta = RutaDeCopia(nombreArchivo);
             string carpeta = ObtenerCarpeta();

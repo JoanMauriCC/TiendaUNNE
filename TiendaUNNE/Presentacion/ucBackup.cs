@@ -234,17 +234,19 @@ namespace TiendaUNNE
             string tamanio = Convert.ToString(fila["Tamano"]);
 
             string confirmacion;
+            LlavesRestauracion llaves;
             using (var dialogo = new frmConfirmarRestauracion(nombre, fecha, tamanio))
             {
                 if (dialogo.ShowDialog(this) != DialogResult.OK)
                     return;
                 confirmacion = dialogo.Confirmacion;
+                llaves = dialogo.Llaves;
             }
 
             try
             {
                 Cursor = Cursors.WaitCursor;
-                NegocioBackup.Restaurar(nombre, confirmacion);
+                NegocioBackup.Restaurar(nombre, confirmacion, llaves);
             }
             catch (ReglaNegocioException ex)
             {
