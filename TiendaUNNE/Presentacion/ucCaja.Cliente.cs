@@ -17,86 +17,104 @@ namespace TiendaUNNE
         private ComboBox cboComprobante;
         private bool _sincronizandoComprobante;
 
+        private Label lblRotuloCliente;
+        private Label lblRotuloComprobante;
+
         private void ConstruirCliente()
         {
-            panelCliente = new Panel { Dock = DockStyle.Top, Height = 96, BackColor = Color.White };
+            // El ancho se toma del ticket: un Panel nuevo mide 200 y, con los controles anclados a la
+            // derecha, al estirarse se corrían fuera de la pantalla. Por eso la distribución se calcula
+            // a mano cada vez que cambia el tamaño (AcomodarCliente), sin depender de anclajes.
+            panelCliente = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 138,
+                Width = panelTicket.ClientSize.Width,
+                BackColor = Color.White
+            };
 
-            panelCliente.Controls.Add(new Label
+            Color gris = Color.FromArgb(120, 125, 135);
+
+            lblRotuloCliente = new Label
             {
                 Text = "CLIENTE",
                 Font = new Font("Segoe UI", 8F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(120, 125, 135),
-                AutoSize = true,
-                Location = new Point(14, 6)
-            });
+                ForeColor = gris,
+                AutoSize = true
+            };
 
             lblCliente = new Label
             {
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                Font = new Font("Segoe UI", 10.5F, FontStyle.Bold),
                 AutoEllipsis = true,
-                UseMnemonic = false,
-                Location = new Point(14, 22),
-                Size = new Size(200, 20)
+                UseMnemonic = false
             };
-            panelCliente.Controls.Add(lblCliente);
 
             lblClienteDetalle = new Label
             {
-                ForeColor = Color.FromArgb(120, 125, 135),
+                ForeColor = gris,
                 Font = new Font("Segoe UI", 8.5F),
                 AutoEllipsis = true,
-                UseMnemonic = false,
-                Location = new Point(14, 40),
-                Size = new Size(200, 16)
+                UseMnemonic = false
             };
-            panelCliente.Controls.Add(lblClienteDetalle);
 
             btnCliente = new Button
             {
-                Text = "Elegir (F3)",
-                Size = new Size(104, 30),
-                Location = new Point(panelTicket.Width - 104 - 14, 14),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                UseVisualStyleBackColor = true
+                Text = "Buscar o cargar cliente  (F3)",
+                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(231, 239, 255),
+                ForeColor = ColorAcento,
+                Cursor = Cursors.Hand,
+                UseVisualStyleBackColor = false
             };
+            btnCliente.FlatAppearance.BorderColor = ColorAcento;
             btnCliente.Click += (s, e) => ElegirCliente();
-            panelCliente.Controls.Add(btnCliente);
 
-            panelCliente.Controls.Add(new Label
+            lblRotuloComprobante = new Label
             {
                 Text = "COMPROBANTE",
                 Font = new Font("Segoe UI", 8F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(120, 125, 135),
-                AutoSize = true,
-                Location = new Point(14, 70)
-            });
-
-            cboComprobante = new ComboBox
-            {
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Location = new Point(104, 66),
-                Size = new Size(panelTicket.Width - 104 - 14, 24),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+                ForeColor = gris,
+                AutoSize = true
             };
+
+            cboComprobante = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
             cboComprobante.Items.AddRange(NegocioComprobante.Tipos);
             cboComprobante.SelectedIndex = 0;
             cboComprobante.SelectedIndexChanged += cboComprobante_SelectedIndexChanged;
-            panelCliente.Controls.Add(cboComprobante);
 
-            panelCliente.Resize += (s, e) =>
+            panelCliente.Controls.AddRange(new Control[]
             {
-                int ancho = Math.Max(60, btnCliente.Left - 14 - 8);
-                lblCliente.Width = ancho;
-                lblClienteDetalle.Width = ancho;
-            };
+                lblRotuloCliente, lblCliente, lblClienteDetalle, btnCliente, lblRotuloComprobante, cboComprobante
+            });
+
+            panelCliente.Resize += (s, e) => AcomodarCliente();
 
             // Queda debajo del título "Ticket en curso" y arriba de la tabla.
             panelTicket.Controls.Add(panelCliente);
             panelTicket.Controls.SetChildIndex(panelCliente, panelTicket.Controls.GetChildIndex(lblTituloTicket));
 
+            AcomodarCliente();
             ActualizarCliente();
         }
 
+        /// <summary>Coloca cada control según el ancho real del panel, con 14 px de margen a cada lado.</summary>
+        private void AcomodarCliente()
+        {
+            const int margen = 14;
+            int ancho = Math.Max(120, panelCliente.ClientSize.Width - 2 * margen);
+
+            lblRotuloCliente.Location = new Point(margen, 8);
+
+            lblCliente.SetBounds(margen, 24, ancho, 22);
+            lblClienteDetalle.SetBounds(margen, 46, ancho, 18);
+            btnCliente.SetBounds(margen, 70, ancho, 32);
+
+            lblRotuloComprobante.Location = new Point(margen, 114);
+            int xCombo = margen + 98;
+            cboComprobante.SetBounds(xCombo, 110, Math.Max(80, panelCliente.ClientSize.Width - xCombo - margen), 24);
+        }
         /// <summary>Abre la ventana de clientes y deja en la venta lo que se haya elegido.</summary>
         private void ElegirCliente()
         {
