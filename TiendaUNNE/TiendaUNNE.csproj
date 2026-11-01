@@ -120,6 +120,10 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Presentacion\AtajosTeclado.cs" />
+    <Compile Include="Presentacion\ExportadorPdfComprobante.cs" />
+    <Compile Include="Presentacion\frmComprobante.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Presentacion\FiltroGrilla.cs" />
     <Compile Include="Presentacion\ExportadorPdfReporte.cs" />
     <Compile Include="Presentacion\ucReportes.cs">

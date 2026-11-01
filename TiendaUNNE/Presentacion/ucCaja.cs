@@ -529,14 +529,9 @@ namespace TiendaUNNE
                 if (cobro.ShowDialog(this) != DialogResult.OK)
                     return;
 
-                MessageBox.Show(
-                    "Cobro completado. " + cobro.Comprobante.Nombre + " Nº " +
-                    cobro.Comprobante.NumeroFormateado + "." +
-                    (cobro.Vuelto > 0
-                        ? Environment.NewLine + Environment.NewLine + "Vuelto: " +
-                          cobro.Vuelto.ToString(NegocioVenta.FormatoImporte)
-                        : string.Empty),
-                    "Cobro", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // El comprobante emitido (con el vuelto, si hubo) se muestra y se puede guardar en PDF.
+                using (var comprobante = new frmComprobante(cobro.Comprobante))
+                    comprobante.ShowDialog(this);
 
                 IniciarVenta();
                 txtBuscar.Focus();
