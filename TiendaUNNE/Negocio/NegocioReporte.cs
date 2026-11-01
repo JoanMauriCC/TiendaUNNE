@@ -263,7 +263,76 @@ namespace TiendaUNNE
             return reporte;
         }
 
-        /// <summary>Título, período y nombre de archivo, iguales para los tres reportes.</summary>
+        // ---------------------------------------------------------------------
+        // Clientes
+        // ---------------------------------------------------------------------
+
+        /// <summary>Cuántos clientes muestra el gráfico (los que más gastaron).</summary>
+        public const int CantidadMejoresClientes = 10;
+
+        /// <summary>
+        /// Quiénes compraron entre dos fechas y cuánto gastaron: indicadores, ranking de los que más
+        /// gastaron en el gráfico y la tabla con todos. Las ventas sin cliente (consumidor final) no
+        /// figuran en la tabla, pero se cuentan en la nota de pie para ver cuánto del negocio queda
+        /// sin identificar.
+        /// </summary>
+        public static ReporteVista Clientes(DateTime desde, DateTime hasta)
+        {
+            ValidarRango(desde, hasta);
+
+            DateTime inicio = desde.Date;
+            DateTime fin = hasta.Date.AddDays(1);   // "hasta" cuenta el día completo
+
+            DataSet datos = ServicioReporte.Clientes(inicio, fin);
+            DataTable clientes = datos.Tables[0];
+            DataRow totales = datos.Tables[1].Rows[0];
+
+            int nuevos = Convert.ToInt32(totales["ClientesNuevos"]);
+            int sinCliente = Convert.ToInt32(totales["VentasSinCliente"]);
+            int ventas = Convert.ToInt32(totales["VentasTotales"]);
+
+            decimal gastado = clientes.AsEnumerable().Sum(f => Convert.ToDecimal(f["Total"]));
+            int cuantos = clientes.Rows.Count;
+
+            string nota = string.Format("Ventas emitidas del {0:dd/MM/yyyy} al {1:dd/MM/yyyy}.", desde, hasta);
+            if (ventas == 0)
+                nota += " No hay ventas en este período.";
+            else
+                nota += string.Format(" {0} de {1} ventas ({2:0.#} %) fueron a consumidor final, sin cliente cargado.",
+                    sinCliente, ventas, sinCliente * 100.0 / ventas);
+
+            var reporte = new ReporteVista
+            {
+                TituloGrafico = "Clientes que más gastaron ($)",
+                Descripcion = nota
+            };
+
+            Encabezar(reporte, "Clientes", desde, hasta);
+            reporte.Indicadores.Add(new IndicadorReporte("Clientes que compraron", cuantos.ToString("N0")));
+            reporte.Indicadores.Add(new IndicadorReporte("Gasto promedio por cliente",
+                Importe(cuantos == 0 ? 0 : gastado / cuantos)));
+            reporte.Indicadores.Add(new IndicadorReporte("Clientes nuevos", nuevos.ToString("N0")));
+
+            foreach (DataRow fila in clientes.AsEnumerable().Take(CantidadMejoresClientes))
+                AgregarPunto(reporte, Convert.ToString(fila["Cliente"]), fila["Total"]);
+
+            reporte.Columnas.AddRange(new[] { "Cliente", "Compras", "Total", "Promedio", "Última compra" });
+            foreach (DataRow fila in clientes.Rows)
+            {
+                reporte.Filas.Add(new[]
+                {
+                    Convert.ToString(fila["Cliente"]),
+                    Convert.ToInt32(fila["Compras"]).ToString("N0"),
+                    Importe(Convert.ToDecimal(fila["Total"])),
+                    Importe(Convert.ToDecimal(fila["Promedio"])),
+                    Convert.ToDateTime(fila["Ultima"]).ToString("dd/MM/yyyy")
+                });
+            }
+
+            CompletarGraficos(reporte, enElTiempo: false);
+            return reporte;
+        }
+        /// <summary>Título, período y nombre de archivo, iguales para todos los reportes.</summary>
         private static void Encabezar(ReporteVista reporte, string nombre, DateTime desde, DateTime hasta)
         {
             reporte.Titulo = "Reporte de " + nombre.ToLower();

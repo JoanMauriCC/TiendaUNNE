@@ -21,6 +21,7 @@ namespace TiendaUNNE
             this.btnVentas = new System.Windows.Forms.Button();
             this.btnProductos = new System.Windows.Forms.Button();
             this.btnRecaudacion = new System.Windows.Forms.Button();
+            this.btnClientes = new System.Windows.Forms.Button();
             this.lblDesde = new System.Windows.Forms.Label();
             this.dtpDesde = new System.Windows.Forms.DateTimePicker();
             this.lblHasta = new System.Windows.Forms.Label();
@@ -63,6 +64,7 @@ namespace TiendaUNNE
             this.panelBarra.Controls.Add(this.btnVentas);
             this.panelBarra.Controls.Add(this.btnProductos);
             this.panelBarra.Controls.Add(this.btnRecaudacion);
+            this.panelBarra.Controls.Add(this.btnClientes);
             this.panelBarra.Controls.Add(this.lblDesde);
             this.panelBarra.Controls.Add(this.dtpDesde);
             this.panelBarra.Controls.Add(this.lblHasta);
@@ -79,7 +81,7 @@ namespace TiendaUNNE
             this.btnVentas.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnVentas.Location = new System.Drawing.Point(6, 8);
             this.btnVentas.Name = "btnVentas";
-            this.btnVentas.Size = new System.Drawing.Size(110, 30);
+            this.btnVentas.Size = new System.Drawing.Size(90, 30);
             this.btnVentas.TabIndex = 0;
             this.btnVentas.Text = "&Ventas";
             this.btnVentas.UseVisualStyleBackColor = false;
@@ -88,9 +90,9 @@ namespace TiendaUNNE
             // btnProductos
             //
             this.btnProductos.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnProductos.Location = new System.Drawing.Point(122, 8);
+            this.btnProductos.Location = new System.Drawing.Point(102, 8);
             this.btnProductos.Name = "btnProductos";
-            this.btnProductos.Size = new System.Drawing.Size(110, 30);
+            this.btnProductos.Size = new System.Drawing.Size(100, 30);
             this.btnProductos.TabIndex = 1;
             this.btnProductos.Text = "&Productos";
             this.btnProductos.UseVisualStyleBackColor = false;
@@ -99,13 +101,24 @@ namespace TiendaUNNE
             // btnRecaudacion
             //
             this.btnRecaudacion.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRecaudacion.Location = new System.Drawing.Point(238, 8);
+            this.btnRecaudacion.Location = new System.Drawing.Point(208, 8);
             this.btnRecaudacion.Name = "btnRecaudacion";
-            this.btnRecaudacion.Size = new System.Drawing.Size(120, 30);
+            this.btnRecaudacion.Size = new System.Drawing.Size(110, 30);
             this.btnRecaudacion.TabIndex = 2;
             this.btnRecaudacion.Text = "&Recaudación";
             this.btnRecaudacion.UseVisualStyleBackColor = false;
             this.btnRecaudacion.Click += new System.EventHandler(this.btnRecaudacion_Click);
+            //
+            // btnClientes
+            //
+            this.btnClientes.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnClientes.Location = new System.Drawing.Point(324, 8);
+            this.btnClientes.Name = "btnClientes";
+            this.btnClientes.Size = new System.Drawing.Size(86, 30);
+            this.btnClientes.TabIndex = 9;
+            this.btnClientes.Text = "&Clientes";
+            this.btnClientes.UseVisualStyleBackColor = false;
+            this.btnClientes.Click += new System.EventHandler(this.btnClientes_Click);
             //
             // lblDesde
             //
@@ -395,6 +408,7 @@ namespace TiendaUNNE
         private System.Windows.Forms.Button btnVentas;
         private System.Windows.Forms.Button btnProductos;
         private System.Windows.Forms.Button btnRecaudacion;
+        private System.Windows.Forms.Button btnClientes;
         private System.Windows.Forms.Label lblDesde;
         private System.Windows.Forms.DateTimePicker dtpDesde;
         private System.Windows.Forms.Label lblHasta;

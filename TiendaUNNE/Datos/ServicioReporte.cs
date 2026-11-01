@@ -147,6 +147,26 @@ ORDER BY Anio, Mes;",
                 desde, hasta);
         }
 
+        /// <summary>
+        /// Reporte de clientes (procedimiento sp_ReporteClientes). La primera tabla trae un cliente
+        /// por fila (IdCliente, Cliente, Compras, Total, Promedio, Ultima); la segunda, una sola fila
+        /// con ClientesNuevos, VentasSinCliente y VentasTotales.
+        /// </summary>
+        public static DataSet Clientes(DateTime desde, DateTime hasta)
+        {
+            var ds = new DataSet();
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand("dbo.sp_ReporteClientes", cn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add("@desde", SqlDbType.DateTime2).Value = desde;
+                cmd.Parameters.Add("@hasta", SqlDbType.DateTime2).Value = hasta;
+
+                using (var da = new SqlDataAdapter(cmd))
+                    da.Fill(ds);
+            }
+            return ds;
+        }
         private static DataTable Consultar(string sql, DateTime desde, DateTime hasta,
                                            params SqlParameter[] otrosParametros)
         {

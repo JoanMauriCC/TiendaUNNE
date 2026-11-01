@@ -277,5 +277,51 @@ BEGIN
     SET @resultado = 0;
 END
 GO
+-------------------------------------------------------------------------------
+-- sp_ReporteClientes
+-- Datos del reporte de clientes entre dos fechas. El rango es [@desde, @hasta):
+-- incluye @desde y no incluye @hasta. Solo cuentan las ventas emitidas (las anuladas
+-- quedan afuera).
+--
+-- Devuelve dos resultados:
+--   1) Una fila por cliente que compró: Cliente, Compras, Total gastado, Promedio por
+--      compra y fecha de la Ultima compra; del que más gastó al que menos.
+--   2) Una sola fila de totales: ClientesNuevos (dados de alta en el rango),
+--      VentasSinCliente (consumidor final) y VentasTotales.
+-------------------------------------------------------------------------------
+IF OBJECT_ID('dbo.sp_ReporteClientes', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_ReporteClientes;
+GO
+
+CREATE PROCEDURE dbo.sp_ReporteClientes
+    @desde  DATETIME2,
+    @hasta  DATETIME2
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT  c.id_cliente                    AS IdCliente,
+            p.apellido + N', ' + p.nombre   AS Cliente,
+            COUNT(*)                        AS Compras,
+            SUM(vc.total)                   AS Total,
+            AVG(vc.total)                   AS Promedio,
+            MAX(vc.fecha_hora)              AS Ultima
+    FROM        dbo.Venta_cabecera vc
+    INNER JOIN  dbo.Cliente        c ON c.id_cliente = vc.id_cliente
+    INNER JOIN  dbo.Persona        p ON p.id_persona = c.id_persona
+    WHERE vc.estado = 'EMITIDA' AND vc.fecha_hora >= @desde AND vc.fecha_hora < @hasta
+    GROUP BY c.id_cliente, p.apellido, p.nombre
+    ORDER BY SUM(vc.total) DESC, p.apellido, p.nombre;
+
+    SELECT
+        (SELECT COUNT(*) FROM dbo.Cliente
+          WHERE fecha_alta >= @desde AND fecha_alta < @hasta)                      AS ClientesNuevos,
+        (SELECT COUNT(*) FROM dbo.Venta_cabecera
+          WHERE estado = 'EMITIDA' AND fecha_hora >= @desde AND fecha_hora < @hasta
+            AND id_cliente IS NULL)                                                AS VentasSinCliente,
+        (SELECT COUNT(*) FROM dbo.Venta_cabecera
+          WHERE estado = 'EMITIDA' AND fecha_hora >= @desde AND fecha_hora < @hasta) AS VentasTotales;
+END
+GO
 PRINT 'Stored procedures de TiendaUNNE creados correctamente.';
 GO

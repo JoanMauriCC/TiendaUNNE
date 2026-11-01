@@ -22,7 +22,7 @@ namespace TiendaUNNE
     /// </summary>
     public partial class ucReportes : UserControl
     {
-        private enum TipoReporte { Ventas, Productos, Recaudacion }
+        private enum TipoReporte { Ventas, Productos, Recaudacion, Clientes }
 
         private static readonly Color ColorAcento = Color.FromArgb(59, 130, 246);
         private static readonly Color ColorAcentoFondo = Color.FromArgb(234, 242, 251);
@@ -112,6 +112,7 @@ namespace TiendaUNNE
         private void btnVentas_Click(object sender, EventArgs e) => CambiarTipo(TipoReporte.Ventas);
         private void btnProductos_Click(object sender, EventArgs e) => CambiarTipo(TipoReporte.Productos);
         private void btnRecaudacion_Click(object sender, EventArgs e) => CambiarTipo(TipoReporte.Recaudacion);
+        private void btnClientes_Click(object sender, EventArgs e) => CambiarTipo(TipoReporte.Clientes);
 
         private void btnAplicar_Click(object sender, EventArgs e) => MostrarReporte();
 
@@ -208,6 +209,9 @@ namespace TiendaUNNE
                     case TipoReporte.Productos:
                         vista = NegocioReporte.Productos(desde, hasta);
                         break;
+                    case TipoReporte.Clientes:
+                        vista = NegocioReporte.Clientes(desde, hasta);
+                        break;
                     default:
                         vista = NegocioReporte.Recaudacion(desde, hasta);
                         break;
@@ -233,6 +237,7 @@ namespace TiendaUNNE
             PintarBoton(btnVentas, _tipo == TipoReporte.Ventas);
             PintarBoton(btnProductos, _tipo == TipoReporte.Productos);
             PintarBoton(btnRecaudacion, _tipo == TipoReporte.Recaudacion);
+            PintarBoton(btnClientes, _tipo == TipoReporte.Clientes);
 
             lblIndTitulo1.Text = vista.Indicadores[0].Titulo;
             lblIndValor1.Text = vista.Indicadores[0].Valor;
