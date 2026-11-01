@@ -13,7 +13,7 @@ namespace TiendaUNNE
     /// Solo muestra datos y recoge lo que hace el cajero; validar stock, filtrar el catálogo,
     /// calcular totales y registrar la venta es trabajo de NegocioVenta y NegocioCaja.
     ///
-    ///   F2 / Ctrl+F  ir al buscador        F3  elegir cliente    F4  cobrar    F5  actualizar el catálogo
+    ///   F2 / Ctrl+F  ir al buscador        F3  elegir cliente    F4  cobrar    F5  actualizar el catálogo    F6  ventas del turno
     ///   Esc          limpiar la búsqueda   Enter (en el buscador) agrega si queda un solo producto
     /// </summary>
     public partial class ucCaja : UserControl
@@ -34,6 +34,7 @@ namespace TiendaUNNE
             InitializeComponent();
             ConstruirApertura();
             ConstruirCliente();
+            ConstruirVentas();
 
             _timerReservas.Tick += (s, e) => NegocioVenta.RenovarReservas(_venta);
             _timerReservas.Start();
@@ -63,6 +64,10 @@ namespace TiendaUNNE
                     case Keys.Control | Keys.F:
                         txtBuscar.Focus();
                         txtBuscar.SelectAll();
+                        return true;
+
+                    case Keys.F6:
+                        VerVentasDelTurno();
                         return true;
 
                     case Keys.F3:

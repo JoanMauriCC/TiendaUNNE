@@ -30,6 +30,115 @@ WHERE  codigo = @codigo AND activo = 1;";
             }
         }
 
+        // ---------------------------------------------------------------------
+        // Ventas del turno y anulación
+        // ---------------------------------------------------------------------
+
+        private const string SelectVentas = @"
+SELECT  vc.id_venta, vc.fecha_hora, tc.nombre AS comprobante, vc.punto_venta,
+        vc.numero_comprobante, vc.total, vc.estado, vc.observaciones,
+        ISNULL(p.apellido + N', ' + p.nombre, N'Consumidor final') AS cliente
+FROM        dbo.Venta_cabecera    vc
+INNER JOIN  dbo.Tipo_comprobante  tc ON tc.id_tipo_comprobante = vc.id_tipo_comprobante
+LEFT JOIN   dbo.Cliente           c  ON c.id_cliente = vc.id_cliente
+LEFT JOIN   dbo.Persona           p  ON p.id_persona = c.id_persona
+";
+
+        /// <summary>Todas las ventas de un turno de caja, las más nuevas primero.</summary>
+        public static List<VentaListada> ListarDelTurno(int idCajaSesion)
+        {
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand(
+                SelectVentas + "WHERE vc.id_caja_sesion = @sesion ORDER BY vc.id_venta DESC;", cn))
+            {
+                cmd.Parameters.Add("@sesion", SqlDbType.Int).Value = idCajaSesion;
+                return LeerVentas(cmd);
+            }
+        }
+
+        /// <summary>Una venta por su id, o null si no existe.</summary>
+        public static VentaListada ObtenerVenta(int idVenta)
+        {
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand(SelectVentas + "WHERE vc.id_venta = @id;", cn))
+            {
+                cmd.Parameters.Add("@id", SqlDbType.Int).Value = idVenta;
+
+                List<VentaListada> lista = LeerVentas(cmd);
+                return lista.Count == 0 ? null : lista[0];
+            }
+        }
+
+        private static List<VentaListada> LeerVentas(SqlCommand cmd)
+        {
+            var lista = new List<VentaListada>();
+            using (var dr = cmd.ExecuteReader())
+            {
+                while (dr.Read())
+                {
+                    lista.Add(new VentaListada
+                    {
+                        IdVenta = (int)dr["id_venta"],
+                        Fecha = (DateTime)dr["fecha_hora"],
+                        Comprobante = (string)dr["comprobante"],
+                        PuntoVenta = (int)dr["punto_venta"],
+                        Numero = (long)dr["numero_comprobante"],
+                        Cliente = (string)dr["cliente"],
+                        Total = (decimal)dr["total"],
+                        Estado = (string)dr["estado"],
+                        Motivo = dr["observaciones"] as string
+                    });
+                }
+            }
+            return lista;
+        }
+
+        /// <summary>
+        /// Anula la venta con el procedimiento sp_AnularVenta. Si se anuló, deja la auditoría
+        /// (MODIFICACION) en la misma transacción: o queda todo o no queda nada.
+        /// </summary>
+        public static ResultadoAnulacion Anular(int idVenta, int idCajaSesion, int idUsuario, string motivo,
+                                                string resumenAnterior, string resumenNuevo)
+        {
+            using (var cn = Db.AbrirConexion())
+            using (var tx = cn.BeginTransaction())
+            {
+                try
+                {
+                    ResultadoAnulacion resultado;
+                    using (var cmd = new SqlCommand("dbo.sp_AnularVenta", cn, tx))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@id_venta", SqlDbType.Int).Value = idVenta;
+                        cmd.Parameters.Add("@id_caja_sesion", SqlDbType.Int).Value = idCajaSesion;
+                        cmd.Parameters.Add("@id_usuario", SqlDbType.Int).Value = idUsuario;
+                        cmd.Parameters.Add("@motivo", SqlDbType.NVarChar, 300).Value = motivo;
+
+                        SqlParameter salida = cmd.Parameters.Add("@resultado", SqlDbType.Int);
+                        salida.Direction = ParameterDirection.Output;
+
+                        cmd.ExecuteNonQuery();
+                        resultado = (ResultadoAnulacion)(int)salida.Value;
+                    }
+
+                    if (resultado == ResultadoAnulacion.Anulada)
+                    {
+                        ServicioAuditoria.Registrar(
+                            "MODIFICACION", "Venta_cabecera", idVenta,
+                            resumenAnterior, resumenNuevo, idUsuario,
+                            cn, tx);
+                    }
+
+                    tx.Commit();
+                    return resultado;
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
+                }
+            }
+        }
         /// <summary>
         /// Guarda la venta completa en una transacción: la cabecera, los renglones, los pagos
         /// y un ingreso de caja por cada pago. Si algo falla no queda nada a medias.

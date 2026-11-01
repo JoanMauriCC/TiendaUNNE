@@ -209,5 +209,73 @@ BEGIN
     SET @creado = 1;
 END
 GO
+-------------------------------------------------------------------------------
+-- sp_AnularVenta
+-- Anula una venta ya cobrada, dentro del turno de caja que está abierto.
+--
+--   @id_venta        venta a anular
+--   @id_caja_sesion  turno abierto desde el que se anula
+--   @id_usuario      quién anula
+--   @motivo          por qué se anula (queda guardado en la venta)
+--   @resultado       (salida) 0 = anulada
+--                             1 = la venta no existe
+--                             2 = ya estaba anulada
+--                             3 = es de otro turno de caja (no se puede desde este)
+--
+-- Si se anula: la venta pasa a estado ANULADA, el stock de cada producto vuelve al
+-- depósito y se registra un egreso de caja por cada pago, con el mismo medio de pago.
+-- Los reportes y el arqueo ya ignoran las ventas anuladas. Se llama dentro de una
+-- transacción de la aplicación, que graba también la auditoría.
+-------------------------------------------------------------------------------
+IF OBJECT_ID('dbo.sp_AnularVenta', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_AnularVenta;
+GO
+
+CREATE PROCEDURE dbo.sp_AnularVenta
+    @id_venta        INT,
+    @id_caja_sesion  INT,
+    @id_usuario      INT,
+    @motivo          NVARCHAR(300),
+    @resultado       INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    DECLARE @estado NVARCHAR(10), @sesion_venta INT;
+
+    -- Se bloquea la venta: dos personas no pueden anularla a la vez.
+    SELECT @estado = estado, @sesion_venta = id_caja_sesion
+    FROM   dbo.Venta_cabecera WITH (UPDLOCK, HOLDLOCK)
+    WHERE  id_venta = @id_venta;
+
+    IF @estado IS NULL      BEGIN SET @resultado = 1; RETURN; END
+    IF @estado = 'ANULADA'  BEGIN SET @resultado = 2; RETURN; END
+    IF @sesion_venta <> @id_caja_sesion BEGIN SET @resultado = 3; RETURN; END
+
+    UPDATE dbo.Venta_cabecera
+    SET    estado = 'ANULADA', observaciones = @motivo
+    WHERE  id_venta = @id_venta;
+
+    -- El stock vuelve al depósito.
+    UPDATE p
+    SET    p.stock = p.stock + d.cantidad
+    FROM   dbo.Producto p
+    INNER JOIN (SELECT id_producto, SUM(cantidad) AS cantidad
+                FROM   dbo.Venta_detalle
+                WHERE  id_venta = @id_venta
+                GROUP BY id_producto) d ON d.id_producto = p.id_producto;
+
+    -- La plata se devuelve por el mismo medio de pago con el que se cobró.
+    INSERT INTO dbo.Movimiento_caja
+        (id_caja_sesion, id_usuario, id_medio_pago, id_venta, tipo, concepto, monto, observaciones)
+    SELECT @id_caja_sesion, @id_usuario, vp.id_medio_pago, @id_venta, 'EGRESO',
+           N'Anulación de venta', vp.importe, @motivo
+    FROM   dbo.Venta_pago vp
+    WHERE  vp.id_venta = @id_venta AND vp.importe > 0;
+
+    SET @resultado = 0;
+END
+GO
 PRINT 'Stored procedures de TiendaUNNE creados correctamente.';
 GO
