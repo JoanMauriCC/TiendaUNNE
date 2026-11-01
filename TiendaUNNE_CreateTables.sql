@@ -455,7 +455,9 @@ INSERT INTO dbo.Medio_pago (nombre, requiere_referencia, es_efectivo) VALUES
     (N'Transferencia',      1, 0);
 
 INSERT INTO dbo.Tipo_comprobante (codigo, nombre, letra, signo) VALUES
-    (N'TKT', N'Ticket', NULL, 1);
+    (N'TKT', N'Ticket', NULL, 1),
+    (N'FB',  N'Factura B', 'B', 1),
+    (N'FA',  N'Factura A', 'A', 1);
 GO
 
 -- El usuario administrador inicial lo crea la aplicación en el primer arranque

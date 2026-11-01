@@ -29,6 +29,13 @@ namespace TiendaUNNE
         public decimal Cantidad { get; set; }
         public decimal PrecioUnitario { get; set; }
 
+        // Los calcula NegocioComprobante al cobrar. Ocultos para que la grilla del ticket no los muestre.
+        [System.ComponentModel.Browsable(false)]
+        public decimal AlicuotaIva { get; set; }
+
+        [System.ComponentModel.Browsable(false)]
+        public decimal ImporteIva { get; set; }
+
         public decimal Subtotal => decimal.Round(Cantidad * PrecioUnitario, 2);
     }
 
@@ -53,6 +60,13 @@ namespace TiendaUNNE
 
         /// <summary>Cliente de la venta; null es consumidor final.</summary>
         public ClienteItem Cliente { get; set; }
+
+        /// <summary>Tipo de comprobante a emitir al cobrar (Ticket por defecto).</summary>
+        public string CodigoComprobante { get; set; } = NegocioComprobante.Ticket;
+
+        /// <summary>Neto e IVA de la venta; los completa NegocioComprobante.AplicarIva antes de guardar.</summary>
+        public decimal ImporteNeto { get; set; }
+        public decimal ImporteIva { get; set; }
 
         public int IdCaja { get; set; }
         public int IdCajaSesion { get; set; }

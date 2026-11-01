@@ -33,10 +33,10 @@ WHERE  codigo = @codigo AND activo = 1;";
         /// <summary>
         /// Guarda la venta completa en una transacción: la cabecera, los renglones, los pagos
         /// y un ingreso de caja por cada pago. Si algo falla no queda nada a medias.
-        /// Devuelve el número de comprobante asignado, correlativo por tipo de comprobante
-        /// y punto de venta.
+        /// Devuelve el número de comprobante asignado (correlativo por tipo de comprobante y punto
+        /// de venta) y la fecha y hora en que quedó registrada.
         /// </summary>
-        public static long Registrar(VentaEditModel venta, IList<PagoVenta> pagos,
+        public static VentaRegistrada Registrar(VentaEditModel venta, IList<PagoVenta> pagos,
                                      int idTipoComprobante, int puntoVenta, string conceptoCaja)
         {
             using (var cn = Db.AbrirConexion())
@@ -45,13 +45,14 @@ WHERE  codigo = @codigo AND activo = 1;";
                 try
                 {
                     long numero = SiguienteNumero(cn, tx, idTipoComprobante, puntoVenta);
-                    int idVenta = InsertarCabecera(cn, tx, venta, idTipoComprobante, puntoVenta, numero);
+                    DateTime fecha;
+                    int idVenta = InsertarCabecera(cn, tx, venta, idTipoComprobante, puntoVenta, numero, out fecha);
                     InsertarRenglones(cn, tx, idVenta, venta.Renglones);
                     DescontarStock(cn, tx, venta);
                     InsertarPagos(cn, tx, venta, idVenta, pagos, conceptoCaja);
 
                     tx.Commit();
-                    return numero;
+                    return new VentaRegistrada { IdVenta = idVenta, Numero = numero, FechaHora = fecha };
                 }
                 catch
                 {
@@ -82,15 +83,16 @@ WHERE  id_tipo_comprobante = @tipo AND punto_venta = @punto_venta;";
         }
 
         private static int InsertarCabecera(SqlConnection cn, SqlTransaction tx, VentaEditModel venta,
-                                            int idTipoComprobante, int puntoVenta, long numero)
+                                            int idTipoComprobante, int puntoVenta, long numero,
+                                            out DateTime fechaHora)
         {
             const string sql = @"
 INSERT INTO dbo.Venta_cabecera
     (id_tipo_comprobante, punto_venta, numero_comprobante, id_cliente, id_usuario, id_caja_sesion,
      subtotal, descuento, importe_neto, importe_iva, total)
 VALUES
-    (@tipo, @punto_venta, @numero, @cliente, @usuario, @sesion, @total, 0, @total, 0, @total);
-SELECT CAST(SCOPE_IDENTITY() AS INT);";
+    (@tipo, @punto_venta, @numero, @cliente, @usuario, @sesion, @total, 0, @neto, @iva, @total);
+SELECT id_venta, fecha_hora FROM dbo.Venta_cabecera WHERE id_venta = SCOPE_IDENTITY();";
 
             using (var cmd = new SqlCommand(sql, cn, tx))
             {
@@ -102,8 +104,15 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                 cmd.Parameters.Add("@usuario", SqlDbType.Int).Value = venta.IdUsuario;
                 cmd.Parameters.Add("@sesion", SqlDbType.Int).Value = venta.IdCajaSesion;
                 AgregarDecimal(cmd, "@total", venta.Total, 12, 2);
+                AgregarDecimal(cmd, "@neto", venta.ImporteNeto, 12, 2);
+                AgregarDecimal(cmd, "@iva", venta.ImporteIva, 12, 2);
 
-                return (int)cmd.ExecuteScalar();
+                using (var dr = cmd.ExecuteReader())
+                {
+                    dr.Read();
+                    fechaHora = dr.GetDateTime(1);
+                    return dr.GetInt32(0);
+                }
             }
         }
 
@@ -115,7 +124,7 @@ INSERT INTO dbo.Venta_detalle
     (id_venta, id_producto, nro_linea, descripcion, cantidad, precio_unitario,
      alicuota_iva, importe_iva, subtotal)
 VALUES
-    (@venta, @producto, @linea, @descripcion, @cantidad, @precio, 0, 0, @subtotal);";
+    (@venta, @producto, @linea, @descripcion, @cantidad, @precio, @alicuota, @iva, @subtotal);";
 
             for (int i = 0; i < renglones.Count; i++)
             {
@@ -130,6 +139,8 @@ VALUES
                     AgregarDecimal(cmd, "@cantidad", r.Cantidad, 12, 3);
                     AgregarDecimal(cmd, "@precio", r.PrecioUnitario, 12, 2);
                     AgregarDecimal(cmd, "@subtotal", r.Subtotal, 12, 2);
+                    AgregarDecimal(cmd, "@alicuota", r.AlicuotaIva, 5, 2);
+                    AgregarDecimal(cmd, "@iva", r.ImporteIva, 12, 2);
                     cmd.ExecuteNonQuery();
                 }
             }

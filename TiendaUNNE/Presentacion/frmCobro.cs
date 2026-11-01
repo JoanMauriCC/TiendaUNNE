@@ -21,8 +21,8 @@ namespace TiendaUNNE
         /// <summary>Vuelto que hay que devolverle al cliente.</summary>
         public decimal Vuelto { get; private set; }
 
-        /// <summary>Número de ticket que se le asignó a la venta confirmada.</summary>
-        public long NumeroTicket { get; private set; }
+        /// <summary>El comprobante emitido al confirmar el cobro (tipo, número y fecha).</summary>
+        public ComprobanteVista Comprobante { get; private set; }
 
         private void frmCobro_Load(object sender, EventArgs e)
         {
@@ -132,7 +132,7 @@ namespace TiendaUNNE
                 Cursor = Cursors.WaitCursor;
 
                 Vuelto = NegocioVenta.CalcularVuelto(_venta);
-                NumeroTicket = NegocioVenta.ConfirmarVenta(_venta);
+                Comprobante = NegocioVenta.ConfirmarVenta(_venta);
 
                 DialogResult = DialogResult.OK;
                 Close();

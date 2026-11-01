@@ -23,9 +23,6 @@ namespace TiendaUNNE
         /// <summary>El número de ticket se muestra con ceros a la izquierda: 00000012.</summary>
         public const string FormatoNumeroTicket = "D8";
 
-        /// <summary>Código del tipo de comprobante que se emite al cobrar (Tipo_comprobante).</summary>
-        private const string CodigoTicket = "TKT";
-
         private const string ConceptoCobro = "Cobro de venta";
 
         /// <summary>Como FormatoCantidad pero sin ceros de más: 1 se ve "1", no "1,000".</summary>
@@ -250,24 +247,32 @@ namespace TiendaUNNE
 
         /// <summary>
         /// Valida el cobro y lo guarda en la base: la venta, sus renglones y los pagos, con el
-        /// vuelto ya descontado del efectivo. Devuelve el número de ticket asignado.
+        /// vuelto ya descontado del efectivo. Devuelve el comprobante emitido (tipo, número y fecha).
         /// Si no se puede guardar, la venta queda como estaba y se puede reintentar.
         /// </summary>
-        public static long ConfirmarVenta(VentaEditModel venta)
+        public static ComprobanteVista ConfirmarVenta(VentaEditModel venta)
         {
             ValidarParaCobrar(venta);
             ValidarCajaAbierta(venta);
 
-            int idTipoTicket = ServicioVenta.ObtenerIdTipoComprobante(CodigoTicket)
+            // El cliente pudo cambiar después de elegir el comprobante: se vuelve a comprobar.
+            NegocioComprobante.Validar(venta, venta.CodigoComprobante);
+            NegocioComprobante.AplicarIva(venta);
+
+            TipoComprobanteItem tipo = NegocioComprobante.Buscar(venta.CodigoComprobante);
+            int idTipo = ServicioVenta.ObtenerIdTipoComprobante(tipo.Codigo)
                 ?? throw new ReglaNegocioException(
-                    "No está cargado el tipo de comprobante «Ticket» en la base de datos.");
+                    "No está cargado el tipo de comprobante «" + tipo.Nombre + "» en la base de datos.");
 
             List<PagoVenta> pagos = PagosSinVuelto(venta);
 
             // El punto de venta es la caja: cada caja numera sus tickets desde 1.
             try
             {
-                return ServicioVenta.Registrar(venta, pagos, idTipoTicket, venta.IdCaja, ConceptoCobro);
+                VentaRegistrada registrada =
+                    ServicioVenta.Registrar(venta, pagos, idTipo, venta.IdCaja, ConceptoCobro);
+
+                return NegocioComprobante.ArmarVista(venta, registrada, CalcularVuelto(venta));
             }
             catch (StockInsuficienteException ex)
             {

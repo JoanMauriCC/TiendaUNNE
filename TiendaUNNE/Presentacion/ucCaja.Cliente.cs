@@ -14,10 +14,12 @@ namespace TiendaUNNE
         private Label lblCliente;
         private Label lblClienteDetalle;
         private Button btnCliente;
+        private ComboBox cboComprobante;
+        private bool _sincronizandoComprobante;
 
         private void ConstruirCliente()
         {
-            panelCliente = new Panel { Dock = DockStyle.Top, Height = 58, BackColor = Color.White };
+            panelCliente = new Panel { Dock = DockStyle.Top, Height = 96, BackColor = Color.White };
 
             panelCliente.Controls.Add(new Label
             {
@@ -60,6 +62,27 @@ namespace TiendaUNNE
             btnCliente.Click += (s, e) => ElegirCliente();
             panelCliente.Controls.Add(btnCliente);
 
+            panelCliente.Controls.Add(new Label
+            {
+                Text = "COMPROBANTE",
+                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(120, 125, 135),
+                AutoSize = true,
+                Location = new Point(14, 70)
+            });
+
+            cboComprobante = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Location = new Point(104, 66),
+                Size = new Size(panelTicket.Width - 104 - 14, 24),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            cboComprobante.Items.AddRange(NegocioComprobante.Tipos);
+            cboComprobante.SelectedIndex = 0;
+            cboComprobante.SelectedIndexChanged += cboComprobante_SelectedIndexChanged;
+            panelCliente.Controls.Add(cboComprobante);
+
             panelCliente.Resize += (s, e) =>
             {
                 int ancho = Math.Max(60, btnCliente.Left - 14 - 8);
@@ -86,6 +109,62 @@ namespace TiendaUNNE
 
                 NegocioVenta.AsignarCliente(_venta, ventana.ClienteElegido);
                 ActualizarCliente();
+                RevalidarComprobante();
+            }
+        }
+
+        private void cboComprobante_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_sincronizandoComprobante || _venta == null) return;
+
+            var tipo = cboComprobante.SelectedItem as TipoComprobanteItem;
+            if (tipo == null) return;
+
+            try
+            {
+                NegocioComprobante.Validar(_venta, tipo.Codigo);
+                _venta.CodigoComprobante = tipo.Codigo;
+            }
+            catch (ReglaNegocioException ex)
+            {
+                MessageBox.Show(ex.Message, "Comprobante", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                SincronizarComprobante();   // vuelve al que estaba
+            }
+        }
+
+        /// <summary>Si al cambiar de cliente el comprobante elegido ya no corresponde, vuelve a Ticket y avisa.</summary>
+        private void RevalidarComprobante()
+        {
+            try
+            {
+                NegocioComprobante.Validar(_venta, _venta.CodigoComprobante);
+            }
+            catch (ReglaNegocioException ex)
+            {
+                MessageBox.Show(ex.Message + Environment.NewLine + Environment.NewLine + "El comprobante vuelve a Ticket.",
+                    "Comprobante", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                _venta.CodigoComprobante = NegocioComprobante.Ticket;
+            }
+
+            SincronizarComprobante();
+        }
+
+        /// <summary>Deja el selector mostrando el comprobante que tiene la venta.</summary>
+        private void SincronizarComprobante()
+        {
+            if (cboComprobante == null) return;
+
+            _sincronizandoComprobante = true;
+            try
+            {
+                string codigo = _venta == null ? NegocioComprobante.Ticket : _venta.CodigoComprobante;
+                for (int i = 0; i < cboComprobante.Items.Count; i++)
+                    if (((TipoComprobanteItem)cboComprobante.Items[i]).Codigo == codigo)
+                        cboComprobante.SelectedIndex = i;
+            }
+            finally
+            {
+                _sincronizandoComprobante = false;
             }
         }
 
@@ -97,6 +176,7 @@ namespace TiendaUNNE
             {
                 lblCliente.Text = "Consumidor final";
                 lblClienteDetalle.Text = "Sin datos del cliente";
+                SincronizarComprobante();
                 return;
             }
 
@@ -104,6 +184,7 @@ namespace TiendaUNNE
 
             string cuit = string.IsNullOrEmpty(cliente.Cuit) ? string.Empty : "  ·  CUIT " + cliente.Cuit;
             lblClienteDetalle.Text = "DNI " + cliente.Dni + cuit + "  ·  " + cliente.CondicionIva;
+            SincronizarComprobante();
         }
     }
 }

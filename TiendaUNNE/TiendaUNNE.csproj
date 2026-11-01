@@ -60,6 +60,7 @@
     <Compile Include="Entidades\CredencialesUsuario.cs" />
     <Compile Include="Entidades\ModelosCaja.cs" />
     <Compile Include="Entidades\ModelosCliente.cs" />
+    <Compile Include="Entidades\ModelosComprobante.cs" />
     <Compile Include="Entidades\ModelosCategoria.cs" />
     <Compile Include="Entidades\ModelosProducto.cs" />
     <Compile Include="Entidades\ModelosReporte.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="Negocio\NegocioCaja.cs" />
     <Compile Include="Negocio\NegocioCategoria.cs" />
     <Compile Include="Negocio\NegocioCliente.cs" />
+    <Compile Include="Negocio\NegocioComprobante.cs" />
     <Compile Include="Negocio\NegocioPerfil.cs" />
     <Compile Include="Negocio\NegocioProducto.cs" />
     <Compile Include="Negocio\NegocioReporte.cs" />

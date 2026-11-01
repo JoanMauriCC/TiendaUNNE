@@ -92,7 +92,15 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Medio_pago)
 
 IF NOT EXISTS (SELECT 1 FROM dbo.Tipo_comprobante WHERE codigo = N'TKT')
     INSERT INTO dbo.Tipo_comprobante (codigo, nombre, letra, signo)
-    VALUES (N'TKT', N'Ticket', NULL, 1);";
+    VALUES (N'TKT', N'Ticket', NULL, 1);
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Tipo_comprobante WHERE codigo = N'FB')
+    INSERT INTO dbo.Tipo_comprobante (codigo, nombre, letra, signo)
+    VALUES (N'FB', N'Factura B', 'B', 1);
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Tipo_comprobante WHERE codigo = N'FA')
+    INSERT INTO dbo.Tipo_comprobante (codigo, nombre, letra, signo)
+    VALUES (N'FA', N'Factura A', 'A', 1);";
 
             using (var cn = Db.AbrirConexion())
             using (var cmd = new SqlCommand(sql, cn))
