@@ -436,6 +436,32 @@ namespace TiendaUNNE
         private void txtBuscar_TextChanged(object sender, EventArgs e)
         {
             AplicarFiltroBusqueda();
+            CargarPrimeraCoincidencia();
+        }
+
+        /// <summary>
+        /// Mientras se escribe en Buscar, la primera coincidencia se elige y se carga en el
+        /// formulario. Solo cuando es la persona quien escribe: si el texto lo borra el programa
+        /// (al refrescar o limpiar) no se elige nada, para que el formulario siga en blanco.
+        /// </summary>
+        private void CargarPrimeraCoincidencia()
+        {
+            if (ActiveControl != txtBuscar || string.IsNullOrWhiteSpace(txtBuscar.Text))
+                return;
+
+            DataGridViewColumn col = PrimeraColumnaVisible();
+            if (dgvProductos.Rows.Count == 0 || col == null)
+                return;
+
+            // Se suprime SelectionChanged: esta elección sí es intencional y se carga a mano abajo.
+            _actualizandoGrilla = true;
+            dgvProductos.ClearSelection();
+            dgvProductos.CurrentCell = dgvProductos.Rows[0].Cells[col.Index];
+            dgvProductos.Rows[0].Selected = true;
+            _actualizandoGrilla = false;
+
+            ActualizarBotones();
+            CargarSeleccionEnFormulario();
         }
 
         private DataGridViewColumn PrimeraColumnaVisible()
