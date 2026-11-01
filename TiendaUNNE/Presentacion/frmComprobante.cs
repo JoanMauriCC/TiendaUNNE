@@ -146,7 +146,7 @@ namespace TiendaUNNE
             if (!string.IsNullOrWhiteSpace(v.Cajero))
                 sb.AppendLine("Atendió: " + Recortar(v.Cajero, Ancho - 9));
             sb.AppendLine("Cliente: " + Recortar(v.ClienteNombre, Ancho - 9));
-            sb.AppendLine("         " + Recortar(v.ClienteDocumento + " · " + v.ClienteCondicionIva, Ancho - 9));
+            sb.AppendLine(Recortar(v.ClienteDocumento + " · " + v.ClienteCondicionIva, Ancho));
             sb.AppendLine(raya);
 
             foreach (ComprobanteRenglon r in v.Renglones)
