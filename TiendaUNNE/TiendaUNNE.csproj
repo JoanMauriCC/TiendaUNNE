@@ -68,6 +68,7 @@
     <Compile Include="Entidades\UsuarioLogueado.cs" />
     <!-- ================= Capa Datos ================= -->
     <Compile Include="Datos\Db.cs" />
+    <Compile Include="Datos\CategoriaConProductosException.cs" />
     <Compile Include="Datos\DuplicadoException.cs" />
     <Compile Include="Datos\ServicioArranque.cs" />
     <Compile Include="Datos\ServicioAuditoria.cs" />
@@ -194,6 +195,9 @@
     <!-- ================= Raíz / Properties ================= -->
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="..\TiendaUNNE_StoredProcedures.sql">
+      <Link>Datos\TiendaUNNE_StoredProcedures.sql</Link>
+    </EmbeddedResource>
     <EmbeddedResource Include="Presentacion\frmLogin.resx">
       <DependentUpon>frmLogin.cs</DependentUpon>
     </EmbeddedResource>

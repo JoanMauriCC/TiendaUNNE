@@ -22,6 +22,12 @@ namespace TiendaUNNE
             ServicioArranque.AsegurarDatosDeCaja();
         }
 
+        /// <summary>Instala los procedimientos almacenados que usa la aplicación, si faltan o cambiaron.</summary>
+        public static void AsegurarProcedimientos()
+        {
+            ServicioArranque.AsegurarProcedimientos();
+        }
+
         public static void AsegurarAdministradorInicial()
         {
             // Si ya hay usuarios, el sistema está inicializado y no se toca nada.

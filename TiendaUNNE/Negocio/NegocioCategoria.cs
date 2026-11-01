@@ -78,7 +78,18 @@ namespace TiendaUNNE
             if (anterior == null)
                 throw new ReglaNegocioException("La categoría ya no existe.");
 
-            int filas = ServicioCategoria.DarDeBaja(idCategoria, idUsuarioSesion, Resumen(anterior));
+            int filas;
+            try
+            {
+                filas = ServicioCategoria.DarDeBaja(idCategoria, idUsuarioSesion, Resumen(anterior));
+            }
+            catch (CategoriaConProductosException ex)
+            {
+                throw new ReglaNegocioException(string.Format(
+                    "No se puede dar de baja la categoría «{0}»: tiene {1} producto{2} activo{2}. " +
+                    "Cambiá de categoría o dá de baja esos productos primero.",
+                    anterior.Nombre, ex.ProductosActivos, ex.ProductosActivos == 1 ? string.Empty : "s"));
+            }
 
             if (filas == 0)
                 throw new ReglaNegocioException("La categoría ya estaba dada de baja o no existe.");

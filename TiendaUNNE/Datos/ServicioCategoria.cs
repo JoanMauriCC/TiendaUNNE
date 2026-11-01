@@ -192,7 +192,11 @@ WHERE id_categoria = @id;";
         // Baja lógica
         // ---------------------------------------------------------------------
 
-        /// <summary>Devuelve la cantidad de filas afectadas; 0 significa que ya estaba inactiva.</summary>
+        /// <summary>
+        /// Baja con el procedimiento sp_DarDeBajaCategoria. Devuelve la cantidad de filas afectadas
+        /// (0 significa que ya estaba inactiva) y lanza CategoriaConProductosException si todavía
+        /// tiene productos activos.
+        /// </summary>
         public static int DarDeBaja(int idCategoria, int idUsuarioSesion, string resumenAnterior)
         {
             using (var cn = Db.AbrirConexion())
@@ -201,11 +205,22 @@ WHERE id_categoria = @id;";
                 try
                 {
                     int filas;
-                    using (var cmd = new SqlCommand(
-                        "UPDATE dbo.Categoria SET activo = 0 WHERE id_categoria = @id AND activo = 1;", cn, tx))
+                    using (var cmd = new SqlCommand("dbo.sp_DarDeBajaCategoria", cn, tx))
                     {
-                        cmd.Parameters.Add("@id", SqlDbType.Int).Value = idCategoria;
-                        filas = cmd.ExecuteNonQuery();
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@id_categoria", SqlDbType.Int).Value = idCategoria;
+
+                        SqlParameter productos = cmd.Parameters.Add("@productos_activos", SqlDbType.Int);
+                        productos.Direction = ParameterDirection.Output;
+                        SqlParameter afectadas = cmd.Parameters.Add("@filas", SqlDbType.Int);
+                        afectadas.Direction = ParameterDirection.Output;
+
+                        cmd.ExecuteNonQuery();
+
+                        if ((int)productos.Value > 0)
+                            throw new CategoriaConProductosException((int)productos.Value);
+
+                        filas = (int)afectadas.Value;
                     }
 
                     if (filas > 0)

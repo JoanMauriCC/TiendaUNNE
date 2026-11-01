@@ -1,6 +1,11 @@
 using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace TiendaUNNE
 {
@@ -10,6 +15,44 @@ namespace TiendaUNNE
     /// </summary>
     public static class ServicioArranque
     {
+        /// <summary>
+        /// Crea (o vuelve a crear) todos los procedimientos almacenados. El script
+        /// TiendaUNNE_StoredProcedures.sql viaja dentro del ejecutable y se corre lote por lote
+        /// (separados por GO), así el cliente no tiene que ejecutar nada en SQL Server.
+        /// Es seguro repetirlo: cada procedimiento se borra y se crea de nuevo.
+        /// </summary>
+        public static void AsegurarProcedimientos()
+        {
+            Assembly ensamblado = typeof(ServicioArranque).Assembly;
+            string recurso = ensamblado.GetManifestResourceNames()
+                .FirstOrDefault(n => n.EndsWith("TiendaUNNE_StoredProcedures.sql", StringComparison.OrdinalIgnoreCase));
+
+            if (recurso == null)
+                throw new InvalidOperationException("No se encontró el script de procedimientos almacenados.");
+
+            string script;
+            using (var lector = new StreamReader(ensamblado.GetManifestResourceStream(recurso), Encoding.UTF8))
+                script = lector.ReadToEnd();
+
+            // La base la define la cadena de conexión: se ignora el "USE" del script.
+            script = Regex.Replace(script, @"^\s*USE\s+\w+\s*;?\s*$", string.Empty,
+                RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+            string[] lotes = Regex.Split(script, @"^[ \t]*GO[ \t]*\r?$",
+                RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+            using (var cn = Db.AbrirConexion())
+            {
+                foreach (string lote in lotes)
+                {
+                    if (string.IsNullOrWhiteSpace(lote)) continue;
+
+                    using (var cmd = new SqlCommand(lote, cn))
+                        cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         public static int ContarUsuarios()
         {
             using (var cn = Db.AbrirConexion())
