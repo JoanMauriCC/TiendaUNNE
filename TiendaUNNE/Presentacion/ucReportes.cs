@@ -297,6 +297,7 @@ namespace TiendaUNNE
 
             bool acumulado = tipo == TipoGrafico.Escalonado || tipo == TipoGrafico.Ojiva;
             lblTituloGrafico.Text = acumulado ? _vista.TituloAcumulado : _vista.TituloGrafico;
+            lblTituloDetalle.Text = _vista.TituloDetalle;
             _grafico.Visible = tipo != TipoGrafico.Torta;
             _torta.Visible = tipo == TipoGrafico.Torta;
 

@@ -74,6 +74,7 @@ namespace TiendaUNNE
         private static void ArmarVentasDeUnDia(ReporteVista reporte, DateTime inicio, DateTime fin)
         {
             reporte.TituloGrafico = "Ventas por hora";
+            reporte.TituloDetalle = "Cada venta del día";
             foreach (DataRow fila in ServicioReporte.VentasPorHora(inicio, fin).Rows)
             {
                 reporte.Etiquetas.Add(fila["Hora"] + "h");
@@ -95,6 +96,7 @@ namespace TiendaUNNE
         private static void ArmarVentasPorDia(ReporteVista reporte, DateTime inicio, DateTime fin)
         {
             reporte.TituloGrafico = "Ventas por día";
+            reporte.TituloDetalle = "Ventas y total de cada día";
             reporte.Columnas.AddRange(new[] { "Período", "Ventas", "Total" });
 
             foreach (DataRow fila in ServicioReporte.VentasPorDia(inicio, fin).Rows)
@@ -107,6 +109,7 @@ namespace TiendaUNNE
         private static void ArmarVentasPorMes(ReporteVista reporte, DateTime inicio, DateTime fin)
         {
             reporte.TituloGrafico = "Ventas por mes";
+            reporte.TituloDetalle = "Ventas y total de cada mes";
             reporte.Columnas.AddRange(new[] { "Período", "Ventas", "Total" });
 
             foreach (DataRow fila in ServicioReporte.VentasPorMes(inicio, fin).Rows)
@@ -159,6 +162,7 @@ namespace TiendaUNNE
             var reporte = new ReporteVista
             {
                 TituloGrafico = "Más vendidos (unidades)",
+                TituloDetalle = "Productos a reponer (stock de hoy)",
                 Descripcion = string.Format(
                     "Ventas del {0:dd/MM/yyyy} al {1:dd/MM/yyyy}. La tabla muestra el stock de hoy, sin importar las fechas.",
                     desde, hasta)
@@ -224,6 +228,7 @@ namespace TiendaUNNE
             reporte.Indicadores.Add(new IndicadorReporte("En efectivo", Importe(efectivo)));
             reporte.Indicadores.Add(new IndicadorReporte("Otros medios", Importe(total - efectivo)));
 
+            reporte.TituloDetalle = "Cobrado por medio de pago";
             reporte.Columnas.AddRange(new[] { "Medio de pago", "Pagos", "Importe" });
             DataTable porMedio = ServicioReporte.RecaudacionPorMedio(inicio, fin);
             foreach (DataRow fila in porMedio.Rows)
@@ -304,6 +309,7 @@ namespace TiendaUNNE
             var reporte = new ReporteVista
             {
                 TituloGrafico = "Clientes que más gastaron ($)",
+                TituloDetalle = "Clientes del período, de mayor a menor gasto",
                 Descripcion = nota
             };
 

@@ -55,6 +55,9 @@ namespace TiendaUNNE
         /// <summary>Qué porcentaje del total es cada valor (0 a 100), para la torta.</summary>
         public List<double> Porcentajes { get; } = new List<double>();
 
+        /// <summary>Título de la tabla de detalle: qué es lo que lista (ej. «Productos a reponer»).</summary>
+        public string TituloDetalle { get; set; }
+
         public List<string> Columnas { get; } = new List<string>();
         public List<string[]> Filas { get; } = new List<string[]>();
 

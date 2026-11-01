@@ -44,6 +44,8 @@ namespace TiendaUNNE
             this.lblTipoGrafico = new System.Windows.Forms.Label();
             this.cboTipoGrafico = new System.Windows.Forms.ComboBox();
             this.dgvDetalle = new System.Windows.Forms.DataGridView();
+            this.panelDetalle = new System.Windows.Forms.Panel();
+            this.lblTituloDetalle = new System.Windows.Forms.Label();
             this.panelPie = new System.Windows.Forms.Panel();
             this.lblAviso = new System.Windows.Forms.Label();
             this.btnExportarPdf = new System.Windows.Forms.Button();
@@ -54,6 +56,7 @@ namespace TiendaUNNE
             this.panelIndicador3.SuspendLayout();
             this.tblCuerpo.SuspendLayout();
             this.panelGrafico.SuspendLayout();
+            this.panelDetalle.SuspendLayout();
             this.panelTituloGrafico.SuspendLayout();
             this.panelPie.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvDetalle)).BeginInit();
@@ -270,7 +273,7 @@ namespace TiendaUNNE
             this.tblCuerpo.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 55F));
             this.tblCuerpo.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 45F));
             this.tblCuerpo.Controls.Add(this.panelGrafico, 0, 0);
-            this.tblCuerpo.Controls.Add(this.dgvDetalle, 1, 0);
+            this.tblCuerpo.Controls.Add(this.panelDetalle, 1, 0);
             this.tblCuerpo.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tblCuerpo.Location = new System.Drawing.Point(0, 126);
             this.tblCuerpo.Name = "tblCuerpo";
@@ -325,6 +328,28 @@ namespace TiendaUNNE
             this.cboTipoGrafico.TabIndex = 2;
             this.cboTipoGrafico.SelectedIndexChanged += new System.EventHandler(this.cboTipoGrafico_SelectedIndexChanged);
             //
+            // panelDetalle
+            //
+            this.panelDetalle.BackColor = System.Drawing.Color.White;
+            this.panelDetalle.Controls.Add(this.dgvDetalle);
+            this.panelDetalle.Controls.Add(this.lblTituloDetalle);
+            this.panelDetalle.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelDetalle.Margin = new System.Windows.Forms.Padding(6);
+            this.panelDetalle.Name = "panelDetalle";
+            this.panelDetalle.Padding = new System.Windows.Forms.Padding(10);
+            this.panelDetalle.TabIndex = 1;
+            //
+            // lblTituloDetalle
+            //
+            this.lblTituloDetalle.AutoEllipsis = true;
+            this.lblTituloDetalle.Dock = System.Windows.Forms.DockStyle.Top;
+            this.lblTituloDetalle.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.lblTituloDetalle.Name = "lblTituloDetalle";
+            this.lblTituloDetalle.Size = new System.Drawing.Size(300, 28);
+            this.lblTituloDetalle.TabIndex = 0;
+            this.lblTituloDetalle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lblTituloDetalle.UseMnemonic = false;
+            //
             // dgvDetalle
             //
             this.dgvDetalle.AllowUserToAddRows = false;
@@ -335,7 +360,6 @@ namespace TiendaUNNE
             this.dgvDetalle.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvDetalle.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvDetalle.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvDetalle.Margin = new System.Windows.Forms.Padding(6);
             this.dgvDetalle.Name = "dgvDetalle";
             this.dgvDetalle.ReadOnly = true;
             this.dgvDetalle.RowHeadersVisible = false;
@@ -396,6 +420,7 @@ namespace TiendaUNNE
             this.panelIndicador3.PerformLayout();
             this.tblCuerpo.ResumeLayout(false);
             this.panelGrafico.ResumeLayout(false);
+            this.panelDetalle.ResumeLayout(false);
             this.panelTituloGrafico.ResumeLayout(false);
             this.panelPie.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvDetalle)).EndInit();
@@ -431,6 +456,8 @@ namespace TiendaUNNE
         private System.Windows.Forms.Label lblTipoGrafico;
         private System.Windows.Forms.ComboBox cboTipoGrafico;
         private System.Windows.Forms.DataGridView dgvDetalle;
+        private System.Windows.Forms.Panel panelDetalle;
+        private System.Windows.Forms.Label lblTituloDetalle;
         private System.Windows.Forms.Panel panelPie;
         private System.Windows.Forms.Label lblAviso;
         private System.Windows.Forms.Button btnExportarPdf;

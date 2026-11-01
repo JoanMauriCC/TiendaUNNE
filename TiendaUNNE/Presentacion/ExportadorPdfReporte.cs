@@ -148,7 +148,7 @@ namespace TiendaUNNE
         /// <summary>La misma tabla de la pantalla; si no entra en una hoja, repite el encabezado.</summary>
         private static void AgregarDetalle(Section seccion, ReporteVista vista)
         {
-            Paragraph titulo = seccion.AddParagraph("Detalle");
+            Paragraph titulo = seccion.AddParagraph(string.IsNullOrWhiteSpace(vista.TituloDetalle) ? "Detalle" : vista.TituloDetalle);
             titulo.Format.Font.Size = 12;
             titulo.Format.Font.Bold = true;
             titulo.Format.SpaceBefore = Unit.FromCentimeter(0.6);
