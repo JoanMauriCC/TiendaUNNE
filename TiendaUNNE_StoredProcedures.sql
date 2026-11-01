@@ -323,5 +323,177 @@ BEGIN
           WHERE estado = 'EMITIDA' AND fecha_hora >= @desde AND fecha_hora < @hasta) AS VentasTotales;
 END
 GO
+-------------------------------------------------------------------------------
+-- Altas y ediciones de Categoría, Producto y Usuario
+--
+-- Los seis procedimientos siguientes solo guardan los datos: la aplicación ya los
+-- validó y normalizó (capa Negocio) y graba la auditoría en la misma transacción
+-- desde la que los llama. Si un dato repite un valor único (nombre de categoría, DNI),
+-- la propia base lo rechaza con su restricción UNIQUE y la aplicación lo traduce.
+-------------------------------------------------------------------------------
+
+-- ---- Categoría -------------------------------------------------------------
+IF OBJECT_ID('dbo.sp_CrearCategoria', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CrearCategoria;
+GO
+
+CREATE PROCEDURE dbo.sp_CrearCategoria
+    @nombre        NVARCHAR(100),
+    @descripcion   NVARCHAR(200) = NULL,
+    @id_categoria  INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.Categoria (nombre, descripcion)
+    VALUES (@nombre, @descripcion);
+
+    SET @id_categoria = SCOPE_IDENTITY();
+END
+GO
+
+IF OBJECT_ID('dbo.sp_ActualizarCategoria', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_ActualizarCategoria;
+GO
+
+CREATE PROCEDURE dbo.sp_ActualizarCategoria
+    @id_categoria  INT,
+    @nombre        NVARCHAR(100),
+    @descripcion   NVARCHAR(200) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.Categoria
+    SET    nombre = @nombre, descripcion = @descripcion
+    WHERE  id_categoria = @id_categoria;
+END
+GO
+
+-- ---- Producto --------------------------------------------------------------
+IF OBJECT_ID('dbo.sp_CrearProducto', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CrearProducto;
+GO
+
+CREATE PROCEDURE dbo.sp_CrearProducto
+    @id_categoria  INT,
+    @nombre        NVARCHAR(150),
+    @descripcion   NVARCHAR(500) = NULL,
+    @precio_venta  DECIMAL(12,2),
+    @stock         DECIMAL(12,3),
+    @stock_minimo  DECIMAL(12,3),
+    @id_producto   INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.Producto (id_categoria, nombre, descripcion, precio_venta, stock, stock_minimo)
+    VALUES (@id_categoria, @nombre, @descripcion, @precio_venta, @stock, @stock_minimo);
+
+    SET @id_producto = SCOPE_IDENTITY();
+END
+GO
+
+IF OBJECT_ID('dbo.sp_ActualizarProducto', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_ActualizarProducto;
+GO
+
+CREATE PROCEDURE dbo.sp_ActualizarProducto
+    @id_producto   INT,
+    @id_categoria  INT,
+    @nombre        NVARCHAR(150),
+    @descripcion   NVARCHAR(500) = NULL,
+    @precio_venta  DECIMAL(12,2),
+    @stock         DECIMAL(12,3),
+    @stock_minimo  DECIMAL(12,3)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.Producto
+    SET    id_categoria = @id_categoria,
+           nombre       = @nombre,
+           descripcion  = @descripcion,
+           precio_venta = @precio_venta,
+           stock        = @stock,
+           stock_minimo = @stock_minimo
+    WHERE  id_producto = @id_producto;
+END
+GO
+
+-- ---- Usuario (Persona + Usuario) -------------------------------------------
+IF OBJECT_ID('dbo.sp_CrearUsuario', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_CrearUsuario;
+GO
+
+-- Crea la persona y su usuario juntos. El hash y el salt llegan calculados: la contraseña
+-- en claro nunca llega a la base.
+CREATE PROCEDURE dbo.sp_CrearUsuario
+    @dni               NVARCHAR(20),
+    @nombre            NVARCHAR(100),
+    @apellido          NVARCHAR(100),
+    @direccion         NVARCHAR(200) = NULL,
+    @telefono          NVARCHAR(30)  = NULL,
+    @email             NVARCHAR(150) = NULL,
+    @fecha_nacimiento  DATE          = NULL,
+    @id_perfil         INT,
+    @hash_password     VARBINARY(256),
+    @salt              VARBINARY(128),
+    @id_usuario        INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @id_persona INT;
+
+    INSERT INTO dbo.Persona (dni_cuit, nombre, apellido, direccion, telefono, email, fecha_nacimiento)
+    VALUES (@dni, @nombre, @apellido, @direccion, @telefono, @email, @fecha_nacimiento);
+
+    SET @id_persona = SCOPE_IDENTITY();
+
+    INSERT INTO dbo.Usuario (id_persona, id_perfil, hash_password, salt)
+    VALUES (@id_persona, @id_perfil, @hash_password, @salt);
+
+    SET @id_usuario = SCOPE_IDENTITY();
+END
+GO
+
+IF OBJECT_ID('dbo.sp_ActualizarUsuario', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_ActualizarUsuario;
+GO
+
+-- Actualiza la persona y el perfil del usuario. Si @hash_password viene en NULL la
+-- contraseña no se toca; si viene con valor, se cambia (y deja de estar pendiente de cambio).
+CREATE PROCEDURE dbo.sp_ActualizarUsuario
+    @id_usuario        INT,
+    @id_persona        INT,
+    @dni               NVARCHAR(20),
+    @nombre            NVARCHAR(100),
+    @apellido          NVARCHAR(100),
+    @direccion         NVARCHAR(200) = NULL,
+    @telefono          NVARCHAR(30)  = NULL,
+    @email             NVARCHAR(150) = NULL,
+    @fecha_nacimiento  DATE          = NULL,
+    @id_perfil         INT,
+    @hash_password     VARBINARY(256) = NULL,
+    @salt              VARBINARY(128) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE dbo.Persona
+    SET    dni_cuit = @dni, nombre = @nombre, apellido = @apellido,
+           direccion = @direccion, telefono = @telefono, email = @email,
+           fecha_nacimiento = @fecha_nacimiento
+    WHERE  id_persona = @id_persona;
+
+    UPDATE dbo.Usuario
+    SET    id_perfil = @id_perfil,
+           hash_password = ISNULL(@hash_password, hash_password),
+           salt = ISNULL(@salt, salt),
+           debe_cambiar_pass = CASE WHEN @hash_password IS NULL THEN debe_cambiar_pass ELSE 0 END
+    WHERE  id_usuario = @id_usuario;
+END
+GO
 PRINT 'Stored procedures de TiendaUNNE creados correctamente.';
 GO

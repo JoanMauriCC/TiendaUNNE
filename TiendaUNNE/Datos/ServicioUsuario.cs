@@ -143,31 +143,20 @@ WHERE p.dni_cuit = @dni;";
             {
                 try
                 {
-                    const string sqlPersona = @"
-INSERT INTO dbo.Persona (dni_cuit, nombre, apellido, direccion, telefono, email, fecha_nacimiento)
-VALUES (@dni, @nombre, @apellido, @direccion, @telefono, @email, @fnac);
-SELECT CAST(SCOPE_IDENTITY() AS INT);";
-
-                    int idPersona;
-                    using (var cmd = new SqlCommand(sqlPersona, cn, tx))
-                    {
-                        AgregarParamsPersona(cmd, m);
-                        idPersona = (int)cmd.ExecuteScalar();
-                    }
-
-                    const string sqlUsuario = @"
-INSERT INTO dbo.Usuario (id_persona, id_perfil, hash_password, salt)
-VALUES (@id_persona, @id_perfil, @hash, @salt);
-SELECT CAST(SCOPE_IDENTITY() AS INT);";
-
                     int idUsuario;
-                    using (var cmd = new SqlCommand(sqlUsuario, cn, tx))
+                    using (var cmd = new SqlCommand("dbo.sp_CrearUsuario", cn, tx))
                     {
-                        cmd.Parameters.Add("@id_persona", SqlDbType.Int).Value = idPersona;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        AgregarParamsPersona(cmd, m);
                         cmd.Parameters.Add("@id_perfil", SqlDbType.Int).Value = m.IdPerfil;
-                        cmd.Parameters.Add("@hash", SqlDbType.VarBinary, 256).Value = hash;
+                        cmd.Parameters.Add("@hash_password", SqlDbType.VarBinary, 256).Value = hash;
                         cmd.Parameters.Add("@salt", SqlDbType.VarBinary, 128).Value = salt;
-                        idUsuario = (int)cmd.ExecuteScalar();
+
+                        SqlParameter id = cmd.Parameters.Add("@id_usuario", SqlDbType.Int);
+                        id.Direction = ParameterDirection.Output;
+
+                        cmd.ExecuteNonQuery();
+                        idUsuario = (int)id.Value;
                     }
 
                     ServicioAuditoria.Registrar(
@@ -211,35 +200,22 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
             {
                 try
                 {
-                    const string sqlPersona = @"
-UPDATE dbo.Persona
-SET dni_cuit = @dni, nombre = @nombre, apellido = @apellido,
-    direccion = @direccion, telefono = @telefono, email = @email, fecha_nacimiento = @fnac
-WHERE id_persona = @id_persona;";
-
-                    using (var cmd = new SqlCommand(sqlPersona, cn, tx))
-                    {
-                        AgregarParamsPersona(cmd, m);
-                        cmd.Parameters.Add("@id_persona", SqlDbType.Int).Value = m.IdPersona;
-                        cmd.ExecuteNonQuery();
-                    }
-
                     bool cambiaPassword = hash != null && salt != null;
 
-                    string sqlUsuario = "UPDATE dbo.Usuario SET id_perfil = @id_perfil";
-                    if (cambiaPassword)
-                        sqlUsuario += ", hash_password = @hash, salt = @salt, debe_cambiar_pass = 0";
-                    sqlUsuario += " WHERE id_usuario = @id_usuario;";
-
-                    using (var cmd = new SqlCommand(sqlUsuario, cn, tx))
+                    using (var cmd = new SqlCommand("dbo.sp_ActualizarUsuario", cn, tx))
                     {
-                        cmd.Parameters.Add("@id_perfil", SqlDbType.Int).Value = m.IdPerfil;
-                        if (cambiaPassword)
-                        {
-                            cmd.Parameters.Add("@hash", SqlDbType.VarBinary, 256).Value = hash;
-                            cmd.Parameters.Add("@salt", SqlDbType.VarBinary, 128).Value = salt;
-                        }
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        AgregarParamsPersona(cmd, m);
                         cmd.Parameters.Add("@id_usuario", SqlDbType.Int).Value = m.IdUsuario;
+                        cmd.Parameters.Add("@id_persona", SqlDbType.Int).Value = m.IdPersona;
+                        cmd.Parameters.Add("@id_perfil", SqlDbType.Int).Value = m.IdPerfil;
+
+                        // Sin contraseña nueva se manda NULL y el procedimiento no la toca.
+                        cmd.Parameters.Add("@hash_password", SqlDbType.VarBinary, 256).Value =
+                            cambiaPassword ? (object)hash : DBNull.Value;
+                        cmd.Parameters.Add("@salt", SqlDbType.VarBinary, 128).Value =
+                            cambiaPassword ? (object)salt : DBNull.Value;
+
                         cmd.ExecuteNonQuery();
                     }
 
@@ -359,7 +335,7 @@ WHERE id_persona = @id_persona;";
             cmd.Parameters.Add("@direccion", SqlDbType.NVarChar, 200).Value = Nz(m.Direccion);
             cmd.Parameters.Add("@telefono", SqlDbType.NVarChar, 30).Value = Nz(m.Telefono);
             cmd.Parameters.Add("@email", SqlDbType.NVarChar, 150).Value = Nz(m.Email);
-            cmd.Parameters.Add("@fnac", SqlDbType.Date).Value = (object)m.FechaNacimiento ?? DBNull.Value;
+            cmd.Parameters.Add("@fecha_nacimiento", SqlDbType.Date).Value = (object)m.FechaNacimiento ?? DBNull.Value;
         }
 
         /// <summary>Mapea null de C# a NULL de SQL. El recorte de espacios ya lo hizo Negocio.</summary>

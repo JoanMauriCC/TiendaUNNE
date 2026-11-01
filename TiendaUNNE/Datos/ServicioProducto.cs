@@ -142,18 +142,17 @@ WHERE p.id_producto = @id;";
             {
                 try
                 {
-                    const string sql = @"
-INSERT INTO dbo.Producto
-    (id_categoria, nombre, descripcion, precio_venta, stock, stock_minimo)
-VALUES
-    (@id_categoria, @nombre, @descripcion, @precio_venta, @stock, @stock_minimo);
-SELECT CAST(SCOPE_IDENTITY() AS INT);";
-
                     int idProducto;
-                    using (var cmd = new SqlCommand(sql, cn, tx))
+                    using (var cmd = new SqlCommand("dbo.sp_CrearProducto", cn, tx))
                     {
+                        cmd.CommandType = CommandType.StoredProcedure;
                         AgregarParams(cmd, m);
-                        idProducto = (int)cmd.ExecuteScalar();
+
+                        SqlParameter id = cmd.Parameters.Add("@id_producto", SqlDbType.Int);
+                        id.Direction = ParameterDirection.Output;
+
+                        cmd.ExecuteNonQuery();
+                        idProducto = (int)id.Value;
                     }
 
                     ServicioAuditoria.Registrar(
@@ -191,18 +190,9 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
             {
                 try
                 {
-                    const string sql = @"
-UPDATE dbo.Producto
-SET id_categoria = @id_categoria,
-    nombre       = @nombre,
-    descripcion  = @descripcion,
-    precio_venta = @precio_venta,
-    stock        = @stock,
-    stock_minimo = @stock_minimo
-WHERE id_producto = @id_producto;";
-
-                    using (var cmd = new SqlCommand(sql, cn, tx))
+                    using (var cmd = new SqlCommand("dbo.sp_ActualizarProducto", cn, tx))
                     {
+                        cmd.CommandType = CommandType.StoredProcedure;
                         AgregarParams(cmd, m);
                         cmd.Parameters.Add("@id_producto", SqlDbType.Int).Value = m.IdProducto;
                         cmd.ExecuteNonQuery();

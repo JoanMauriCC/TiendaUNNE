@@ -109,16 +109,17 @@ WHERE  id_categoria = @id;";
             {
                 try
                 {
-                    const string sql = @"
-INSERT INTO dbo.Categoria (nombre, descripcion)
-VALUES (@nombre, @descripcion);
-SELECT CAST(SCOPE_IDENTITY() AS INT);";
-
                     int idCategoria;
-                    using (var cmd = new SqlCommand(sql, cn, tx))
+                    using (var cmd = new SqlCommand("dbo.sp_CrearCategoria", cn, tx))
                     {
+                        cmd.CommandType = CommandType.StoredProcedure;
                         AgregarParams(cmd, m);
-                        idCategoria = (int)cmd.ExecuteScalar();
+
+                        SqlParameter id = cmd.Parameters.Add("@id_categoria", SqlDbType.Int);
+                        id.Direction = ParameterDirection.Output;
+
+                        cmd.ExecuteNonQuery();
+                        idCategoria = (int)id.Value;
                     }
 
                     ServicioAuditoria.Registrar(
@@ -156,15 +157,11 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
             {
                 try
                 {
-                    const string sql = @"
-UPDATE dbo.Categoria
-SET nombre = @nombre, descripcion = @descripcion
-WHERE id_categoria = @id;";
-
-                    using (var cmd = new SqlCommand(sql, cn, tx))
+                    using (var cmd = new SqlCommand("dbo.sp_ActualizarCategoria", cn, tx))
                     {
+                        cmd.CommandType = CommandType.StoredProcedure;
                         AgregarParams(cmd, m);
-                        cmd.Parameters.Add("@id", SqlDbType.Int).Value = m.IdCategoria;
+                        cmd.Parameters.Add("@id_categoria", SqlDbType.Int).Value = m.IdCategoria;
                         cmd.ExecuteNonQuery();
                     }
 
