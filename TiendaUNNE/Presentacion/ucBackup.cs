@@ -22,11 +22,13 @@ namespace TiendaUNNE
         public ucBackup()
         {
             InitializeComponent();
+            ConstruirDetalle();
             panelResumen.Resize += (s, e) => ReubicarResumen();
         }
 
         private void ucBackup_Load(object sender, EventArgs e)
         {
+            splitBackups.SplitterDistance = Math.Max(splitBackups.Panel1MinSize, splitBackups.Height * 55 / 100);
             CargarListado();
             ReubicarResumen();
         }
@@ -68,6 +70,7 @@ namespace TiendaUNNE
         private void CargarListado()
         {
             string nombreElegido = NombreSeleccionado();
+            OlvidarDetalles();
 
             try
             {
@@ -178,6 +181,7 @@ namespace TiendaUNNE
         private void dgvBackups_SelectionChanged(object sender, EventArgs e)
         {
             ActualizarBotones();
+            MostrarDetalle();
         }
 
         private void ActualizarBotones()

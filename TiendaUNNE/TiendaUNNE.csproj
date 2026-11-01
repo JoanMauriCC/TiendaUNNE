@@ -184,6 +184,9 @@
     <Compile Include="Presentacion\ucBackup.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Presentacion\ucBackup.Detalle.cs">
+      <DependentUpon>ucBackup.cs</DependentUpon>
+    </Compile>
     <Compile Include="Presentacion\ucBackup.Designer.cs">
       <DependentUpon>ucBackup.cs</DependentUpon>
     </Compile>

@@ -145,6 +145,36 @@ namespace TiendaUNNE
             }
         }
 
+        /// <summary>Datos que el archivo trae adentro: base, servidor, quién y cuándo la hizo.</summary>
+        public static EncabezadoBackup LeerEncabezado(string ruta)
+        {
+            try
+            {
+                using (var cn = AbrirConexionMaster())
+                using (var cmd = Comando(cn, "RESTORE HEADERONLY FROM DISK = @ruta;", ruta))
+                using (var dr = cmd.ExecuteReader())
+                {
+                    if (!dr.Read())
+                        return null;
+
+                    return new EncabezadoBackup
+                    {
+                        BaseDeDatos = Convert.ToString(dr["DatabaseName"]),
+                        Servidor = Convert.ToString(dr["ServerName"]),
+                        UsuarioSql = Convert.ToString(dr["UserName"]),
+                        VersionMayorSql = Convert.ToInt32(dr["SoftwareVersionMajor"]),
+                        ConChecksum = Convert.ToBoolean(dr["HasBackupChecksums"]),
+                        Inicio = Convert.ToDateTime(dr["BackupStartDate"]),
+                        Fin = Convert.ToDateTime(dr["BackupFinishDate"])
+                    };
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw ErrorBackupException.Traducir(ex);
+            }
+        }
+
         /// <summary>
         /// Reemplaza TODA la base por el contenido del archivo. Saca a todos los demás de la
         /// base mientras dura (modo de un solo usuario) y la deja de nuevo para todos al terminar,

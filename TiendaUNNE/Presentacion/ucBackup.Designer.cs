@@ -31,9 +31,15 @@ namespace TiendaUNNE
             this.tarjetaActualizar = new TiendaUNNE.TarjetaAccion();
             this.lblAviso = new System.Windows.Forms.Label();
             this.dgvBackups = new System.Windows.Forms.DataGridView();
+            this.splitBackups = new System.Windows.Forms.SplitContainer();
+            this.panelDetalle = new System.Windows.Forms.Panel();
             this.panelResumen.SuspendLayout();
             this.panelRiel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvBackups)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.splitBackups)).BeginInit();
+            this.splitBackups.Panel1.SuspendLayout();
+            this.splitBackups.Panel2.SuspendLayout();
+            this.splitBackups.SuspendLayout();
             this.SuspendLayout();
             //
             // panelResumen
@@ -188,22 +194,44 @@ namespace TiendaUNNE
             this.dgvBackups.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvBackups.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvBackups.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.dgvBackups.Location = new System.Drawing.Point(0, 66);
+            this.dgvBackups.Location = new System.Drawing.Point(0, 0);
             this.dgvBackups.MultiSelect = false;
             this.dgvBackups.Name = "dgvBackups";
             this.dgvBackups.ReadOnly = true;
             this.dgvBackups.RowHeadersVisible = false;
             this.dgvBackups.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvBackups.Size = new System.Drawing.Size(552, 383);
+            this.dgvBackups.Size = new System.Drawing.Size(552, 200);
             this.dgvBackups.TabIndex = 0;
             this.dgvBackups.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dgvBackups_CellFormatting);
             this.dgvBackups.SelectionChanged += new System.EventHandler(this.dgvBackups_SelectionChanged);
             //
+            // splitBackups
+            //
+            this.splitBackups.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitBackups.Location = new System.Drawing.Point(0, 66);
+            this.splitBackups.Name = "splitBackups";
+            this.splitBackups.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.splitBackups.Panel1.Controls.Add(this.dgvBackups);
+            this.splitBackups.Panel1MinSize = 110;
+            this.splitBackups.Panel2.Controls.Add(this.panelDetalle);
+            this.splitBackups.Panel2MinSize = 150;
+            this.splitBackups.Size = new System.Drawing.Size(552, 383);
+            this.splitBackups.SplitterDistance = 200;
+            this.splitBackups.TabIndex = 0;
+            //
+            // panelDetalle
+            //
+            this.panelDetalle.BackColor = System.Drawing.Color.White;
+            this.panelDetalle.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelDetalle.Location = new System.Drawing.Point(0, 0);
+            this.panelDetalle.Name = "panelDetalle";
+            this.panelDetalle.Size = new System.Drawing.Size(552, 179);
+            this.panelDetalle.TabIndex = 0;            //
             // ucBackup
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.dgvBackups);
+            this.Controls.Add(this.splitBackups);
             this.Controls.Add(this.panelRiel);
             this.Controls.Add(this.lblAviso);
             this.Controls.Add(this.panelResumen);
@@ -214,6 +242,10 @@ namespace TiendaUNNE
             this.panelResumen.PerformLayout();
             this.panelRiel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvBackups)).EndInit();
+            this.splitBackups.Panel1.ResumeLayout(false);
+            this.splitBackups.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitBackups)).EndInit();
+            this.splitBackups.ResumeLayout(false);
             this.ResumeLayout(false);
         }
 
@@ -233,5 +265,7 @@ namespace TiendaUNNE
         private TarjetaAccion tarjetaActualizar;
         private System.Windows.Forms.Label lblAviso;
         private System.Windows.Forms.DataGridView dgvBackups;
+        private System.Windows.Forms.SplitContainer splitBackups;
+        private System.Windows.Forms.Panel panelDetalle;
     }
 }

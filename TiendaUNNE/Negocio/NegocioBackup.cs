@@ -104,6 +104,77 @@ namespace TiendaUNNE
             return dt;
         }
 
+        // ---------------------------------------------------------------------
+        // Detalle de una copia
+        // ---------------------------------------------------------------------
+
+        /// <summary>
+        /// Datos de la copia elegida para el panel de abajo: los del archivo (fecha, tamaño, lugar)
+        /// y los que trae adentro. Si SQL Server no puede leer el archivo, se devuelven igual los
+        /// del archivo y EncabezadoLeido queda en false.
+        /// </summary>
+        public static DetalleBackup ObtenerDetalle(string nombreArchivo)
+        {
+            ExigirAdministrador();
+
+            string ruta = RutaDeCopia(nombreArchivo);
+            ArchivoBackup archivo = ServicioBackup.ListarArchivos(ObtenerCarpeta())
+                .Find(a => string.Equals(a.Nombre, nombreArchivo, StringComparison.OrdinalIgnoreCase));
+
+            if (archivo == null)
+                throw new ReglaNegocioException("Esa copia ya no está en la carpeta. Actualizá el listado.");
+
+            var detalle = new DetalleBackup
+            {
+                Archivo = archivo.Nombre,
+                Tipo = EsPrevio(archivo.Nombre) ? TipoPrevio : TipoManual,
+                Ubicacion = ruta,
+                FechaHora = archivo.FechaHora,
+                Tamano = FormatoTamanio(archivo.TamanioBytes)
+            };
+
+            try
+            {
+                EncabezadoBackup h = ServicioBackup.LeerEncabezado(ruta);
+                if (h != null)
+                {
+                    detalle.EncabezadoLeido = true;
+                    detalle.BaseDeDatos = h.BaseDeDatos;
+                    detalle.Servidor = h.Servidor;
+                    detalle.UsuarioSql = h.UsuarioSql;
+                    detalle.VersionSql = "SQL Server (versión " + h.VersionMayorSql + ")";
+                    detalle.ConChecksum = h.ConChecksum;
+                    detalle.Duracion = h.Fin - h.Inicio;
+                }
+            }
+            catch (ErrorBackupException)
+            {
+                detalle.EncabezadoLeido = false;
+            }
+
+            return detalle;
+        }
+
+        /// <summary>
+        /// Comprueba que la copia esté íntegra y se pueda restaurar, sin restaurar nada.
+        /// Si no pasa la prueba, lanza una ReglaNegocioException con el motivo.
+        /// </summary>
+        public static void VerificarIntegridad(string nombreArchivo)
+        {
+            ExigirAdministrador();
+
+            string ruta = RutaDeCopia(nombreArchivo);
+
+            try
+            {
+                ServicioBackup.VerificarArchivo(ruta);
+            }
+            catch (ErrorBackupException ex)
+            {
+                throw new ReglaNegocioException("La copia no pasó la verificación: " + ex.Message);
+            }
+        }
+
         private static bool EsPrevio(string nombre)
             => nombre.EndsWith(SufijoPrevio + ".bak", StringComparison.OrdinalIgnoreCase);
 
