@@ -87,5 +87,55 @@ BEGIN
     SET @filas = @@ROWCOUNT;
 END
 GO
+-------------------------------------------------------------------------------
+-- sp_DarDeBajaProducto
+-- Da de baja (baja lógica) un producto, siempre que ningún ticket en curso lo tenga
+-- reservado.
+--
+--   @id_producto  producto a dar de baja
+--   @reservado    (salida) unidades que hay reservadas ahora por tickets en curso
+--   @filas        (salida) 1 si se dio de baja; 0 si no se tocó nada
+--                 (estaba reservado, ya estaba inactivo o no existe)
+--
+-- Primero se bloquea la fila del producto, igual que hace la reserva de stock: así una
+-- caja que justo está agregando el producto al ticket y esta baja no se pisan.
+-- Las reservas vencidas no cuentan. La auditoría la graba la aplicación en la misma
+-- transacción.
+-------------------------------------------------------------------------------
+IF OBJECT_ID('dbo.sp_DarDeBajaProducto', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_DarDeBajaProducto;
+GO
+
+CREATE PROCEDURE dbo.sp_DarDeBajaProducto
+    @id_producto  INT,
+    @reservado    DECIMAL(12,3) OUTPUT,
+    @filas        INT           OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SET @filas = 0;
+
+    -- Bloquea el producto (si no existe, no hay nada que dar de baja).
+    IF NOT EXISTS (SELECT 1 FROM dbo.Producto WITH (UPDLOCK, HOLDLOCK) WHERE id_producto = @id_producto)
+    BEGIN
+        SET @reservado = 0;
+        RETURN;
+    END
+
+    SELECT @reservado = ISNULL(SUM(cantidad), 0)
+    FROM   dbo.Reserva_stock
+    WHERE  id_producto = @id_producto AND vence > GETDATE();
+
+    IF @reservado > 0
+        RETURN;
+
+    UPDATE dbo.Producto
+    SET    activo = 0
+    WHERE  id_producto = @id_producto AND activo = 1;
+
+    SET @filas = @@ROWCOUNT;
+END
+GO
 PRINT 'Stored procedures de TiendaUNNE creados correctamente.';
 GO

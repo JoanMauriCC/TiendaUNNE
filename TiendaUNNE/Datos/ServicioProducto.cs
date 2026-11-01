@@ -232,7 +232,11 @@ WHERE id_producto = @id_producto;";
         // Baja lógica
         // ---------------------------------------------------------------------
 
-        /// <summary>Devuelve la cantidad de filas afectadas; 0 significa que ya estaba inactivo.</summary>
+        /// <summary>
+        /// Baja con el procedimiento sp_DarDeBajaProducto. Devuelve la cantidad de filas afectadas
+        /// (0 significa que ya estaba inactivo) y lanza ProductoEnVentaException si una venta en
+        /// curso lo tiene reservado.
+        /// </summary>
         public static int DarDeBaja(int idProducto, int idUsuarioSesion, string resumenAnterior)
         {
             using (var cn = Db.AbrirConexion())
@@ -241,11 +245,24 @@ WHERE id_producto = @id_producto;";
                 try
                 {
                     int filas;
-                    using (var cmd = new SqlCommand(
-                        "UPDATE dbo.Producto SET activo = 0 WHERE id_producto = @id AND activo = 1;", cn, tx))
+                    using (var cmd = new SqlCommand("dbo.sp_DarDeBajaProducto", cn, tx))
                     {
-                        cmd.Parameters.Add("@id", SqlDbType.Int).Value = idProducto;
-                        filas = cmd.ExecuteNonQuery();
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@id_producto", SqlDbType.Int).Value = idProducto;
+
+                        SqlParameter reservado = cmd.Parameters.Add("@reservado", SqlDbType.Decimal);
+                        reservado.Precision = 12;
+                        reservado.Scale = 3;
+                        reservado.Direction = ParameterDirection.Output;
+                        SqlParameter afectadas = cmd.Parameters.Add("@filas", SqlDbType.Int);
+                        afectadas.Direction = ParameterDirection.Output;
+
+                        cmd.ExecuteNonQuery();
+
+                        if ((decimal)reservado.Value > 0)
+                            throw new ProductoEnVentaException((decimal)reservado.Value);
+
+                        filas = (int)afectadas.Value;
                     }
 
                     if (filas > 0)

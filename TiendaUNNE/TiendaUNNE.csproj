@@ -69,6 +69,7 @@
     <!-- ================= Capa Datos ================= -->
     <Compile Include="Datos\Db.cs" />
     <Compile Include="Datos\CategoriaConProductosException.cs" />
+    <Compile Include="Datos\ProductoEnVentaException.cs" />
     <Compile Include="Datos\DuplicadoException.cs" />
     <Compile Include="Datos\ServicioArranque.cs" />
     <Compile Include="Datos\ServicioAuditoria.cs" />

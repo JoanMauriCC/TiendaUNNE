@@ -114,7 +114,20 @@ namespace TiendaUNNE
             if (anterior == null)
                 throw new ReglaNegocioException("El producto ya no existe.");
 
-            int filas = ServicioProducto.DarDeBaja(idProducto, idUsuarioSesion, Resumen(anterior));
+            int filas;
+            try
+            {
+                filas = ServicioProducto.DarDeBaja(idProducto, idUsuarioSesion, Resumen(anterior));
+            }
+            catch (ProductoEnVentaException ex)
+            {
+                throw new ReglaNegocioException(string.Format(
+                    "No se puede dar de baja «{0}»: hay una venta en curso con {1} unidad{2} en el ticket. " +
+                    "Esperá a que se cobre o se cancele.",
+                    anterior.Nombre,
+                    ex.CantidadReservada.ToString("#,##0.###"),
+                    ex.CantidadReservada == 1 ? string.Empty : "es"));
+            }
 
             if (filas == 0)
                 throw new ReglaNegocioException("El producto ya estaba dado de baja o no existe.");
