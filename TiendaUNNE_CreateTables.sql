@@ -121,6 +121,7 @@ CREATE TABLE dbo.Cliente
     id_cliente        INT             IDENTITY(1,1) NOT NULL,
     id_persona        INT             NOT NULL,
     razon_social      NVARCHAR(150)   NULL,
+    cuit              NVARCHAR(11)    NULL,         -- necesario para Factura A
     condicion_iva     NVARCHAR(30)    NOT NULL CONSTRAINT DF_Cliente_condicion_iva DEFAULT ('Consumidor Final'),
     limite_credito    DECIMAL(12,2)   NOT NULL CONSTRAINT DF_Cliente_limite_credito DEFAULT (0),
     saldo_cuenta      DECIMAL(12,2)   NOT NULL CONSTRAINT DF_Cliente_saldo_cuenta DEFAULT (0),
@@ -131,8 +132,14 @@ CREATE TABLE dbo.Cliente
     CONSTRAINT PK_Cliente PRIMARY KEY (id_cliente),
     CONSTRAINT UQ_Cliente_persona UNIQUE (id_persona),          -- garantiza la relación 1 a 1
     CONSTRAINT FK_Cliente_Persona FOREIGN KEY (id_persona) REFERENCES dbo.Persona (id_persona),
-    CONSTRAINT CK_Cliente_limite_credito CHECK (limite_credito >= 0)
+    CONSTRAINT CK_Cliente_limite_credito CHECK (limite_credito >= 0),
+    CONSTRAINT CK_Cliente_cuit CHECK (cuit IS NULL OR (cuit NOT LIKE '%[^0-9]%' AND LEN(cuit) = 11)),
+    CONSTRAINT CK_Cliente_condicion_iva CHECK (condicion_iva IN (N'Consumidor Final', N'Responsable Inscripto', N'Monotributista', N'Exento'))
 );
+GO
+
+-- Un CUIT no se repite entre clientes (los NULL no cuentan).
+CREATE UNIQUE INDEX UQ_Cliente_cuit ON dbo.Cliente (cuit) WHERE cuit IS NOT NULL;
 GO
 
 -------------------------------------------------------------------------------

@@ -183,6 +183,13 @@ namespace TiendaUNNE
             });
         }
 
+        /// <summary>Asigna el cliente a la venta. Null vuelve a consumidor final.</summary>
+        public static void AsignarCliente(VentaEditModel venta, ClienteItem cliente)
+        {
+            if (venta == null) throw new ArgumentNullException(nameof(venta));
+
+            venta.Cliente = cliente;
+        }
         public static void QuitarRenglon(VentaEditModel venta, int indice)
         {
             if (venta == null) throw new ArgumentNullException(nameof(venta));

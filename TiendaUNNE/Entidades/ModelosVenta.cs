@@ -51,6 +51,9 @@ namespace TiendaUNNE
         /// <summary>Identifica este ticket en las reservas de stock; cada ticket nuevo tiene el suyo.</summary>
         public Guid Token { get; } = Guid.NewGuid();
 
+        /// <summary>Cliente de la venta; null es consumidor final.</summary>
+        public ClienteItem Cliente { get; set; }
+
         public int IdCaja { get; set; }
         public int IdCajaSesion { get; set; }
         public int IdUsuario { get; set; }

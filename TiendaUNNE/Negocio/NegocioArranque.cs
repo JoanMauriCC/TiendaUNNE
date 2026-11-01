@@ -22,10 +22,10 @@ namespace TiendaUNNE
             ServicioArranque.AsegurarDatosDeCaja();
         }
 
-        /// <summary>Instala los procedimientos almacenados que usa la aplicación, si faltan o cambiaron.</summary>
-        public static void AsegurarProcedimientos()
+        /// <summary>Aplica los cambios de esquema y instala los procedimientos almacenados que usa la aplicación.</summary>
+        public static void AsegurarEsquemaYProcedimientos()
         {
-            ServicioArranque.AsegurarProcedimientos();
+            ServicioArranque.AsegurarEsquemaYProcedimientos();
         }
 
         public static void AsegurarAdministradorInicial()

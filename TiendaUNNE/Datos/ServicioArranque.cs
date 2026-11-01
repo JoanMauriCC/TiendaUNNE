@@ -15,44 +15,55 @@ namespace TiendaUNNE
     /// </summary>
     public static class ServicioArranque
     {
+        // Scripts que viajan dentro del ejecutable, en el orden en que se aplican:
+        // primero el esquema (columnas) y después los procedimientos que lo usan.
+        private static readonly string[] ScriptsDeBase =
+        {
+            "TiendaUNNE_Migracion_Clientes.sql",
+            "TiendaUNNE_StoredProcedures.sql"
+        };
+
         /// <summary>
-        /// Crea (o vuelve a crear) todos los procedimientos almacenados. El script
-        /// TiendaUNNE_StoredProcedures.sql viaja dentro del ejecutable y se corre lote por lote
+        /// Deja la base al día: aplica los cambios de esquema y (re)crea los procedimientos
+        /// almacenados. Los scripts viajan dentro del ejecutable y se corren lote por lote
         /// (separados por GO), así el cliente no tiene que ejecutar nada en SQL Server.
-        /// Es seguro repetirlo: cada procedimiento se borra y se crea de nuevo.
+        /// Es seguro repetirlo: cada paso se fija primero si ya está aplicado.
         /// </summary>
-        public static void AsegurarProcedimientos()
+        public static void AsegurarEsquemaYProcedimientos()
         {
             Assembly ensamblado = typeof(ServicioArranque).Assembly;
-            string recurso = ensamblado.GetManifestResourceNames()
-                .FirstOrDefault(n => n.EndsWith("TiendaUNNE_StoredProcedures.sql", StringComparison.OrdinalIgnoreCase));
-
-            if (recurso == null)
-                throw new InvalidOperationException("No se encontró el script de procedimientos almacenados.");
-
-            string script;
-            using (var lector = new StreamReader(ensamblado.GetManifestResourceStream(recurso), Encoding.UTF8))
-                script = lector.ReadToEnd();
-
-            // La base la define la cadena de conexión: se ignora el "USE" del script.
-            script = Regex.Replace(script, @"^\s*USE\s+\w+\s*;?\s*$", string.Empty,
-                RegexOptions.Multiline | RegexOptions.IgnoreCase);
-
-            string[] lotes = Regex.Split(script, @"^[ \t]*GO[ \t]*\r?$",
-                RegexOptions.Multiline | RegexOptions.IgnoreCase);
 
             using (var cn = Db.AbrirConexion())
             {
-                foreach (string lote in lotes)
+                foreach (string nombre in ScriptsDeBase)
                 {
-                    if (string.IsNullOrWhiteSpace(lote)) continue;
+                    string recurso = ensamblado.GetManifestResourceNames()
+                        .FirstOrDefault(n => n.EndsWith(nombre, StringComparison.OrdinalIgnoreCase));
 
-                    using (var cmd = new SqlCommand(lote, cn))
-                        cmd.ExecuteNonQuery();
+                    if (recurso == null)
+                        throw new InvalidOperationException("No se encontró el script " + nombre + ".");
+
+                    string script;
+                    using (var lector = new StreamReader(ensamblado.GetManifestResourceStream(recurso), Encoding.UTF8))
+                        script = lector.ReadToEnd();
+
+                    // La base la define la cadena de conexión: se ignora el "USE" del script.
+                    script = Regex.Replace(script, @"^\s*USE\s+\w+\s*;?\s*$", string.Empty,
+                        RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+                    string[] lotes = Regex.Split(script, @"^[ \t]*GO[ \t]*\r?$",
+                        RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+                    foreach (string lote in lotes)
+                    {
+                        if (string.IsNullOrWhiteSpace(lote)) continue;
+
+                        using (var cmd = new SqlCommand(lote, cn))
+                            cmd.ExecuteNonQuery();
+                    }
                 }
             }
         }
-
         public static int ContarUsuarios()
         {
             using (var cn = Db.AbrirConexion())

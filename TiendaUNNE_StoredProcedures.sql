@@ -137,5 +137,77 @@ BEGIN
     SET @filas = @@ROWCOUNT;
 END
 GO
+-------------------------------------------------------------------------------
+-- sp_ObtenerOCrearCliente
+-- Devuelve el cliente con ese DNI; si no existe, lo crea.
+--
+--   Si la persona (DNI) no existe, se crea la Persona y el Cliente.
+--   Si la persona ya existe (por ejemplo, es un usuario del sistema) pero todavía no
+--   es cliente, solo se le agrega el Cliente: no se pisan sus datos.
+--   Si ya es cliente, se devuelve el existente (y se reactiva si estaba dado de baja).
+--
+--   @id_cliente  (salida) id del cliente encontrado o creado
+--   @creado      (salida) 1 si se creó ahora; 0 si ya existía
+--
+-- Se llama dentro de una transacción de la aplicación: la Persona y el Cliente se crean
+-- juntos o no se crea ninguno, y la auditoría se graba en esa misma transacción.
+-- Un CUIT repetido lo rechaza el índice único UQ_Cliente_cuit.
+-------------------------------------------------------------------------------
+IF OBJECT_ID('dbo.sp_ObtenerOCrearCliente', 'P') IS NOT NULL
+    DROP PROCEDURE dbo.sp_ObtenerOCrearCliente;
+GO
+
+CREATE PROCEDURE dbo.sp_ObtenerOCrearCliente
+    @dni            NVARCHAR(20),
+    @nombre         NVARCHAR(100),
+    @apellido       NVARCHAR(100),
+    @email          NVARCHAR(150) = NULL,
+    @telefono       NVARCHAR(30)  = NULL,
+    @razon_social   NVARCHAR(150) = NULL,
+    @cuit           NVARCHAR(11)  = NULL,
+    @condicion_iva  NVARCHAR(30),
+    @id_cliente     INT OUTPUT,
+    @creado         BIT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    DECLARE @id_persona INT;
+
+    SET @creado = 0;
+    SET @id_cliente = NULL;
+
+    SELECT @id_persona = id_persona
+    FROM   dbo.Persona WITH (UPDLOCK, HOLDLOCK)
+    WHERE  dni_cuit = @dni;
+
+    IF @id_persona IS NOT NULL
+    BEGIN
+        SELECT @id_cliente = id_cliente
+        FROM   dbo.Cliente WITH (UPDLOCK, HOLDLOCK)
+        WHERE  id_persona = @id_persona;
+
+        IF @id_cliente IS NOT NULL
+        BEGIN
+            UPDATE dbo.Cliente SET activo = 1 WHERE id_cliente = @id_cliente AND activo = 0;
+            RETURN;
+        END
+    END
+    ELSE
+    BEGIN
+        INSERT INTO dbo.Persona (dni_cuit, nombre, apellido, email, telefono)
+        VALUES (@dni, @nombre, @apellido, @email, @telefono);
+
+        SET @id_persona = SCOPE_IDENTITY();
+    END
+
+    INSERT INTO dbo.Cliente (id_persona, razon_social, cuit, condicion_iva)
+    VALUES (@id_persona, @razon_social, @cuit, @condicion_iva);
+
+    SET @id_cliente = SCOPE_IDENTITY();
+    SET @creado = 1;
+END
+GO
 PRINT 'Stored procedures de TiendaUNNE creados correctamente.';
 GO

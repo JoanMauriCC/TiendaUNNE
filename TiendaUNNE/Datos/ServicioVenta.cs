@@ -86,10 +86,10 @@ WHERE  id_tipo_comprobante = @tipo AND punto_venta = @punto_venta;";
         {
             const string sql = @"
 INSERT INTO dbo.Venta_cabecera
-    (id_tipo_comprobante, punto_venta, numero_comprobante, id_usuario, id_caja_sesion,
+    (id_tipo_comprobante, punto_venta, numero_comprobante, id_cliente, id_usuario, id_caja_sesion,
      subtotal, descuento, importe_neto, importe_iva, total)
 VALUES
-    (@tipo, @punto_venta, @numero, @usuario, @sesion, @total, 0, @total, 0, @total);
+    (@tipo, @punto_venta, @numero, @cliente, @usuario, @sesion, @total, 0, @total, 0, @total);
 SELECT CAST(SCOPE_IDENTITY() AS INT);";
 
             using (var cmd = new SqlCommand(sql, cn, tx))
@@ -97,6 +97,8 @@ SELECT CAST(SCOPE_IDENTITY() AS INT);";
                 cmd.Parameters.Add("@tipo", SqlDbType.Int).Value = idTipoComprobante;
                 cmd.Parameters.Add("@punto_venta", SqlDbType.Int).Value = puntoVenta;
                 cmd.Parameters.Add("@numero", SqlDbType.BigInt).Value = numero;
+                cmd.Parameters.Add("@cliente", SqlDbType.Int).Value =
+                    venta.Cliente == null ? (object)DBNull.Value : venta.Cliente.IdCliente;
                 cmd.Parameters.Add("@usuario", SqlDbType.Int).Value = venta.IdUsuario;
                 cmd.Parameters.Add("@sesion", SqlDbType.Int).Value = venta.IdCajaSesion;
                 AgregarDecimal(cmd, "@total", venta.Total, 12, 2);
