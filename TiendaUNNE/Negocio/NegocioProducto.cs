@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using System.Data;
 using System.Globalization;
@@ -104,6 +105,14 @@ namespace TiendaUNNE
             }
         }
 
+        /// <summary>Productos cuyo nombre contiene lo escrito, para ofrecerlos mientras se tipea.</summary>
+        public static List<SugerenciaItem> Sugerir(string texto)
+        {
+            string t = Sugerencias.Preparar(texto);
+            return t == null
+                ? new List<SugerenciaItem>()
+                : Sugerencias.Rotular(ServicioProducto.Sugerir(t));
+        }
         // ---------------------------------------------------------------------
         // Baja lógica
         // ---------------------------------------------------------------------

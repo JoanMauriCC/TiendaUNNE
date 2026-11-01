@@ -21,5 +21,15 @@ namespace TiendaUNNE
             cn.Open();
             return cn;
         }
+
+        /// <summary>
+        /// Prepara un texto para usarlo en un LIKE ... ESCAPE '\': un %, un _ o un [ escrito por la
+        /// persona se busca tal cual, en vez de hacer de comodín.
+        /// </summary>
+        public static string EscaparLike(string texto)
+        {
+            return (texto ?? string.Empty)
+                .Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_").Replace("[", "\\[");
+        }
     }
 }

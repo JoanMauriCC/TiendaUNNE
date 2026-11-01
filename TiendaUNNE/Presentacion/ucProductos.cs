@@ -38,10 +38,41 @@ namespace TiendaUNNE
         public ucProductos()
         {
             InitializeComponent();
+
+            // Mientras se escribe el nombre se ofrecen los productos que ya existen.
+            _sugerenciasNombre = new SugerenciasCampo(this, txtNombre, NegocioProducto.Sugerir, CargarSugerido, () => EsAlta);
+
             panelFormulario.Resize += (s, e) => ReubicarFormulario();
         }
 
         private bool EsAlta => _original == null;
+
+        private readonly SugerenciasCampo _sugerenciasNombre;
+
+        /// <summary>Carga en el formulario al producto elegido en la lista de coincidencias.</summary>
+        private void CargarSugerido(SugerenciaItem item)
+        {
+            try
+            {
+                ProductoEditModel m = NegocioProducto.ObtenerParaEdicion(item.Id);
+                CargarEnFormulario(m);
+
+                // La fila se marca sin que la grilla descarte la selección (no tiene el foco).
+                _actualizandoGrilla = true;
+                try { SeleccionarFilaPorId(m.IdProducto); }
+                finally { _actualizandoGrilla = false; }
+                ActualizarBotones();
+            }
+            catch (ReglaNegocioException ex)
+            {
+                MessageBox.Show(ex.Message, "Productos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("No se pudieron cargar los datos del producto.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
         // -----------------------------------------------------------------
         // Atajos de teclado (ver AtajosTeclado para la lista completa)
@@ -54,6 +85,13 @@ namespace TiendaUNNE
         /// </summary>
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
+            // Esc con una lista de coincidencias abierta: solo la cierra, no limpia el formulario.
+            if (keyData == Keys.Escape && _sugerenciasNombre.Visible)
+            {
+                _sugerenciasNombre.Ocultar();
+                return true;
+            }
+
             // Esc en el buscador: primero borra lo que se escribió, sin tocar el formulario.
             if (keyData == Keys.Escape && ActiveControl == txtBuscar && txtBuscar.Text.Length > 0)
             {

@@ -71,6 +71,36 @@ ORDER BY nombre;";
             return lista;
         }
 
+        /// <summary>Categorías cuyo nombre contiene lo escrito (activas y dadas de baja), para ofrecerlas al tipear. Hasta 6.</summary>
+        public static List<SugerenciaItem> Sugerir(string texto)
+        {
+            const string sql = @"
+SELECT TOP 6 id_categoria, nombre, activo
+FROM   dbo.Categoria
+WHERE  nombre LIKE @contiene ESCAPE '\'
+ORDER BY nombre;";
+
+            var lista = new List<SugerenciaItem>();
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand(sql, cn))
+            {
+                cmd.Parameters.Add("@contiene", SqlDbType.NVarChar, 120).Value = "%" + Db.EscaparLike(texto) + "%";
+
+                using (var dr = cmd.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        lista.Add(new SugerenciaItem
+                        {
+                            Id = (int)dr["id_categoria"],
+                            Texto = (string)dr["nombre"],
+                            Activo = (bool)dr["activo"]
+                        });
+                    }
+                }
+            }
+            return lista;
+        }
         /// <summary>Trae una categoría, o null si no existe. Interpretar el null es cosa de Negocio.</summary>
         public static CategoriaEditModel Obtener(int idCategoria)
         {

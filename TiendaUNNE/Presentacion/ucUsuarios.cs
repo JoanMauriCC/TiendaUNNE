@@ -44,6 +44,11 @@ namespace TiendaUNNE
         public ucUsuarios()
         {
             InitializeComponent();
+
+            // Mientras se escribe el DNI o el apellido se ofrecen los usuarios que ya existen.
+            _sugerenciasDni = new SugerenciasCampo(this, txtDniCuit, NegocioUsuario.Sugerir, CargarSugerido, () => EsAlta);
+            _sugerenciasApellido = new SugerenciasCampo(this, txtApellido, NegocioUsuario.Sugerir, CargarSugerido, () => EsAlta);
+
             panelFormulario.Resize += (s, e) => ReubicarFormulario();
             panelFormulario.Paint += panelFormulario_Paint;
 
@@ -113,6 +118,34 @@ namespace TiendaUNNE
 
         private bool EsAlta => _original == null;
 
+        private readonly SugerenciasCampo _sugerenciasDni;
+        private readonly SugerenciasCampo _sugerenciasApellido;
+
+        /// <summary>Carga en el formulario al usuario elegido en la lista de coincidencias.</summary>
+        private void CargarSugerido(SugerenciaItem item)
+        {
+            try
+            {
+                UsuarioEditModel m = NegocioUsuario.ObtenerParaEdicion(item.Id);
+                CargarEnFormulario(m);
+
+                // La fila se marca sin que la grilla descarte la selección (no tiene el foco).
+                _actualizandoGrilla = true;
+                try { SeleccionarFilaPorId(m.IdUsuario); }
+                finally { _actualizandoGrilla = false; }
+                ActualizarBotones();
+            }
+            catch (ReglaNegocioException ex)
+            {
+                MessageBox.Show(ex.Message, "Usuarios", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("No se pudieron cargar los datos del usuario.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         // -----------------------------------------------------------------
         // Atajos de teclado (ver AtajosTeclado para la lista completa)
         // -----------------------------------------------------------------
@@ -124,6 +157,14 @@ namespace TiendaUNNE
         /// </summary>
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
+            // Esc con una lista de coincidencias abierta: solo la cierra, no limpia el formulario.
+            if (keyData == Keys.Escape && (_sugerenciasDni.Visible || _sugerenciasApellido.Visible))
+            {
+                _sugerenciasDni.Ocultar();
+                _sugerenciasApellido.Ocultar();
+                return true;
+            }
+
             // Esc en el buscador: primero borra lo que se escribió, sin tocar el formulario.
             if (keyData == Keys.Escape && ActiveControl == txtBuscar && txtBuscar.Text.Length > 0)
             {

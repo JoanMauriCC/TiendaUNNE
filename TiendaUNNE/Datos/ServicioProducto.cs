@@ -96,6 +96,37 @@ ORDER BY p.nombre;";
             return lista;
         }
 
+        /// <summary>Productos cuyo nombre contiene lo escrito (activos y dados de baja), para ofrecerlos al tipear. Hasta 6.</summary>
+        public static List<SugerenciaItem> Sugerir(string texto)
+        {
+            const string sql = @"
+SELECT TOP 6 p.id_producto, p.nombre, c.nombre AS categoria, p.activo
+FROM        dbo.Producto  p
+INNER JOIN  dbo.Categoria c ON c.id_categoria = p.id_categoria
+WHERE p.nombre LIKE @contiene ESCAPE '\'
+ORDER BY p.nombre;";
+
+            var lista = new List<SugerenciaItem>();
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand(sql, cn))
+            {
+                cmd.Parameters.Add("@contiene", SqlDbType.NVarChar, 160).Value = "%" + Db.EscaparLike(texto) + "%";
+
+                using (var dr = cmd.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        lista.Add(new SugerenciaItem
+                        {
+                            Id = (int)dr["id_producto"],
+                            Texto = (string)dr["nombre"] + "  ·  " + (string)dr["categoria"],
+                            Activo = (bool)dr["activo"]
+                        });
+                    }
+                }
+            }
+            return lista;
+        }
         /// <summary>Trae un producto, o null si no existe. Interpretar el null es cosa de Negocio.</summary>
         public static ProductoEditModel Obtener(int idProducto)
         {

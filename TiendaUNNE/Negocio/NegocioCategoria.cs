@@ -68,6 +68,14 @@ namespace TiendaUNNE
             }
         }
 
+        /// <summary>Categorías cuyo nombre contiene lo escrito, para ofrecerlas mientras se tipea.</summary>
+        public static List<SugerenciaItem> Sugerir(string texto)
+        {
+            string t = Sugerencias.Preparar(texto);
+            return t == null
+                ? new List<SugerenciaItem>()
+                : Sugerencias.Rotular(ServicioCategoria.Sugerir(t));
+        }
         // ---------------------------------------------------------------------
         // Baja lógica
         // ---------------------------------------------------------------------

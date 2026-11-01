@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -68,6 +69,20 @@ namespace TiendaUNNE
             return idUsuario.HasValue ? ServicioUsuario.Obtener(idUsuario.Value) : null;
         }
 
+        /// <summary>
+        /// Usuarios que coinciden con lo escrito, para ofrecerlos mientras se tipea. Si son solo
+        /// dígitos se busca por el principio del DNI; si no, por apellido o nombre.
+        /// </summary>
+        public static List<SugerenciaItem> Sugerir(string texto)
+        {
+            string t = Sugerencias.Preparar(texto);
+            if (t == null) return new List<SugerenciaItem>();
+
+            bool esDni = t.All(char.IsDigit);
+            if (esDni && t.Length > 8) return new List<SugerenciaItem>();
+
+            return Sugerencias.Rotular(ServicioUsuario.Sugerir(t, esDni));
+        }
         // ---------------------------------------------------------------------
         // Alta y edición
         // ---------------------------------------------------------------------

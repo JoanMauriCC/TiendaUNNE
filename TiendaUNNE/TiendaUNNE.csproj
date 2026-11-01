@@ -61,6 +61,7 @@
     <Compile Include="Entidades\ModelosCaja.cs" />
     <Compile Include="Entidades\ModelosAnulacion.cs" />
     <Compile Include="Entidades\ModelosCliente.cs" />
+    <Compile Include="Entidades\ModelosSugerencia.cs" />
     <Compile Include="Entidades\ModelosComprobante.cs" />
     <Compile Include="Entidades\ModelosCategoria.cs" />
     <Compile Include="Entidades\ModelosProducto.cs" />
@@ -111,6 +112,7 @@
     <Compile Include="Negocio\Validaciones.cs" />
     <Compile Include="Negocio\ReglaNegocioException.cs" />
     <Compile Include="Negocio\SesionActual.cs" />
+    <Compile Include="Negocio\Sugerencias.cs" />
     <!-- ================= Capa Presentacion ================= -->
     <Compile Include="Presentacion\TarjetaMenu.cs">
       <SubType>Component</SubType>
@@ -127,6 +129,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Presentacion\FiltroGrilla.cs" />
+    <Compile Include="Presentacion\SugerenciasCampo.cs" />
     <Compile Include="Presentacion\ExportadorPdfReporte.cs" />
     <Compile Include="Presentacion\ucReportes.cs">
       <SubType>UserControl</SubType>

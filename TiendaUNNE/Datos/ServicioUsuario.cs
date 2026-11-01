@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -89,6 +90,46 @@ WHERE u.id_usuario = @id;";
             }
         }
 
+        /// <summary>
+        /// Usuarios que coinciden con lo escrito, para ofrecerlos mientras se tipea: si son solo dígitos,
+        /// los que tienen un DNI que empieza así; si no, los que tienen ese texto en el apellido o el
+        /// nombre. Incluye a los dados de baja (se avisa en el texto). Hasta 6.
+        /// </summary>
+        public static List<SugerenciaItem> Sugerir(string texto, bool esDni)
+        {
+            const string select = @"
+SELECT TOP 6 u.id_usuario, p.dni_cuit, p.apellido, p.nombre, u.activo
+FROM        dbo.Usuario u
+INNER JOIN  dbo.Persona p ON p.id_persona = u.id_persona
+";
+            const string porDni = "WHERE p.dni_cuit LIKE @inicio ESCAPE '\\' ORDER BY p.dni_cuit;";
+            const string porNombre = @"WHERE p.apellido LIKE @contiene ESCAPE '\' OR p.nombre LIKE @contiene ESCAPE '\'
+ORDER BY p.apellido, p.nombre;";
+
+            string escapado = Db.EscaparLike(texto);
+
+            var lista = new List<SugerenciaItem>();
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand(select + (esDni ? porDni : porNombre), cn))
+            {
+                cmd.Parameters.Add("@inicio", SqlDbType.NVarChar, 120).Value = escapado + "%";
+                cmd.Parameters.Add("@contiene", SqlDbType.NVarChar, 120).Value = "%" + escapado + "%";
+
+                using (var dr = cmd.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        lista.Add(new SugerenciaItem
+                        {
+                            Id = (int)dr["id_usuario"],
+                            Texto = (string)dr["dni_cuit"] + "  ·  " + (string)dr["apellido"] + ", " + (string)dr["nombre"],
+                            Activo = (bool)dr["activo"]
+                        });
+                    }
+                }
+            }
+            return lista;
+        }
         /// <summary>Id del usuario cuya persona tiene ese DNI, o null si nadie lo tiene.</summary>
         public static int? ObtenerIdPorDni(string dni)
         {
