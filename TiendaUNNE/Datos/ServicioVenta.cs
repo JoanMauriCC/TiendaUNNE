@@ -31,112 +31,153 @@ WHERE  codigo = @codigo AND activo = 1;";
         }
 
         // ---------------------------------------------------------------------
-        // Ventas del turno y anulación
+        // Historial de ventas y reimpresión
         // ---------------------------------------------------------------------
 
         private const string SelectVentas = @"
-SELECT  vc.id_venta, vc.fecha_hora, tc.nombre AS comprobante, vc.punto_venta,
+SELECT TOP (@maximo)
+        vc.id_venta, vc.fecha_hora, tc.nombre AS comprobante, vc.punto_venta,
         vc.numero_comprobante, vc.total, vc.estado, vc.observaciones,
         ISNULL(p.apellido + N', ' + p.nombre, N'Consumidor final') AS cliente
 FROM        dbo.Venta_cabecera    vc
 INNER JOIN  dbo.Tipo_comprobante  tc ON tc.id_tipo_comprobante = vc.id_tipo_comprobante
 LEFT JOIN   dbo.Cliente           c  ON c.id_cliente = vc.id_cliente
 LEFT JOIN   dbo.Persona           p  ON p.id_persona = c.id_persona
-";
+WHERE (@sesion IS NULL OR vc.id_caja_sesion = @sesion)
+  AND (@desde  IS NULL OR vc.fecha_hora >= @desde)
+ORDER BY vc.fecha_hora DESC, vc.id_venta DESC;";
 
-        /// <summary>Todas las ventas de un turno de caja, las más nuevas primero.</summary>
-        public static List<VentaListada> ListarDelTurno(int idCajaSesion)
-        {
-            using (var cn = Db.AbrirConexion())
-            using (var cmd = new SqlCommand(
-                SelectVentas + "WHERE vc.id_caja_sesion = @sesion ORDER BY vc.id_venta DESC;", cn))
-            {
-                cmd.Parameters.Add("@sesion", SqlDbType.Int).Value = idCajaSesion;
-                return LeerVentas(cmd);
-            }
-        }
-
-        /// <summary>Una venta por su id, o null si no existe.</summary>
-        public static VentaListada ObtenerVenta(int idVenta)
-        {
-            using (var cn = Db.AbrirConexion())
-            using (var cmd = new SqlCommand(SelectVentas + "WHERE vc.id_venta = @id;", cn))
-            {
-                cmd.Parameters.Add("@id", SqlDbType.Int).Value = idVenta;
-
-                List<VentaListada> lista = LeerVentas(cmd);
-                return lista.Count == 0 ? null : lista[0];
-            }
-        }
-
-        private static List<VentaListada> LeerVentas(SqlCommand cmd)
+        /// <summary>
+        /// Ventas, las más nuevas primero. <paramref name="idCajaSesion"/> en null trae las de todos los
+        /// turnos; <paramref name="desde"/> en null, sin límite de fecha. Se corta en <paramref name="maximo"/>.
+        /// </summary>
+        public static List<VentaListada> Listar(int? idCajaSesion, DateTime? desde, int maximo)
         {
             var lista = new List<VentaListada>();
-            using (var dr = cmd.ExecuteReader())
+
+            using (var cn = Db.AbrirConexion())
+            using (var cmd = new SqlCommand(SelectVentas, cn))
             {
-                while (dr.Read())
+                cmd.Parameters.Add("@maximo", SqlDbType.Int).Value = maximo;
+                cmd.Parameters.Add("@sesion", SqlDbType.Int).Value = (object)idCajaSesion ?? DBNull.Value;
+                cmd.Parameters.Add("@desde", SqlDbType.DateTime2).Value = (object)desde ?? DBNull.Value;
+
+                using (var dr = cmd.ExecuteReader())
                 {
-                    lista.Add(new VentaListada
+                    while (dr.Read())
                     {
-                        IdVenta = (int)dr["id_venta"],
-                        Fecha = (DateTime)dr["fecha_hora"],
-                        Comprobante = (string)dr["comprobante"],
-                        PuntoVenta = (int)dr["punto_venta"],
-                        Numero = (long)dr["numero_comprobante"],
-                        Cliente = (string)dr["cliente"],
-                        Total = (decimal)dr["total"],
-                        Estado = (string)dr["estado"],
-                        Motivo = dr["observaciones"] as string
-                    });
+                        lista.Add(new VentaListada
+                        {
+                            IdVenta = (int)dr["id_venta"],
+                            Fecha = (DateTime)dr["fecha_hora"],
+                            Comprobante = (string)dr["comprobante"],
+                            PuntoVenta = (int)dr["punto_venta"],
+                            Numero = (long)dr["numero_comprobante"],
+                            Cliente = (string)dr["cliente"],
+                            Total = (decimal)dr["total"],
+                            Estado = (string)dr["estado"],
+                            Motivo = dr["observaciones"] as string
+                        });
+                    }
                 }
             }
             return lista;
         }
 
-        /// <summary>
-        /// Anula la venta con el procedimiento sp_AnularVenta. Si se anuló, deja la auditoría
-        /// (MODIFICACION) en la misma transacción: o queda todo o no queda nada.
-        /// </summary>
-        public static ResultadoAnulacion Anular(int idVenta, int idCajaSesion, int idUsuario, string motivo,
-                                                string resumenAnterior, string resumenNuevo)
+        /// <summary>Una venta con sus renglones y pagos, para volver a armar su comprobante; null si no existe.</summary>
+        public static VentaCompleta ObtenerCompleta(int idVenta)
         {
+            const string sqlCabecera = @"
+SELECT  vc.id_venta, vc.punto_venta, vc.numero_comprobante, vc.fecha_hora, vc.estado,
+        vc.importe_neto, vc.importe_iva, vc.total,
+        tc.codigo AS tipo_codigo, tc.nombre AS tipo_nombre,
+        pu.apellido + N', ' + pu.nombre AS cajero,
+        pc.apellido + N', ' + pc.nombre AS cliente, pc.dni_cuit, c.cuit, c.condicion_iva
+FROM        dbo.Venta_cabecera   vc
+INNER JOIN  dbo.Tipo_comprobante tc ON tc.id_tipo_comprobante = vc.id_tipo_comprobante
+INNER JOIN  dbo.Usuario          u  ON u.id_usuario = vc.id_usuario
+INNER JOIN  dbo.Persona          pu ON pu.id_persona = u.id_persona
+LEFT JOIN   dbo.Cliente          c  ON c.id_cliente = vc.id_cliente
+LEFT JOIN   dbo.Persona          pc ON pc.id_persona = c.id_persona
+WHERE vc.id_venta = @id;";
+
+            const string sqlRenglones = @"
+SELECT descripcion, cantidad, precio_unitario, subtotal
+FROM   dbo.Venta_detalle
+WHERE  id_venta = @id
+ORDER BY nro_linea;";
+
+            const string sqlPagos = @"
+SELECT mp.nombre, vp.importe
+FROM        dbo.Venta_pago vp
+INNER JOIN  dbo.Medio_pago mp ON mp.id_medio_pago = vp.id_medio_pago
+WHERE vp.id_venta = @id
+ORDER BY vp.id_venta_pago;";
+
             using (var cn = Db.AbrirConexion())
-            using (var tx = cn.BeginTransaction())
             {
-                try
+                VentaCompleta venta;
+
+                using (var cmd = new SqlCommand(sqlCabecera, cn))
                 {
-                    ResultadoAnulacion resultado;
-                    using (var cmd = new SqlCommand("dbo.sp_AnularVenta", cn, tx))
+                    cmd.Parameters.Add("@id", SqlDbType.Int).Value = idVenta;
+                    using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
                     {
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.Add("@id_venta", SqlDbType.Int).Value = idVenta;
-                        cmd.Parameters.Add("@id_caja_sesion", SqlDbType.Int).Value = idCajaSesion;
-                        cmd.Parameters.Add("@id_usuario", SqlDbType.Int).Value = idUsuario;
-                        cmd.Parameters.Add("@motivo", SqlDbType.NVarChar, 300).Value = motivo;
+                        if (!dr.Read())
+                            return null;
 
-                        SqlParameter salida = cmd.Parameters.Add("@resultado", SqlDbType.Int);
-                        salida.Direction = ParameterDirection.Output;
-
-                        cmd.ExecuteNonQuery();
-                        resultado = (ResultadoAnulacion)(int)salida.Value;
+                        venta = new VentaCompleta
+                        {
+                            IdVenta = (int)dr["id_venta"],
+                            CodigoTipo = (string)dr["tipo_codigo"],
+                            NombreTipo = (string)dr["tipo_nombre"],
+                            PuntoVenta = (int)dr["punto_venta"],
+                            Numero = (long)dr["numero_comprobante"],
+                            Fecha = (DateTime)dr["fecha_hora"],
+                            Estado = (string)dr["estado"],
+                            Cajero = (string)dr["cajero"],
+                            ClienteNombre = dr["cliente"] as string,
+                            ClienteDni = dr["dni_cuit"] as string,
+                            ClienteCuit = dr["cuit"] as string,
+                            ClienteCondicionIva = dr["condicion_iva"] as string,
+                            ImporteNeto = (decimal)dr["importe_neto"],
+                            ImporteIva = (decimal)dr["importe_iva"],
+                            Total = (decimal)dr["total"]
+                        };
                     }
-
-                    if (resultado == ResultadoAnulacion.Anulada)
-                    {
-                        ServicioAuditoria.Registrar(
-                            "MODIFICACION", "Venta_cabecera", idVenta,
-                            resumenAnterior, resumenNuevo, idUsuario,
-                            cn, tx);
-                    }
-
-                    tx.Commit();
-                    return resultado;
                 }
-                catch
+
+                using (var cmd = new SqlCommand(sqlRenglones, cn))
                 {
-                    tx.Rollback();
-                    throw;
+                    cmd.Parameters.Add("@id", SqlDbType.Int).Value = idVenta;
+                    using (var dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                            venta.Renglones.Add(new ComprobanteRenglon
+                            {
+                                Descripcion = (string)dr["descripcion"],
+                                Cantidad = (decimal)dr["cantidad"],
+                                PrecioUnitario = (decimal)dr["precio_unitario"],
+                                Subtotal = (decimal)dr["subtotal"]
+                            });
+                    }
                 }
+
+                using (var cmd = new SqlCommand(sqlPagos, cn))
+                {
+                    cmd.Parameters.Add("@id", SqlDbType.Int).Value = idVenta;
+                    using (var dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                            venta.Pagos.Add(new ComprobantePago
+                            {
+                                Medio = (string)dr["nombre"],
+                                Importe = (decimal)dr["importe"]
+                            });
+                    }
+                }
+
+                return venta;
             }
         }
         /// <summary>

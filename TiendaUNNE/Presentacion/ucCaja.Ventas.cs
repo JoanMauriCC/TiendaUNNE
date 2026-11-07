@@ -5,8 +5,8 @@ using System.Windows.Forms;
 namespace TiendaUNNE
 {
     /// <summary>
-    /// Botón "Ventas del turno" del encabezado de la Caja: abre la lista de ventas del turno,
-    /// desde donde un Administrador o un Supervisor puede anular una.
+    /// Botón «Historial de ventas» del encabezado de la Caja: abre la lista de ventas (del turno o de
+    /// un período más largo), desde donde se puede volver a abrir y guardar el ticket de cualquier venta.
     /// </summary>
     public partial class ucCaja
     {
@@ -16,28 +16,22 @@ namespace TiendaUNNE
         {
             btnVentas = new Button
             {
-                Text = "Ventas del turno (F6)",
-                Size = new Size(150, 28),
-                Location = new Point(btnCerrarCaja.Left - 150 - 8, btnCerrarCaja.Top),
+                Text = "Historial de ventas (F6)",
+                Size = new Size(170, 28),
+                Location = new Point(btnCerrarCaja.Left - 170 - 8, btnCerrarCaja.Top),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
                 UseVisualStyleBackColor = true
             };
-            btnVentas.Click += (s, e) => VerVentasDelTurno();
+            btnVentas.Click += (s, e) => VerHistorial();
             panelEncabezado.Controls.Add(btnVentas);
         }
 
-        private void VerVentasDelTurno()
+        private void VerHistorial()
         {
             if (_sesion == null) return;
 
-            using (var ventana = new frmVentasTurno(_sesion))
-            {
+            using (var ventana = new frmHistorialVentas(_sesion))
                 ventana.ShowDialog(this);
-
-                // Si se anuló una venta, volvió stock al depósito: el catálogo tiene que mostrarlo.
-                if (ventana.HuboAnulaciones)
-                    CargarCatalogo();
-            }
         }
     }
 }

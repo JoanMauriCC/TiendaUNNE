@@ -13,7 +13,7 @@ namespace TiendaUNNE
     /// Solo muestra datos y recoge lo que hace el cajero; validar stock, filtrar el catálogo,
     /// calcular totales y registrar la venta es trabajo de NegocioVenta y NegocioCaja.
     ///
-    ///   F2 / Ctrl+F  ir al buscador        F3  elegir cliente    F4  cobrar    F5  actualizar el catálogo    F6  ventas del turno
+    ///   F2 / Ctrl+F  ir al buscador        F3  elegir cliente    F4  cobrar    F5  actualizar el catálogo    F6  historial de ventas
     ///   Esc          limpiar la búsqueda   Enter (en el buscador) agrega si queda un solo producto
     /// </summary>
     public partial class ucCaja : UserControl
@@ -67,7 +67,7 @@ namespace TiendaUNNE
                         return true;
 
                     case Keys.F6:
-                        VerVentasDelTurno();
+                        VerHistorial();
                         return true;
 
                     case Keys.F3:

@@ -64,5 +64,11 @@ namespace TiendaUNNE
         public decimal ImporteIva { get; set; }
         public decimal Total { get; set; }
         public decimal Vuelto { get; set; }
+
+        /// <summary>True si se vuelve a imprimir un comprobante ya emitido (se aclara «REIMPRESIÓN»).</summary>
+        public bool EsCopia { get; set; }
+
+        /// <summary>True si la venta figura como anulada (ventas de antes; se aclara en el comprobante).</summary>
+        public bool Anulada { get; set; }
     }
 }

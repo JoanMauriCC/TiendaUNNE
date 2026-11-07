@@ -85,7 +85,7 @@ namespace TiendaUNNE
             string ruta;
             using (var dialogo = new SaveFileDialog
             {
-                Title = "Guardar comprobante en PDF",
+                Title = _comprobante.EsCopia ? "Guardar la reimpresión en PDF" : "Guardar comprobante en PDF",
                 Filter = "Documento PDF (*.pdf)|*.pdf",
                 FileName = ExportadorPdfComprobante.NombreSugerido(_comprobante)
             })
@@ -141,6 +141,10 @@ namespace TiendaUNNE
             sb.AppendLine(Centrar("TiendaUNNE"));
             sb.AppendLine(Centrar(v.Nombre.ToUpperInvariant()));
             sb.AppendLine(Centrar("Nº " + v.NumeroFormateado));
+            if (v.EsCopia)
+                sb.AppendLine(Centrar("*** REIMPRESIÓN ***"));
+            if (v.Anulada)
+                sb.AppendLine(Centrar("*** VENTA ANULADA ***"));
             sb.AppendLine();
             sb.AppendLine("Fecha:   " + v.FechaHora.ToString("dd/MM/yyyy HH:mm"));
             if (!string.IsNullOrWhiteSpace(v.Cajero))

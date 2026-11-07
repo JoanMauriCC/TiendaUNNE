@@ -31,7 +31,7 @@ namespace TiendaUNNE
         /// <summary>Nombre de archivo sugerido: "Factura-B-0001-00000003.pdf".</summary>
         public static string NombreSugerido(ComprobanteVista v)
         {
-            return v.Nombre.Replace(' ', '-') + "-" + v.NumeroFormateado + ".pdf";
+            return v.Nombre.Replace(' ', '-') + "-" + v.NumeroFormateado + (v.EsCopia ? "-reimpresion" : string.Empty) + ".pdf";
         }
 
         private static Document ArmarDocumento(ComprobanteVista v)
@@ -75,6 +75,17 @@ namespace TiendaUNNE
             titulo.Format.Font.Color = ColorAcento;
 
             seccion.AddParagraph("Nº " + v.NumeroFormateado).Format.Font.Size = 13;
+
+            if (v.EsCopia || v.Anulada)
+            {
+                Paragraph aviso = seccion.AddParagraph(
+                    (v.EsCopia ? "REIMPRESIÓN" : string.Empty) +
+                    (v.EsCopia && v.Anulada ? "  ·  " : string.Empty) +
+                    (v.Anulada ? "VENTA ANULADA" : string.Empty));
+                aviso.Format.Font.Bold = true;
+                aviso.Format.Font.Size = 11;
+                aviso.Format.Font.Color = new Color(180, 35, 24);
+            }
 
             Paragraph fecha = seccion.AddParagraph(
                 "Fecha: " + v.FechaHora.ToString("dd/MM/yyyy HH:mm") +
