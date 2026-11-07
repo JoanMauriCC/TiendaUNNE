@@ -37,7 +37,7 @@ WHERE  codigo = @codigo AND activo = 1;";
         private const string SelectVentas = @"
 SELECT TOP (@maximo)
         vc.id_venta, vc.fecha_hora, tc.nombre AS comprobante, vc.punto_venta,
-        vc.numero_comprobante, vc.total, vc.estado, vc.observaciones,
+        vc.numero_comprobante, vc.total, vc.estado, vc.observaciones, tc.signo,
         ISNULL(p.apellido + N', ' + p.nombre, N'Consumidor final') AS cliente
 FROM        dbo.Venta_cabecera    vc
 INNER JOIN  dbo.Tipo_comprobante  tc ON tc.id_tipo_comprobante = vc.id_tipo_comprobante
@@ -76,6 +76,7 @@ ORDER BY vc.fecha_hora DESC, vc.id_venta DESC;";
                             Cliente = (string)dr["cliente"],
                             Total = (decimal)dr["total"],
                             Estado = (string)dr["estado"],
+                            Signo = Convert.ToInt32(dr["signo"]),
                             Motivo = dr["observaciones"] as string
                         });
                     }
@@ -89,8 +90,9 @@ ORDER BY vc.fecha_hora DESC, vc.id_venta DESC;";
         {
             const string sqlCabecera = @"
 SELECT  vc.id_venta, vc.punto_venta, vc.numero_comprobante, vc.fecha_hora, vc.estado,
-        vc.importe_neto, vc.importe_iva, vc.total,
+        vc.importe_neto, vc.importe_iva, vc.total, vc.observaciones, tc.signo,
         tc.codigo AS tipo_codigo, tc.nombre AS tipo_nombre,
+        orig_tc.nombre AS asociado_tipo, orig.punto_venta AS asociado_punto, orig.numero_comprobante AS asociado_numero,
         pu.apellido + N', ' + pu.nombre AS cajero,
         pc.apellido + N', ' + pc.nombre AS cliente, pc.dni_cuit, c.cuit, c.condicion_iva
 FROM        dbo.Venta_cabecera   vc
@@ -99,6 +101,8 @@ INNER JOIN  dbo.Usuario          u  ON u.id_usuario = vc.id_usuario
 INNER JOIN  dbo.Persona          pu ON pu.id_persona = u.id_persona
 LEFT JOIN   dbo.Cliente          c  ON c.id_cliente = vc.id_cliente
 LEFT JOIN   dbo.Persona          pc ON pc.id_persona = c.id_persona
+LEFT JOIN   dbo.Venta_cabecera   orig    ON orig.id_venta = vc.id_venta_anulada
+LEFT JOIN   dbo.Tipo_comprobante orig_tc ON orig_tc.id_tipo_comprobante = orig.id_tipo_comprobante
 WHERE vc.id_venta = @id;";
 
             const string sqlRenglones = @"
@@ -135,6 +139,11 @@ ORDER BY vp.id_venta_pago;";
                             Numero = (long)dr["numero_comprobante"],
                             Fecha = (DateTime)dr["fecha_hora"],
                             Estado = (string)dr["estado"],
+                            Signo = Convert.ToInt32(dr["signo"]),
+                            Motivo = dr["observaciones"] as string,
+                            AsociadoTipo = dr["asociado_tipo"] as string,
+                            AsociadoPunto = dr["asociado_punto"] as int?,
+                            AsociadoNumero = dr["asociado_numero"] as long?,
                             Cajero = (string)dr["cajero"],
                             ClienteNombre = dr["cliente"] as string,
                             ClienteDni = dr["dni_cuit"] as string,
@@ -178,6 +187,243 @@ ORDER BY vp.id_venta_pago;";
                 }
 
                 return venta;
+            }
+        }
+        // ---------------------------------------------------------------------
+        // Notas de crédito
+        // ---------------------------------------------------------------------
+
+        /// <summary>
+        /// La venta sobre la que se va a emitir una nota de crédito, con cada renglón (agrupado por
+        /// producto y precio), lo vendido y lo ya devuelto por notas anteriores. Null si no existe.
+        /// </summary>
+        public static VentaADevolver ObtenerADevolver(int idVenta)
+        {
+            const string sqlCabecera = @"
+SELECT  vc.id_venta, tc.codigo, tc.nombre, vc.punto_venta, vc.numero_comprobante,
+        vc.fecha_hora, vc.estado, tc.signo, vc.id_cliente,
+        pc.apellido + N', ' + pc.nombre AS cliente,
+        (SELECT TOP 1 vp.id_medio_pago FROM dbo.Venta_pago vp
+          WHERE vp.id_venta = vc.id_venta ORDER BY vp.importe DESC) AS medio
+FROM        dbo.Venta_cabecera   vc
+INNER JOIN  dbo.Tipo_comprobante tc ON tc.id_tipo_comprobante = vc.id_tipo_comprobante
+LEFT JOIN   dbo.Cliente          c  ON c.id_cliente = vc.id_cliente
+LEFT JOIN   dbo.Persona          pc ON pc.id_persona = c.id_persona
+WHERE vc.id_venta = @id;";
+
+            const string sqlRenglones = @"
+SELECT  d.id_producto, MAX(d.descripcion) AS descripcion, d.precio_unitario, d.alicuota_iva,
+        SUM(d.cantidad) AS vendida,
+        ISNULL((SELECT SUM(nd.cantidad)
+                FROM   dbo.Venta_cabecera nc
+                INNER JOIN dbo.Venta_detalle nd ON nd.id_venta = nc.id_venta
+                WHERE  nc.id_venta_anulada = @id
+                  AND  nd.id_producto = d.id_producto
+                  AND  nd.precio_unitario = d.precio_unitario), 0) AS devuelta
+FROM    dbo.Venta_detalle d
+WHERE   d.id_venta = @id
+GROUP BY d.id_producto, d.precio_unitario, d.alicuota_iva
+ORDER BY MIN(d.nro_linea);";
+
+            using (var cn = Db.AbrirConexion())
+            {
+                VentaADevolver venta;
+
+                using (var cmd = new SqlCommand(sqlCabecera, cn))
+                {
+                    cmd.Parameters.Add("@id", SqlDbType.Int).Value = idVenta;
+                    using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
+                    {
+                        if (!dr.Read())
+                            return null;
+
+                        venta = new VentaADevolver
+                        {
+                            IdVenta = (int)dr["id_venta"],
+                            CodigoTipo = (string)dr["codigo"],
+                            NombreTipo = (string)dr["nombre"],
+                            PuntoVenta = (int)dr["punto_venta"],
+                            Numero = (long)dr["numero_comprobante"],
+                            Fecha = (DateTime)dr["fecha_hora"],
+                            Estado = (string)dr["estado"],
+                            Signo = Convert.ToInt32(dr["signo"]),
+                            IdCliente = dr["id_cliente"] as int?,
+                            ClienteNombre = dr["cliente"] as string,
+                            IdMedioPagoSugerido = dr["medio"] as int?
+                        };
+                    }
+                }
+
+                using (var cmd = new SqlCommand(sqlRenglones, cn))
+                {
+                    cmd.Parameters.Add("@id", SqlDbType.Int).Value = idVenta;
+                    using (var dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                            venta.Renglones.Add(new LineaDevolvible
+                            {
+                                IdProducto = (int)dr["id_producto"],
+                                Descripcion = (string)dr["descripcion"],
+                                PrecioUnitario = (decimal)dr["precio_unitario"],
+                                AlicuotaIva = (decimal)dr["alicuota_iva"],
+                                Vendida = (decimal)dr["vendida"],
+                                Devuelta = (decimal)dr["devuelta"]
+                            });
+                    }
+                }
+
+                return venta;
+            }
+        }
+
+        /// <summary>
+        /// Guarda la nota de crédito en una transacción: bloquea la venta original, comprueba otra vez
+        /// que no se devuelva más de lo vendido (dos personas podrían estar devolviendo a la vez), toma
+        /// el siguiente número, graba cabecera y renglones, devuelve el stock al depósito y registra la
+        /// salida de dinero de la caja, además de la auditoría. Si algo falla no queda nada a medias.
+        /// </summary>
+        public static VentaRegistrada RegistrarNotaCredito(NotaCreditoEdit nota, int idTipoNotaCredito,
+                                                           int puntoVenta, string resumenAuditoria)
+        {
+            using (var cn = Db.AbrirConexion())
+            using (var tx = cn.BeginTransaction())
+            {
+                try
+                {
+                    // 1) La venta original: se bloquea y se comprueba que se le pueda hacer una nota.
+                    int? idCliente;
+                    using (var cmd = new SqlCommand(@"
+SELECT vc.id_cliente, vc.estado, tc.signo
+FROM        dbo.Venta_cabecera   vc WITH (UPDLOCK, HOLDLOCK)
+INNER JOIN  dbo.Tipo_comprobante tc ON tc.id_tipo_comprobante = vc.id_tipo_comprobante
+WHERE vc.id_venta = @id;", cn, tx))
+                    {
+                        cmd.Parameters.Add("@id", SqlDbType.Int).Value = nota.IdVentaOriginal;
+                        using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
+                        {
+                            if (!dr.Read())
+                                throw new NotaCreditoInvalidaException(CausaNotaCredito.VentaInexistente);
+
+                            if ((string)dr["estado"] != "EMITIDA" || Convert.ToInt32(dr["signo"]) != 1)
+                                throw new NotaCreditoInvalidaException(CausaNotaCredito.NoSeAdmiteNotaDeCredito);
+
+                            idCliente = dr["id_cliente"] as int?;
+                        }
+                    }
+
+                    // 2) Cada renglón: no se devuelve más de lo que se vendió menos lo ya devuelto.
+                    foreach (RenglonVenta r in nota.Renglones)
+                    {
+                        decimal vendida, devuelta;
+
+                        using (var cmd = new SqlCommand(@"
+SELECT ISNULL(SUM(cantidad), 0) FROM dbo.Venta_detalle
+WHERE id_venta = @id AND id_producto = @producto AND precio_unitario = @precio;", cn, tx))
+                        {
+                            cmd.Parameters.Add("@id", SqlDbType.Int).Value = nota.IdVentaOriginal;
+                            cmd.Parameters.Add("@producto", SqlDbType.Int).Value = r.IdProducto;
+                            AgregarDecimal(cmd, "@precio", r.PrecioUnitario, 12, 2);
+                            vendida = (decimal)cmd.ExecuteScalar();
+                        }
+
+                        using (var cmd = new SqlCommand(@"
+SELECT ISNULL(SUM(nd.cantidad), 0)
+FROM        dbo.Venta_cabecera nc
+INNER JOIN  dbo.Venta_detalle  nd ON nd.id_venta = nc.id_venta
+WHERE nc.id_venta_anulada = @id AND nd.id_producto = @producto AND nd.precio_unitario = @precio;", cn, tx))
+                        {
+                            cmd.Parameters.Add("@id", SqlDbType.Int).Value = nota.IdVentaOriginal;
+                            cmd.Parameters.Add("@producto", SqlDbType.Int).Value = r.IdProducto;
+                            AgregarDecimal(cmd, "@precio", r.PrecioUnitario, 12, 2);
+                            devuelta = (decimal)cmd.ExecuteScalar();
+                        }
+
+                        decimal disponible = vendida - devuelta;
+                        if (r.Cantidad > disponible)
+                            throw new NotaCreditoInvalidaException(
+                                CausaNotaCredito.CantidadExcedida, r.IdProducto, disponible > 0 ? disponible : 0);
+                    }
+
+                    // 3) Número correlativo de la nota y cabecera (apunta a la venta que corrige).
+                    long numero = SiguienteNumero(cn, tx, idTipoNotaCredito, puntoVenta);
+                    int idNota;
+                    DateTime fecha;
+
+                    using (var cmd = new SqlCommand(@"
+INSERT INTO dbo.Venta_cabecera
+    (id_tipo_comprobante, punto_venta, numero_comprobante, id_cliente, id_usuario, id_caja_sesion,
+     subtotal, descuento, importe_neto, importe_iva, total, id_venta_anulada, observaciones)
+VALUES
+    (@tipo, @punto_venta, @numero, @cliente, @usuario, @sesion,
+     @total, 0, @neto, @iva, @total, @original, @motivo);
+SELECT id_venta, fecha_hora FROM dbo.Venta_cabecera WHERE id_venta = SCOPE_IDENTITY();", cn, tx))
+                    {
+                        cmd.Parameters.Add("@tipo", SqlDbType.Int).Value = idTipoNotaCredito;
+                        cmd.Parameters.Add("@punto_venta", SqlDbType.Int).Value = puntoVenta;
+                        cmd.Parameters.Add("@numero", SqlDbType.BigInt).Value = numero;
+                        cmd.Parameters.Add("@cliente", SqlDbType.Int).Value = (object)idCliente ?? DBNull.Value;
+                        cmd.Parameters.Add("@usuario", SqlDbType.Int).Value = nota.IdUsuario;
+                        cmd.Parameters.Add("@sesion", SqlDbType.Int).Value = nota.IdCajaSesion;
+                        cmd.Parameters.Add("@original", SqlDbType.Int).Value = nota.IdVentaOriginal;
+                        cmd.Parameters.Add("@motivo", SqlDbType.NVarChar, 300).Value = nota.Motivo;
+                        AgregarDecimal(cmd, "@total", nota.Total, 12, 2);
+                        AgregarDecimal(cmd, "@neto", nota.ImporteNeto, 12, 2);
+                        AgregarDecimal(cmd, "@iva", nota.ImporteIva, 12, 2);
+
+                        using (var dr = cmd.ExecuteReader())
+                        {
+                            dr.Read();
+                            idNota = dr.GetInt32(0);
+                            fecha = dr.GetDateTime(1);
+                        }
+                    }
+
+                    // 4) Renglones de la nota y vuelta del stock al depósito.
+                    InsertarRenglones(cn, tx, idNota, nota.Renglones);
+
+                    foreach (RenglonVenta r in nota.Renglones)
+                    {
+                        using (var cmd = new SqlCommand(
+                            "UPDATE dbo.Producto SET stock = stock + @cantidad WHERE id_producto = @producto;", cn, tx))
+                        {
+                            cmd.Parameters.Add("@producto", SqlDbType.Int).Value = r.IdProducto;
+                            AgregarDecimal(cmd, "@cantidad", r.Cantidad, 12, 3);
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    // 5) La devolución del dinero: un pago de la nota y su egreso de caja.
+                    using (var cmd = new SqlCommand(@"
+INSERT INTO dbo.Venta_pago (id_venta, id_medio_pago, importe) VALUES (@nota, @medio, @importe);
+INSERT INTO dbo.Movimiento_caja
+    (id_caja_sesion, id_usuario, id_medio_pago, id_venta, tipo, concepto, monto, observaciones)
+VALUES
+    (@sesion, @usuario, @medio, @nota, 'EGRESO', N'Nota de crédito', @importe, @motivo);", cn, tx))
+                    {
+                        cmd.Parameters.Add("@nota", SqlDbType.Int).Value = idNota;
+                        cmd.Parameters.Add("@medio", SqlDbType.Int).Value = nota.IdMedioPago;
+                        cmd.Parameters.Add("@sesion", SqlDbType.Int).Value = nota.IdCajaSesion;
+                        cmd.Parameters.Add("@usuario", SqlDbType.Int).Value = nota.IdUsuario;
+                        cmd.Parameters.Add("@motivo", SqlDbType.NVarChar, 300).Value = nota.Motivo;
+                        AgregarDecimal(cmd, "@importe", nota.Total, 12, 2);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    ServicioAuditoria.Registrar(
+                        "ALTA", "Venta_cabecera", idNota,
+                        valorAnterior: null,
+                        valorNuevo: resumenAuditoria,
+                        idUsuario: nota.IdUsuario,
+                        cn: cn, tx: tx);
+
+                    tx.Commit();
+                    return new VentaRegistrada { IdVenta = idNota, Numero = numero, FechaHora = fecha };
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
+                }
             }
         }
         /// <summary>

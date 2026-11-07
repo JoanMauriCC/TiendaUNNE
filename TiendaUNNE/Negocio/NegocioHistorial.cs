@@ -15,13 +15,16 @@ namespace TiendaUNNE
 
     /// <summary>
     /// Historial de ventas: lista de lo vendido y reimpresión de cualquier comprobante por si se
-    /// extravió. Puede verlo cualquier rol que use la Caja. Reimprimir no modifica nada: arma de nuevo
+    /// extravió, y punto de partida para emitir una nota de crédito. Puede verlo cualquier rol que use la Caja. Reimprimir no modifica nada: arma de nuevo
     /// el comprobante con lo que quedó guardado y lo marca como «REIMPRESIÓN», sin vuelto (el vuelto
     /// no se guarda: en la base quedan los pagos ya descontados).
     /// </summary>
     public static class NegocioHistorial
     {
         public const string EstadoAnulada = "ANULADA";
+
+        /// <summary>Solo el Administrador y el Supervisor emiten notas de crédito: devuelven plata y stock.</summary>
+        public static bool PuedeEmitirNotaCredito => NegocioNotaCredito.PuedeEmitir;
 
         /// <summary>Tope de filas que trae la lista: alcanza para buscar y no carga la base entera.</summary>
         public const int MaximoDeVentas = 300;
@@ -71,19 +74,23 @@ namespace TiendaUNNE
             dt.Columns.Add("Cliente", typeof(string));
             dt.Columns.Add("Total", typeof(decimal));
             dt.Columns.Add("Estado", typeof(string));
+            dt.Columns.Add("Signo", typeof(int));
 
             foreach (VentaListada v in ServicioVenta.Listar(idSesion, desde, MaximoDeVentas))
             {
                 dt.Rows.Add(v.IdVenta, v.Fecha, v.Comprobante,
                     NegocioComprobante.FormatearNumero(v.PuntoVenta, v.Numero),
-                    v.Cliente, v.Total, v.Estado);
+                    v.Cliente, v.Total * v.Signo, v.Estado, v.Signo);
             }
 
             return dt;
         }
 
-        /// <summary>El comprobante de una venta ya emitida, listo para mostrarlo y guardarlo de nuevo en PDF.</summary>
-        public static ComprobanteVista ObtenerComprobante(int idVenta)
+        /// <summary>
+        /// El comprobante de una venta o nota de crédito ya emitida, listo para mostrarlo y guardarlo en PDF.
+        /// <paramref name="esCopia"/> en true lo marca como reimpresión; en false (recién emitido) no.
+        /// </summary>
+        public static ComprobanteVista ObtenerComprobante(int idVenta, bool esCopia = true)
         {
             VentaCompleta v = ServicioVenta.ObtenerCompleta(idVenta)
                 ?? throw new ReglaNegocioException("Esa venta ya no existe.");
@@ -98,7 +105,7 @@ namespace TiendaUNNE
             {
                 Codigo = v.CodigoTipo,
                 Nombre = v.NombreTipo,
-                DiscriminaIva = discrimina,
+                DiscriminaIva = discrimina && v.ImporteIva > 0,
                 PuntoVenta = v.PuntoVenta,
                 Numero = v.Numero,
                 NumeroFormateado = NegocioComprobante.FormatearNumero(v.PuntoVenta, v.Numero),
@@ -113,7 +120,12 @@ namespace TiendaUNNE
                 ImporteIva = v.ImporteIva,
                 Total = v.Total,
                 Vuelto = 0,
-                EsCopia = true,
+                EsCopia = esCopia,
+                EsNotaCredito = v.Signo < 0,
+                ComprobanteAsociado = v.AsociadoNumero.HasValue
+                    ? v.AsociadoTipo + " " + NegocioComprobante.FormatearNumero(v.AsociadoPunto ?? 0, v.AsociadoNumero.Value)
+                    : null,
+                Motivo = v.Signo < 0 ? v.Motivo : null,
                 Anulada = string.Equals(v.Estado, EstadoAnulada, StringComparison.OrdinalIgnoreCase)
             };
 

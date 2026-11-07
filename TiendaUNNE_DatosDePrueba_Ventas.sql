@@ -125,16 +125,22 @@ SET fecha_hora = CASE
     END;
 
 -- Cliente: 3 de cada 10 son a consumidor final; el resto, con preferencia por los primeros de la lista.
+-- El sorteo se guarda primero en #Sorteo: con NEWID() dentro de una subconsulta, el motor la
+-- reevalúa en cada fila del JOIN y los resultados no coinciden.
+SELECT id,
+       1 + CAST(12.0 * POWER((ABS(CHECKSUM(NEWID())) % 10000) / 10000.0, 1.3) AS INT) AS orden,
+       ABS(CHECKSUM(NEWID())) % 100 AS dado
+INTO   #Sorteo
+FROM   #V;
+
 UPDATE v
 SET    id_cliente = c.id_cliente,
        condicion  = c.condicion_iva
 FROM   #V v
-INNER JOIN (
-    SELECT id, 1 + CAST(12.0 * POWER((ABS(CHECKSUM(NEWID())) % 10000) / 10000.0, 1.3) AS INT) AS orden
-    FROM   #V
-    WHERE  ABS(CHECKSUM(NEWID())) % 100 >= 30
-) x ON x.id = v.id
+INNER JOIN #Sorteo x ON x.id = v.id AND x.dado >= 30
 INNER JOIN #Cli c ON c.orden = CASE WHEN x.orden > 12 THEN 12 ELSE x.orden END;
+
+DROP TABLE #Sorteo;
 
 -- Comprobante según el cliente: Responsable Inscripto -> Factura A o Ticket; el resto -> Factura B o Ticket.
 UPDATE #V

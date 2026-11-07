@@ -101,15 +101,16 @@ WHERE s.id_caja = @id_caja AND s.estado = 'ABIERTA';";
 
         /// <summary>
         /// Total cobrado en efectivo durante ese turno, según los pagos de sus ventas
-        /// emitidas. Las ventas anuladas no suman.
+        /// emitidas, y le resta lo devuelto en efectivo con notas de crédito. Las ventas anuladas no suman.
         /// </summary>
         public static decimal ObtenerEfectivoCobrado(int idCajaSesion)
         {
             const string sql = @"
-SELECT ISNULL(SUM(vp.importe), 0)
-FROM        dbo.Venta_pago     vp
-INNER JOIN  dbo.Venta_cabecera vc ON vc.id_venta      = vp.id_venta
-INNER JOIN  dbo.Medio_pago     mp ON mp.id_medio_pago = vp.id_medio_pago
+SELECT ISNULL(SUM(vp.importe * tc.signo), 0)
+FROM        dbo.Venta_pago       vp
+INNER JOIN  dbo.Venta_cabecera   vc ON vc.id_venta      = vp.id_venta
+INNER JOIN  dbo.Tipo_comprobante tc ON tc.id_tipo_comprobante = vc.id_tipo_comprobante
+INNER JOIN  dbo.Medio_pago       mp ON mp.id_medio_pago = vp.id_medio_pago
 WHERE vc.id_caja_sesion = @id_caja_sesion
   AND vc.estado         = 'EMITIDA'
   AND mp.es_efectivo    = 1;";

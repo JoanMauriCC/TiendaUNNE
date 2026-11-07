@@ -86,7 +86,8 @@ namespace TiendaUNNE
             {
                 reporte.Filas.Add(new[]
                 {
-                    "Nº " + Convert.ToInt64(fila["Numero"]).ToString(NegocioVenta.FormatoNumeroTicket),
+                    (Convert.ToBoolean(fila["EsNotaCredito"]) ? "NC Nº " : "Nº ")
+                        + Convert.ToInt64(fila["Numero"]).ToString(NegocioVenta.FormatoNumeroTicket),
                     Convert.ToDateTime(fila["Fecha"]).ToString("HH:mm"),
                     Importe(Convert.ToDecimal(fila["Total"]))
                 });

@@ -145,6 +145,8 @@ namespace TiendaUNNE
                 sb.AppendLine(Centrar("*** REIMPRESIÓN ***"));
             if (v.Anulada)
                 sb.AppendLine(Centrar("*** VENTA ANULADA ***"));
+            if (v.EsNotaCredito && !string.IsNullOrEmpty(v.ComprobanteAsociado))
+                sb.AppendLine(Centrar("Corrige: " + v.ComprobanteAsociado));
             sb.AppendLine();
             sb.AppendLine("Fecha:   " + v.FechaHora.ToString("dd/MM/yyyy HH:mm"));
             if (!string.IsNullOrWhiteSpace(v.Cajero))
@@ -170,20 +172,37 @@ namespace TiendaUNNE
                     v.ImporteIva.ToString(NegocioVenta.FormatoImporte)));
             }
 
-            sb.AppendLine(Dos("TOTAL  $", v.Total.ToString(NegocioVenta.FormatoImporte)));
+            sb.AppendLine(Dos(v.EsNotaCredito ? "TOTAL DEVUELTO  $" : "TOTAL  $",
+                v.Total.ToString(NegocioVenta.FormatoImporte)));
             sb.AppendLine(raya);
 
             foreach (ComprobantePago p in v.Pagos)
-                sb.AppendLine(Dos(Recortar(p.Medio, Ancho - 14), p.Importe.ToString(NegocioVenta.FormatoImporte)));
+                sb.AppendLine(Dos(Recortar((v.EsNotaCredito ? "Devuelto por " : string.Empty) + p.Medio, Ancho - 14),
+                    p.Importe.ToString(NegocioVenta.FormatoImporte)));
 
             if (v.Vuelto > 0)
                 sb.AppendLine(Dos("VUELTO", v.Vuelto.ToString(NegocioVenta.FormatoImporte)));
 
+            if (v.EsNotaCredito && !string.IsNullOrWhiteSpace(v.Motivo))
+            {
+                sb.AppendLine();
+                sb.AppendLine("Motivo:");
+                foreach (string linea in Partir(v.Motivo, Ancho))
+                    sb.AppendLine(linea);
+            }
+
             sb.AppendLine();
-            sb.AppendLine(Centrar(v.Codigo == NegocioComprobante.Ticket
-                ? "Ticket interno, no válido como factura"
-                : "Comprobante interno, sin CAE de ARCA"));
-            sb.AppendLine(Centrar("¡Gracias por tu compra!"));
+            if (v.EsNotaCredito)
+            {
+                sb.AppendLine(Centrar("Comprobante interno, sin CAE de ARCA"));
+            }
+            else
+            {
+                sb.AppendLine(Centrar(v.Codigo == NegocioComprobante.Ticket
+                    ? "Ticket interno, no válido como factura"
+                    : "Comprobante interno, sin CAE de ARCA"));
+                sb.AppendLine(Centrar("¡Gracias por tu compra!"));
+            }
 
             return sb.ToString();
         }
@@ -199,6 +218,22 @@ namespace TiendaUNNE
         {
             int espacio = Math.Max(1, Ancho - izquierda.Length - derecha.Length);
             return izquierda + new string(' ', espacio) + derecha;
+        }
+
+        /// <summary>Parte un texto largo en líneas del ancho del ticket, cortando en los espacios.</summary>
+        private static System.Collections.Generic.IEnumerable<string> Partir(string texto, int maximo)
+        {
+            string linea = string.Empty;
+            foreach (string palabra in texto.Split(' '))
+            {
+                if (linea.Length > 0 && linea.Length + 1 + palabra.Length > maximo)
+                {
+                    yield return linea;
+                    linea = string.Empty;
+                }
+                linea = linea.Length == 0 ? palabra : linea + " " + palabra;
+            }
+            if (linea.Length > 0) yield return linea;
         }
 
         private static string Recortar(string texto, int maximo)

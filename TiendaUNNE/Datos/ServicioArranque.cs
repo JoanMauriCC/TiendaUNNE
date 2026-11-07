@@ -100,7 +100,15 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Tipo_comprobante WHERE codigo = N'FB')
 
 IF NOT EXISTS (SELECT 1 FROM dbo.Tipo_comprobante WHERE codigo = N'FA')
     INSERT INTO dbo.Tipo_comprobante (codigo, nombre, letra, signo)
-    VALUES (N'FA', N'Factura A', 'A', 1);";
+    VALUES (N'FA', N'Factura A', 'A', 1);
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Tipo_comprobante WHERE codigo = N'NCA')
+    INSERT INTO dbo.Tipo_comprobante (codigo, nombre, letra, signo)
+    VALUES (N'NCA', N'Nota de crédito A', 'A', -1);
+
+IF NOT EXISTS (SELECT 1 FROM dbo.Tipo_comprobante WHERE codigo = N'NCB')
+    INSERT INTO dbo.Tipo_comprobante (codigo, nombre, letra, signo)
+    VALUES (N'NCB', N'Nota de crédito B', 'B', -1);";
 
             using (var cn = Db.AbrirConexion())
             using (var cmd = new SqlCommand(sql, cn))

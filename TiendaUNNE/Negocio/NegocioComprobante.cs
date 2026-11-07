@@ -18,6 +18,9 @@ namespace TiendaUNNE
         public const string FacturaB = "FB";
         public const string FacturaA = "FA";
 
+        public const string NotaCreditoA = "NCA";
+        public const string NotaCreditoB = "NCB";
+
         public const decimal AlicuotaIva = 21m;
 
         public static readonly TipoComprobanteItem[] Tipos =
@@ -27,9 +30,22 @@ namespace TiendaUNNE
             new TipoComprobanteItem { Codigo = FacturaA, Nombre = "Factura A", DiscriminaIva = true }
         };
 
+        /// <summary>Notas de crédito: no se eligen al cobrar, se emiten desde el historial de ventas.</summary>
+        public static readonly TipoComprobanteItem[] TiposNotaCredito =
+        {
+            new TipoComprobanteItem { Codigo = NotaCreditoA, Nombre = "Nota de crédito A", DiscriminaIva = true },
+            new TipoComprobanteItem { Codigo = NotaCreditoB, Nombre = "Nota de crédito B", DiscriminaIva = true }
+        };
+
+        /// <summary>La nota de crédito que corresponde a una venta: A para la Factura A; B para la Factura B y el Ticket.</summary>
+        public static string NotaCreditoPara(string codigoVenta)
+        {
+            return string.Equals(codigoVenta, FacturaA, StringComparison.OrdinalIgnoreCase) ? NotaCreditoA : NotaCreditoB;
+        }
+
         public static TipoComprobanteItem Buscar(string codigo)
         {
-            return Tipos.FirstOrDefault(t => string.Equals(t.Codigo, codigo, StringComparison.OrdinalIgnoreCase))
+            return Tipos.Concat(TiposNotaCredito).FirstOrDefault(t => string.Equals(t.Codigo, codigo, StringComparison.OrdinalIgnoreCase))
                 ?? throw new ReglaNegocioException("El tipo de comprobante no existe.");
         }
 

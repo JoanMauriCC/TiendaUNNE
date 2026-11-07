@@ -15,6 +15,9 @@ namespace TiendaUNNE
         public decimal Total { get; set; }
         public string Estado { get; set; }
 
+        /// <summary>1 en una venta; -1 en una nota de crédito (resta).</summary>
+        public int Signo { get; set; }
+
         /// <summary>Observación guardada en la venta (en ventas anuladas de antes, el motivo); null si no tiene.</summary>
         public string Motivo { get; set; }
     }
@@ -32,7 +35,15 @@ namespace TiendaUNNE
         public long Numero { get; set; }
         public DateTime Fecha { get; set; }
         public string Estado { get; set; }
+        public int Signo { get; set; }
         public string Cajero { get; set; }
+
+        /// <summary>En una nota de crédito: qué comprobante corrige (tipo, punto de venta y número); null en una venta.</summary>
+        public string AsociadoTipo { get; set; }
+        public int? AsociadoPunto { get; set; }
+        public long? AsociadoNumero { get; set; }
+
+        public string Motivo { get; set; }
 
         /// <summary>Null en una venta a consumidor final.</summary>
         public string ClienteNombre { get; set; }

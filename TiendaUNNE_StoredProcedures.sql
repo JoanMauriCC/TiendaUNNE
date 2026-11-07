@@ -240,27 +240,36 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    -- Cada tipo de comprobante tiene un "signo": 1 en una venta y -1 en una nota de crédito.
+    -- Lo gastado es neto de devoluciones, y una nota de crédito no cuenta como compra.
+    -- Solo figuran los clientes que compraron en el rango.
     SELECT  c.id_cliente                    AS IdCliente,
             p.apellido + N', ' + p.nombre   AS Cliente,
-            COUNT(*)                        AS Compras,
-            SUM(vc.total)                   AS Total,
-            AVG(vc.total)                   AS Promedio,
-            MAX(vc.fecha_hora)              AS Ultima
-    FROM        dbo.Venta_cabecera vc
-    INNER JOIN  dbo.Cliente        c ON c.id_cliente = vc.id_cliente
-    INNER JOIN  dbo.Persona        p ON p.id_persona = c.id_persona
+            COUNT(CASE WHEN tc.signo = 1 THEN 1 END)  AS Compras,
+            SUM(vc.total * tc.signo)                  AS Total,
+            ISNULL(SUM(vc.total * tc.signo)
+                   / NULLIF(COUNT(CASE WHEN tc.signo = 1 THEN 1 END), 0), 0) AS Promedio,
+            MAX(vc.fecha_hora)                        AS Ultima
+    FROM        dbo.Venta_cabecera   vc
+    INNER JOIN  dbo.Tipo_comprobante tc ON tc.id_tipo_comprobante = vc.id_tipo_comprobante
+    INNER JOIN  dbo.Cliente          c  ON c.id_cliente = vc.id_cliente
+    INNER JOIN  dbo.Persona          p  ON p.id_persona = c.id_persona
     WHERE vc.estado = 'EMITIDA' AND vc.fecha_hora >= @desde AND vc.fecha_hora < @hasta
     GROUP BY c.id_cliente, p.apellido, p.nombre
-    ORDER BY SUM(vc.total) DESC, p.apellido, p.nombre;
+    HAVING COUNT(CASE WHEN tc.signo = 1 THEN 1 END) > 0
+    ORDER BY SUM(vc.total * tc.signo) DESC, p.apellido, p.nombre;
 
     SELECT
         (SELECT COUNT(*) FROM dbo.Cliente
           WHERE fecha_alta >= @desde AND fecha_alta < @hasta)                      AS ClientesNuevos,
-        (SELECT COUNT(*) FROM dbo.Venta_cabecera
-          WHERE estado = 'EMITIDA' AND fecha_hora >= @desde AND fecha_hora < @hasta
-            AND id_cliente IS NULL)                                                AS VentasSinCliente,
-        (SELECT COUNT(*) FROM dbo.Venta_cabecera
-          WHERE estado = 'EMITIDA' AND fecha_hora >= @desde AND fecha_hora < @hasta) AS VentasTotales;
+        (SELECT COUNT(*) FROM dbo.Venta_cabecera vc
+           INNER JOIN dbo.Tipo_comprobante tc ON tc.id_tipo_comprobante = vc.id_tipo_comprobante
+          WHERE vc.estado = 'EMITIDA' AND vc.fecha_hora >= @desde AND vc.fecha_hora < @hasta
+            AND tc.signo = 1 AND vc.id_cliente IS NULL)                            AS VentasSinCliente,
+        (SELECT COUNT(*) FROM dbo.Venta_cabecera vc
+           INNER JOIN dbo.Tipo_comprobante tc ON tc.id_tipo_comprobante = vc.id_tipo_comprobante
+          WHERE vc.estado = 'EMITIDA' AND vc.fecha_hora >= @desde AND vc.fecha_hora < @hasta
+            AND tc.signo = 1)                                                      AS VentasTotales;
 END
 GO
 -------------------------------------------------------------------------------

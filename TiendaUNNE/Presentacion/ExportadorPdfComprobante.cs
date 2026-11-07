@@ -87,6 +87,13 @@ namespace TiendaUNNE
                 aviso.Format.Font.Color = new Color(180, 35, 24);
             }
 
+            if (v.EsNotaCredito && !string.IsNullOrEmpty(v.ComprobanteAsociado))
+            {
+                Paragraph corrige = seccion.AddParagraph("Corrige: " + v.ComprobanteAsociado);
+                corrige.Format.Font.Bold = true;
+                corrige.Format.Font.Size = 11;
+            }
+
             Paragraph fecha = seccion.AddParagraph(
                 "Fecha: " + v.FechaHora.ToString("dd/MM/yyyy HH:mm") +
                 (string.IsNullOrWhiteSpace(v.Cajero) ? string.Empty : "   ·   Atendió: " + v.Cajero));
@@ -181,8 +188,14 @@ namespace TiendaUNNE
                 Linea(tabla, "IVA " + NegocioComprobante.AlicuotaIva.ToString("0.##") + " %", v.ImporteIva, false);
             }
 
-            Row total = Linea(tabla, "TOTAL", v.Total, true);
+            Row total = Linea(tabla, v.EsNotaCredito ? "TOTAL DEVUELTO" : "TOTAL", v.Total, true);
             total.Shading.Color = ColorFondo;
+
+            if (v.EsNotaCredito && !string.IsNullOrWhiteSpace(v.Motivo))
+            {
+                Paragraph motivo = seccion.AddParagraph("Motivo: " + v.Motivo);
+                motivo.Format.SpaceBefore = Unit.FromCentimeter(0.4);
+            }
         }
 
         private static Row Linea(Table tabla, string rotulo, decimal importe, bool destacada)
@@ -209,14 +222,14 @@ namespace TiendaUNNE
         {
             if (v.Pagos.Count == 0) return;
 
-            Paragraph titulo = seccion.AddParagraph("Pagos");
+            Paragraph titulo = seccion.AddParagraph(v.EsNotaCredito ? "Devolución" : "Pagos");
             titulo.Format.Font.Size = 12;
             titulo.Format.Font.Bold = true;
             titulo.Format.SpaceBefore = Unit.FromCentimeter(0.6);
             titulo.Format.SpaceAfter = Unit.FromCentimeter(0.2);
 
             foreach (ComprobantePago p in v.Pagos)
-                seccion.AddParagraph(p.Medio + ":  $ " + p.Importe.ToString(NegocioVenta.FormatoImporte));
+                seccion.AddParagraph((v.EsNotaCredito ? "Devuelto por " : string.Empty) + p.Medio + ":  $ " + p.Importe.ToString(NegocioVenta.FormatoImporte));
 
             if (v.Vuelto > 0)
             {
@@ -227,7 +240,7 @@ namespace TiendaUNNE
 
         private static void AgregarPie(Section seccion, ComprobanteVista v)
         {
-            Paragraph nota = seccion.AddParagraph(v.Codigo == NegocioComprobante.Ticket
+            Paragraph nota = seccion.AddParagraph(!v.EsNotaCredito && v.Codigo == NegocioComprobante.Ticket
                 ? "Ticket interno. No es válido como factura."
                 : "Comprobante interno de TiendaUNNE. No incluye CAE de ARCA (AFIP).");
             nota.Format.Font.Size = 8;

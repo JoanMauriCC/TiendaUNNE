@@ -68,6 +68,14 @@ namespace TiendaUNNE
         /// <summary>True si se vuelve a imprimir un comprobante ya emitido (se aclara «REIMPRESIÓN»).</summary>
         public bool EsCopia { get; set; }
 
+        /// <summary>True en una nota de crédito: los importes son lo que se devuelve.</summary>
+        public bool EsNotaCredito { get; set; }
+
+        /// <summary>La factura o ticket que corrige una nota de crédito (ej. «Factura A 0001-00000023»).</summary>
+        public string ComprobanteAsociado { get; set; }
+
+        public string Motivo { get; set; }
+
         /// <summary>True si la venta figura como anulada (ventas de antes; se aclara en el comprobante).</summary>
         public bool Anulada { get; set; }
     }
