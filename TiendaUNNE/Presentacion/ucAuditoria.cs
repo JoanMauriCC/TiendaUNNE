@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace TiendaUNNE
@@ -10,30 +11,128 @@ namespace TiendaUNNE
     /// </summary>
     public partial class ucAuditoria : UserControl
     {
+        private static readonly Color ColorAntes = Color.FromArgb(180, 35, 24);
+        private static readonly Color ColorDespues = Color.FromArgb(21, 128, 61);
+
+        // Panel de detalle, debajo de la lista: se arma por código.
+        private readonly Panel panelDetalle = new Panel();
+        private readonly Label lblDetalleTitulo = new Label();
+        private readonly Label lblDetalleResumen = new Label();
+        private readonly DataGridView dgvDetalle = new DataGridView();
+        private readonly TextBox txtDetalle = new TextBox();
+
         public ucAuditoria()
         {
             InitializeComponent();
+            ArmarDetalle();
+        }
+
+        private void ArmarDetalle()
+        {
+            panelDetalle.Dock = DockStyle.Bottom;
+            panelDetalle.Height = 190;
+            panelDetalle.Padding = new Padding(0, 6, 0, 0);
+
+            var encabezado = new Panel { Dock = DockStyle.Top, Height = 46 };
+            lblDetalleTitulo.Font = new Font(Font, FontStyle.Bold);
+            lblDetalleTitulo.AutoSize = false;
+            lblDetalleTitulo.Dock = DockStyle.Top;
+            lblDetalleTitulo.Height = 22;
+            lblDetalleResumen.AutoSize = false;
+            lblDetalleResumen.Dock = DockStyle.Fill;
+            lblDetalleResumen.ForeColor = Color.FromArgb(91, 98, 112);
+            encabezado.Controls.Add(lblDetalleResumen);
+            encabezado.Controls.Add(lblDetalleTitulo);
+
+            dgvDetalle.Dock = DockStyle.Fill;
+            dgvDetalle.ReadOnly = true;
+            dgvDetalle.AllowUserToAddRows = false;
+            dgvDetalle.AllowUserToDeleteRows = false;
+            dgvDetalle.AllowUserToResizeRows = false;
+            dgvDetalle.RowHeadersVisible = false;
+            dgvDetalle.MultiSelect = false;
+            dgvDetalle.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvDetalle.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvDetalle.BackgroundColor = Color.White;
+            dgvDetalle.BorderStyle = BorderStyle.FixedSingle;
+            dgvDetalle.Columns.Add("Campo", "Dato");
+            dgvDetalle.Columns.Add("Antes", "Antes");
+            dgvDetalle.Columns.Add("Despues", "Ahora");
+            dgvDetalle.Columns["Campo"].FillWeight = 22;
+            dgvDetalle.Columns["Antes"].FillWeight = 39;
+            dgvDetalle.Columns["Despues"].FillWeight = 39;
+            dgvDetalle.Columns["Antes"].DefaultCellStyle.ForeColor = ColorAntes;
+            dgvDetalle.Columns["Despues"].DefaultCellStyle.ForeColor = ColorDespues;
+            dgvDetalle.SelectionChanged += (s, e) => dgvDetalle.ClearSelection();
+
+            txtDetalle.Dock = DockStyle.Fill;
+            txtDetalle.Multiline = true;
+            txtDetalle.ReadOnly = true;
+            txtDetalle.ScrollBars = ScrollBars.Vertical;
+            txtDetalle.BackColor = Color.White;
+            txtDetalle.BorderStyle = BorderStyle.FixedSingle;
+            txtDetalle.Visible = false;
+
+            panelDetalle.Controls.Add(dgvDetalle);
+            panelDetalle.Controls.Add(txtDetalle);
+            panelDetalle.Controls.Add(encabezado);
+            Controls.Add(panelDetalle);
+
+            // CurrentCellChanged y no SelectionChanged: este último salta antes de que la fila actual cambie.
+            dgvAuditoria.CurrentCellChanged += (s, e) => MostrarDetalle();
+            dgvAuditoria.DataSourceChanged += (s, e) => MostrarDetalle();
+        }
+
+        /// <summary>Muestra, debajo de la lista, el detalle del movimiento elegido.</summary>
+        private void MostrarDetalle()
+        {
+            var fila = dgvAuditoria.CurrentRow == null ? null : dgvAuditoria.CurrentRow.DataBoundItem as DataRowView;
+            if (fila == null)
+            {
+                lblDetalleTitulo.Text = "Detalle";
+                lblDetalleResumen.Text = "Elegí un movimiento de la lista para ver qué cambió.";
+                dgvDetalle.Rows.Clear();
+                dgvDetalle.Visible = false;
+                txtDetalle.Visible = false;
+                return;
+            }
+
+            lblDetalleTitulo.Text = Convert.ToString(fila["Resumen"]);
+            lblDetalleResumen.Text = string.Format("{0:dd/MM/yyyy HH:mm:ss}  ·  {1}  ·  {2} · {3}",
+                fila["Fecha"], fila["Usuario"], fila["Modulo"], fila["Accion"]);
+
+            DetalleAuditoria detalle = NegocioAuditoria.Detalle(
+                Convert.ToString(fila["Accion"]), Convert.ToString(fila["Tabla"]),
+                Convert.ToString(fila["ValorAnterior"]), Convert.ToString(fila["ValorNuevo"]));
+
+            dgvDetalle.Rows.Clear();
+
+            if (detalle.TieneFilas)
+            {
+                foreach (FilaDetalle f in detalle.Filas)
+                    dgvDetalle.Rows.Add(f.Campo, f.Antes, f.Despues);
+                dgvDetalle.ClearSelection();
+                dgvDetalle.Visible = true;
+                txtDetalle.Visible = false;
+                return;
+            }
+
+            var texto = new System.Text.StringBuilder();
+            if (!string.IsNullOrEmpty(detalle.TextoAntes))
+                texto.AppendLine("ANTES").AppendLine(detalle.TextoAntes).AppendLine();
+            if (!string.IsNullOrEmpty(detalle.TextoDespues))
+                texto.AppendLine(string.IsNullOrEmpty(detalle.TextoAntes) ? "REGISTRO" : "DESPUÉS").Append(detalle.TextoDespues);
+
+            txtDetalle.Text = texto.ToString();
+            txtDetalle.SelectionStart = 0;
+            txtDetalle.Visible = true;
+            dgvDetalle.Visible = false;
         }
 
         private void ucAuditoria_Load(object sender, EventArgs e)
         {
             cboTabla.Items.AddRange(NegocioAuditoria.Modulos().ToArray());
-            dgvAuditoria.CellToolTipTextNeeded += dgvAuditoria_CellToolTipTextNeeded;
             LimpiarFiltros();          // deja los filtros en su estado inicial y carga la grilla
-        }
-
-        // Mientras no hay panel de detalle, el texto completo del movimiento se ve al apoyar el mouse en el resumen.
-        private void dgvAuditoria_CellToolTipTextNeeded(object sender, DataGridViewCellToolTipTextNeededEventArgs e)
-        {
-            if (e.RowIndex < 0 || dgvAuditoria.Columns[e.ColumnIndex].Name != "Resumen") return;
-
-            var fila = dgvAuditoria.Rows[e.RowIndex].DataBoundItem as DataRowView;
-            if (fila == null) return;
-
-            string antes = Convert.ToString(fila["ValorAnterior"]);
-            string despues = Convert.ToString(fila["ValorNuevo"]);
-            e.ToolTipText = (antes.Length > 0 ? "Antes: " + antes + "\n" : string.Empty) +
-                            (despues.Length > 0 ? "Después: " + despues : string.Empty);
         }
 
         private void CargarGrilla()

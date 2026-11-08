@@ -55,6 +55,12 @@ namespace TiendaUNNE
             }
         }
 
+        /// <summary>El detalle de un movimiento de la lista: solo lo que cambió, o el texto completo.</summary>
+        public static DetalleAuditoria Detalle(string accion, string tabla, string anterior, string nuevo)
+        {
+            return ResumenAuditoria.Detalle(accion, tabla, anterior, nuevo);
+        }
+
         /// <summary>
         /// Devuelve los movimientos que cumplen los filtros, ya resumidos para la lista. El rango se
         /// interpreta por día completo: "hasta el 5" incluye todo el día 5, así que se consulta como

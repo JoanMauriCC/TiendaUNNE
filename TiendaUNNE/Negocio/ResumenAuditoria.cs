@@ -31,8 +31,15 @@ namespace TiendaUNNE
                 { "Tel", "teléfono" },
                 { "Email", "email" },
                 { "FNac", "nacimiento" },
-                { "Perfil", "perfil" }
+                { "Perfil", "perfil" },
+                { "Activo", "activo" },
+                { "Usuario", "usuario" },
+                { Contrasena, "contraseña" }
             };
+
+        // Cuando se cambia la contraseña, el texto guardado lo anota al final con esta marca (nunca la clave).
+        private const string Contrasena = "Contraseña";
+        private const string MarcaContrasena = @"\s*\[contraseña actualizada\]";
 
         /// <summary>La frase corta de un movimiento.</summary>
         public static string De(string accion, string tabla, string anterior, string nuevo)
@@ -54,6 +61,93 @@ namespace TiendaUNNE
         }
 
         // ---------------------------------------------------------------------
+        // Detalle de un movimiento: solo lo que cambió
+        // ---------------------------------------------------------------------
+
+        /// <summary>
+        /// El detalle de un movimiento. En usuarios, categorías y productos separa los datos y deja solo
+        /// los que cambiaron («Precio: 12.000 → 15.000»); en el resto (caja, ventas, backup) muestra el
+        /// texto completo con una idea por renglón.
+        /// </summary>
+        public static DetalleAuditoria Detalle(string accion, string tabla, string anterior, string nuevo)
+        {
+            anterior = (anterior ?? string.Empty).Trim();
+            nuevo = (nuevo ?? string.Empty).Trim();
+
+            var detalle = new DetalleAuditoria();
+            List<KeyValuePair<string, string>> campoNuevo = Campos(nuevo);
+            List<KeyValuePair<string, string>> campoAnterior = Campos(anterior);
+
+            bool esRegistro = tabla != "Caja_sesion" && tabla != "Venta_cabecera" && tabla != "Cliente"
+                              && tabla != NegocioBackup.TablaAuditoria;
+
+            if (esRegistro && (campoNuevo.Count > 0 || campoAnterior.Count > 0))
+            {
+                switch ((accion ?? string.Empty).ToUpperInvariant())
+                {
+                    case "ALTA":
+                        foreach (KeyValuePair<string, string> c in campoNuevo)
+                            detalle.Filas.Add(Fila(c.Key, null, c.Value));
+                        break;
+
+                    case "BAJA":
+                        detalle.Filas.Add(new FilaDetalle { Campo = "Estado", Antes = "Activo", Despues = "Dado de baja" });
+                        break;
+
+                    default:
+                        if (nuevo.IndexOf("reactivad", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            detalle.Filas.Add(new FilaDetalle { Campo = "Estado", Antes = "Dado de baja", Despues = "Activo" });
+                            break;
+                        }
+
+                        foreach (KeyValuePair<string, string> c in campoNuevo)
+                        {
+                            string previo = Previo(campoAnterior, c.Key);
+                            if (previo != null && !string.Equals(previo, c.Value, StringComparison.Ordinal))
+                                detalle.Filas.Add(Fila(c.Key, previo, c.Value));
+                        }
+                        break;
+                }
+
+                if (detalle.TieneFilas) return detalle;
+
+                detalle.TextoDespues = "No cambió ningún dato de los que se muestran (por ejemplo, solo se cambió la contraseña).";
+                return detalle;
+            }
+
+            detalle.TextoAntes = UnaIdeaPorRenglon(anterior);
+            detalle.TextoDespues = UnaIdeaPorRenglon(nuevo);
+            return detalle;
+        }
+
+        private static FilaDetalle Fila(string clave, string antes, string despues)
+        {
+            string campo = Etiqueta(clave);
+            return new FilaDetalle
+            {
+                Campo = char.ToUpperInvariant(campo[0]) + campo.Substring(1),
+                Antes = antes == null ? string.Empty : Legible(antes),
+                Despues = Legible(despues)
+            };
+        }
+
+        private static string Legible(string valor)
+        {
+            if (valor.Length == 0) return "(vacío)";
+            if (string.Equals(valor, "True", StringComparison.OrdinalIgnoreCase)) return "Sí";
+            if (string.Equals(valor, "False", StringComparison.OrdinalIgnoreCase)) return "No";
+            return valor;
+        }
+
+        private static string UnaIdeaPorRenglon(string texto)
+        {
+            return string.IsNullOrWhiteSpace(texto)
+                ? string.Empty
+                : texto.Replace("; ", Environment.NewLine).Replace(". Llave", Environment.NewLine + "Llave");
+        }
+
+        // ---------------------------------------------------------------------
         // Altas, bajas y modificaciones de usuarios, categorías y productos
         // ---------------------------------------------------------------------
 
@@ -65,7 +159,10 @@ namespace TiendaUNNE
             List<KeyValuePair<string, string>> campoAnterior = Campos(anterior);
 
             // Un texto sin campos (por ejemplo «Alta automática del administrador inicial») se muestra tal cual.
-            List<KeyValuePair<string, string>> fuente = campoNuevo.Count > 0 ? campoNuevo : campoAnterior;
+            // Los datos que identifican al registro (nombre, DNI) están en el lado que los trae: en una baja,
+            // el valor nuevo es solo «activo = 0» y el nombre está en el anterior.
+            List<KeyValuePair<string, string>> fuente = Valor(campoNuevo, "Nombre") != null ? campoNuevo : campoAnterior;
+            if (fuente.Count == 0) fuente = campoNuevo;
             if (fuente.Count == 0) return null;
 
             string nombre = Valor(fuente, "Nombre");
@@ -101,11 +198,18 @@ namespace TiendaUNNE
             var cambios = new List<string>();
             foreach (KeyValuePair<string, string> campo in despues)
             {
-                string previo = Valor(antes, campo.Key);
+                string previo = Previo(antes, campo.Key);
                 if (previo != null && !string.Equals(previo, campo.Value, StringComparison.Ordinal))
                     cambios.Add(Etiqueta(campo.Key));
             }
             return cambios;
+        }
+
+        // La contraseña solo figura cuando cambió, así que antes no estaba: se cuenta igual como cambio.
+        private static string Previo(List<KeyValuePair<string, string>> antes, string clave)
+        {
+            string previo = Valor(antes, clave);
+            return previo == null && clave == Contrasena ? "—" : previo;
         }
 
         // ---------------------------------------------------------------------
@@ -177,6 +281,10 @@ namespace TiendaUNNE
             var campos = new List<KeyValuePair<string, string>>();
             if (string.IsNullOrWhiteSpace(texto)) return campos;
 
+            bool cambioContrasena = Regex.IsMatch(texto, MarcaContrasena, RegexOptions.IgnoreCase);
+            if (cambioContrasena)
+                texto = Regex.Replace(texto, MarcaContrasena, string.Empty, RegexOptions.IgnoreCase);
+
             foreach (string parte in texto.Split(new[] { "; " }, StringSplitOptions.None))
             {
                 int igual = parte.IndexOf('=');
@@ -192,6 +300,9 @@ namespace TiendaUNNE
                     campos[campos.Count - 1] = new KeyValuePair<string, string>(ultimo.Key, ultimo.Value + "; " + parte);
                 }
             }
+
+            if (cambioContrasena)
+                campos.Add(new KeyValuePair<string, string>(Contrasena, "Actualizada"));
             return campos;
         }
 
