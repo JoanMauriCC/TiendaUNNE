@@ -17,8 +17,23 @@ namespace TiendaUNNE
 
         private void ucAuditoria_Load(object sender, EventArgs e)
         {
-            cboTabla.Items.AddRange(NegocioAuditoria.TablasAuditables().ToArray());
+            cboTabla.Items.AddRange(NegocioAuditoria.Modulos().ToArray());
+            dgvAuditoria.CellToolTipTextNeeded += dgvAuditoria_CellToolTipTextNeeded;
             LimpiarFiltros();          // deja los filtros en su estado inicial y carga la grilla
+        }
+
+        // Mientras no hay panel de detalle, el texto completo del movimiento se ve al apoyar el mouse en el resumen.
+        private void dgvAuditoria_CellToolTipTextNeeded(object sender, DataGridViewCellToolTipTextNeededEventArgs e)
+        {
+            if (e.RowIndex < 0 || dgvAuditoria.Columns[e.ColumnIndex].Name != "Resumen") return;
+
+            var fila = dgvAuditoria.Rows[e.RowIndex].DataBoundItem as DataRowView;
+            if (fila == null) return;
+
+            string antes = Convert.ToString(fila["ValorAnterior"]);
+            string despues = Convert.ToString(fila["ValorNuevo"]);
+            e.ToolTipText = (antes.Length > 0 ? "Antes: " + antes + "\n" : string.Empty) +
+                            (despues.Length > 0 ? "Después: " + despues : string.Empty);
         }
 
         private void CargarGrilla()
@@ -27,7 +42,8 @@ namespace TiendaUNNE
             {
                 Cursor = Cursors.WaitCursor;
 
-                string tabla = cboTabla.SelectedItem as string;
+                var modulo = cboTabla.SelectedItem as ModuloAuditoria;
+                string tabla = modulo == null ? null : modulo.Tabla;
                 DateTime? desde = dtpDesde.Checked ? dtpDesde.Value.Date : (DateTime?)null;
                 DateTime? hasta = dtpHasta.Checked ? dtpHasta.Value.Date : (DateTime?)null;
 
@@ -56,26 +72,35 @@ namespace TiendaUNNE
             SetHeader("Fecha", "Fecha y hora");
             SetHeader("Usuario", "Usuario");
             SetHeader("Accion", "Acción");
-            SetHeader("Tabla", "Tabla");
-            SetHeader("ValorAnterior", "Valor anterior");
-            SetHeader("ValorNuevo", "Valor nuevo");
+            SetHeader("Modulo", "Módulo");
+            SetHeader("Resumen", "Qué pasó");
 
-            if (dgvAuditoria.Columns.Contains("Fecha"))
-            {
-                dgvAuditoria.Columns["Fecha"].DefaultCellStyle.Format = NegocioAuditoria.FormatoFechaHora;
-                dgvAuditoria.Columns["Fecha"].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-                dgvAuditoria.Columns["Fecha"].Width = 140;
-            }
-            if (dgvAuditoria.Columns.Contains("Accion"))
-            {
-                dgvAuditoria.Columns["Accion"].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-                dgvAuditoria.Columns["Accion"].Width = 110;
-            }
-            if (dgvAuditoria.Columns.Contains("Tabla"))
-            {
-                dgvAuditoria.Columns["Tabla"].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-                dgvAuditoria.Columns["Tabla"].Width = 90;
-            }
+            // Los textos completos y la tabla técnica quedan guardados en la fila, pero no se muestran.
+            foreach (string oculta in new[] { "ValorAnterior", "ValorNuevo", "Tabla" })
+                if (dgvAuditoria.Columns.Contains(oculta))
+                    dgvAuditoria.Columns[oculta].Visible = false;
+
+            // Orden de lectura: cuándo, quién, qué hizo, dónde y el resumen.
+            string[] orden = { "Fecha", "Usuario", "Accion", "Modulo", "Resumen" };
+            for (int i = 0; i < orden.Length; i++)
+                if (dgvAuditoria.Columns.Contains(orden[i]))
+                    dgvAuditoria.Columns[orden[i]].DisplayIndex = i;
+
+            FijarAncho("Fecha", 115, NegocioAuditoria.FormatoFechaHora);
+            FijarAncho("Usuario", 140);
+            FijarAncho("Accion", 100);
+            FijarAncho("Modulo", 95);
+            // «Resumen» ocupa el resto del ancho.
+        }
+
+        private void FijarAncho(string columna, int ancho, string formato = null)
+        {
+            if (!dgvAuditoria.Columns.Contains(columna)) return;
+
+            DataGridViewColumn c = dgvAuditoria.Columns[columna];
+            c.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            c.Width = ancho;
+            if (formato != null) c.DefaultCellStyle.Format = formato;
         }
 
         private void SetHeader(string columna, string texto)

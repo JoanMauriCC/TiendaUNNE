@@ -59,7 +59,9 @@
     <Compile Include="Entidades\CampoUsuario.cs" />
     <Compile Include="Entidades\CredencialesUsuario.cs" />
     <Compile Include="Entidades\ModelosCaja.cs" />
+    <Compile Include="Entidades\ModelosAuditoria.cs" />
     <Compile Include="Entidades\ModelosHistorial.cs" />
+    <Compile Include="Negocio\ResumenAuditoria.cs" />
     <Compile Include="Entidades\ModelosNotaCredito.cs" />
     <Compile Include="Entidades\ModelosCliente.cs" />
     <Compile Include="Entidades\ModelosSugerencia.cs" />

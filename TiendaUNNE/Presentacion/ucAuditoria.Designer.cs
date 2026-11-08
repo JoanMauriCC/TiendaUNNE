@@ -56,7 +56,7 @@ namespace TiendaUNNE
             this.lblTabla.Name = "lblTabla";
             this.lblTabla.Size = new System.Drawing.Size(36, 15);
             this.lblTabla.TabIndex = 0;
-            this.lblTabla.Text = "&Tabla";
+            this.lblTabla.Text = "&Módulo";
             //
             // cboTabla
             //
