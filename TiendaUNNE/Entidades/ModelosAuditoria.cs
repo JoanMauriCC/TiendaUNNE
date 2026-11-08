@@ -23,6 +23,33 @@ namespace TiendaUNNE
         public bool TieneFilas => Filas.Count > 0;
     }
 
+    /// <summary>Una opción del filtro «Usuario»: quién hizo el movimiento (null = todos).</summary>
+    public sealed class UsuarioAuditoria
+    {
+        public string Nombre { get; set; }
+        public int? IdUsuario { get; set; }
+        public override string ToString() => Nombre;
+    }
+
+    /// <summary>Una opción del filtro «Acción»: el nombre que se lee y el valor guardado en la base (null = todas).</summary>
+    public sealed class AccionAuditoria
+    {
+        public string Nombre { get; set; }
+        public string Valor { get; set; }
+        public override string ToString() => Nombre;
+    }
+
+    /// <summary>Todo lo que se puede filtrar en la consulta de auditoría; lo que está vacío no filtra.</summary>
+    public sealed class FiltroAuditoria
+    {
+        public string Tabla { get; set; }
+        public int? IdUsuario { get; set; }
+        public string Accion { get; set; }
+        public System.DateTime? Desde { get; set; }
+        public System.DateTime? Hasta { get; set; }
+        public string Texto { get; set; }
+    }
+
     /// <summary>
     /// Un módulo del sistema sobre el que se registran movimientos, con el nombre que ve el usuario
     /// y la tabla de la base que le corresponde (null = todos los módulos).

@@ -55,9 +55,11 @@ VALUES
         /// resueltos desde NegocioAuditoria: <paramref name="tablaAfectada"/> en null
         /// significa sin filtro, y el rango de fechas viene como [desde, hasta).
         /// </summary>
-        public static DataTable Listar(string tablaAfectada, DateTime? desdeInclusive, DateTime? hastaExclusive)
+        public static DataTable Listar(string tablaAfectada, int? idUsuario, string accion,
+                                       DateTime? desdeInclusive, DateTime? hastaExclusive)
         {
             bool filtraTabla = !string.IsNullOrWhiteSpace(tablaAfectada);
+            bool filtraAccion = !string.IsNullOrWhiteSpace(accion);
 
             var sql = new StringBuilder(@"
 SELECT  a.fecha_hora                        AS Fecha,
@@ -72,6 +74,8 @@ LEFT JOIN   dbo.Persona  p ON p.id_persona = u.id_persona
 WHERE 1 = 1");
 
             if (filtraTabla) sql.Append(" AND a.tabla_afectada = @tabla");
+            if (idUsuario.HasValue) sql.Append(" AND a.id_usuario = @id_usuario");
+            if (filtraAccion) sql.Append(" AND a.accion = @accion");
             if (desdeInclusive.HasValue) sql.Append(" AND a.fecha_hora >= @desde");
             if (hastaExclusive.HasValue) sql.Append(" AND a.fecha_hora < @hasta");
             sql.Append(" ORDER BY a.fecha_hora DESC;");
@@ -82,6 +86,10 @@ WHERE 1 = 1");
             {
                 if (filtraTabla)
                     cmd.Parameters.Add("@tabla", SqlDbType.NVarChar, 100).Value = tablaAfectada;
+                if (idUsuario.HasValue)
+                    cmd.Parameters.Add("@id_usuario", SqlDbType.Int).Value = idUsuario.Value;
+                if (filtraAccion)
+                    cmd.Parameters.Add("@accion", SqlDbType.NVarChar, 20).Value = accion;
                 if (desdeInclusive.HasValue)
                     cmd.Parameters.Add("@desde", SqlDbType.DateTime2).Value = desdeInclusive.Value;
                 if (hastaExclusive.HasValue)
@@ -90,6 +98,23 @@ WHERE 1 = 1");
                 using (var da = new SqlDataAdapter(cmd))
                     da.Fill(dt);
             }
+            return dt;
+        }
+
+        /// <summary>Id y nombre de las personas que tienen movimientos registrados, para el filtro «Usuario».</summary>
+        public static DataTable ListarUsuarios()
+        {
+            const string sql = @"
+SELECT DISTINCT a.id_usuario AS IdUsuario, (p.apellido + N', ' + p.nombre) AS Nombre
+FROM        dbo.Auditoria a
+INNER JOIN  dbo.Usuario u ON u.id_usuario = a.id_usuario
+INNER JOIN  dbo.Persona p ON p.id_persona = u.id_persona
+ORDER BY Nombre;";
+
+            var dt = new DataTable();
+            using (var cn = Db.AbrirConexion())
+            using (var da = new SqlDataAdapter(sql, cn))
+                da.Fill(dt);
             return dt;
         }
     }

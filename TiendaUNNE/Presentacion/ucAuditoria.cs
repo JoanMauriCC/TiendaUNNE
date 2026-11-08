@@ -132,8 +132,52 @@ namespace TiendaUNNE
         private void ucAuditoria_Load(object sender, EventArgs e)
         {
             cboTabla.Items.AddRange(NegocioAuditoria.Modulos().ToArray());
+            cboAccion.Items.AddRange(NegocioAuditoria.Acciones().ToArray());
+            CargarUsuarios();
+
+            // Los combos filtran al elegir; el buscador, con Enter; las fechas, con Filtrar o con los atajos.
+            cboTabla.SelectionChangeCommitted += (s, ev) => CargarGrilla();
+            cboUsuario.SelectionChangeCommitted += (s, ev) => CargarGrilla();
+            cboAccion.SelectionChangeCommitted += (s, ev) => CargarGrilla();
+            txtBuscar.KeyDown += txtBuscar_KeyDown;
+
             LimpiarFiltros();          // deja los filtros en su estado inicial y carga la grilla
         }
+
+        /// <summary>Llena el combo de usuarios con quienes tienen movimientos; conserva el elegido si sigue estando.</summary>
+        private void CargarUsuarios()
+        {
+            int? elegido = (cboUsuario.SelectedItem as UsuarioAuditoria)?.IdUsuario;
+
+            cboUsuario.Items.Clear();
+            cboUsuario.Items.AddRange(NegocioAuditoria.Usuarios().ToArray());
+
+            cboUsuario.SelectedIndex = 0;
+            for (int i = 0; i < cboUsuario.Items.Count; i++)
+                if (((UsuarioAuditoria)cboUsuario.Items[i]).IdUsuario == elegido && elegido.HasValue)
+                    cboUsuario.SelectedIndex = i;
+        }
+
+        private void txtBuscar_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter) return;
+            e.SuppressKeyPress = true;
+            CargarGrilla();
+        }
+
+        /// <summary>Fija «desde hoy menos N días» y «hasta hoy», y filtra.</summary>
+        private void AtajoDeFechas(int dias)
+        {
+            dtpDesde.Value = NegocioAuditoria.DesdeHaceDias(dias);
+            dtpHasta.Value = DateTime.Today;
+            dtpDesde.Checked = true;
+            dtpHasta.Checked = true;
+            CargarGrilla();
+        }
+
+        private void btnHoy_Click(object sender, EventArgs e) { AtajoDeFechas(1); }
+        private void btnSemana_Click(object sender, EventArgs e) { AtajoDeFechas(7); }
+        private void btnMes_Click(object sender, EventArgs e) { AtajoDeFechas(30); }
 
         private void CargarGrilla()
         {
@@ -141,12 +185,17 @@ namespace TiendaUNNE
             {
                 Cursor = Cursors.WaitCursor;
 
-                var modulo = cboTabla.SelectedItem as ModuloAuditoria;
-                string tabla = modulo == null ? null : modulo.Tabla;
-                DateTime? desde = dtpDesde.Checked ? dtpDesde.Value.Date : (DateTime?)null;
-                DateTime? hasta = dtpHasta.Checked ? dtpHasta.Value.Date : (DateTime?)null;
+                var filtro = new FiltroAuditoria
+                {
+                    Tabla = (cboTabla.SelectedItem as ModuloAuditoria)?.Tabla,
+                    IdUsuario = (cboUsuario.SelectedItem as UsuarioAuditoria)?.IdUsuario,
+                    Accion = (cboAccion.SelectedItem as AccionAuditoria)?.Valor,
+                    Desde = dtpDesde.Checked ? dtpDesde.Value.Date : (DateTime?)null,
+                    Hasta = dtpHasta.Checked ? dtpHasta.Value.Date : (DateTime?)null,
+                    Texto = txtBuscar.Text
+                };
 
-                DataTable dt = NegocioAuditoria.Listar(tabla, desde, hasta);
+                DataTable dt = NegocioAuditoria.Listar(filtro);
                 dgvAuditoria.DataSource = dt;
                 AplicarFormato();
             }
@@ -210,12 +259,16 @@ namespace TiendaUNNE
 
         private void LimpiarFiltros()
         {
-            cboTabla.SelectedIndex = 0;   // "Todas"
+            cboTabla.SelectedIndex = 0;   // "Todos"
+            cboUsuario.SelectedIndex = 0;
+            cboAccion.SelectedIndex = 0;
+            txtBuscar.Clear();
 
-            dtpDesde.Checked = false;
-            dtpHasta.Checked = false;
+            // Primero el valor y después el tilde: asignar el valor puede volver a tildar la casilla.
             dtpDesde.Value = NegocioAuditoria.FechaDesdePorDefecto;
             dtpHasta.Value = NegocioAuditoria.FechaHastaPorDefecto;
+            dtpDesde.Checked = false;
+            dtpHasta.Checked = false;
 
             CargarGrilla();
         }
@@ -232,6 +285,7 @@ namespace TiendaUNNE
 
         private void btnActualizar_Click(object sender, EventArgs e)
         {
+            CargarUsuarios();   // por si alguien nuevo hizo algo desde que se abrió la pantalla
             CargarGrilla();
         }
     }

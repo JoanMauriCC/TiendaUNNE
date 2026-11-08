@@ -57,6 +57,19 @@ namespace TiendaUNNE
             return RegexNombrePersona.IsMatch(nombre.Trim());
         }
 
+        /// <summary>Minúsculas y sin tildes, para buscar texto sin que importe cómo se escribió («Perez» encuentra «Pérez»).</summary>
+        public static string SinTildes(string texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto)) return string.Empty;
+
+            string descompuesto = texto.Trim().ToLowerInvariant().Normalize(System.Text.NormalizationForm.FormD);
+            var sb = new System.Text.StringBuilder(descompuesto.Length);
+            foreach (char c in descompuesto)
+                if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
+                    sb.Append(c);
+            return sb.ToString();
+        }
+
         /// <summary>Recorta los extremos y deja un solo espacio entre palabras.</summary>
         public static string NormalizarEspacios(string texto)
         {
