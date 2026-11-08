@@ -133,6 +133,7 @@ namespace TiendaUNNE
             lista.Columns.Add("ValorAnterior", typeof(string));
             lista.Columns.Add("ValorNuevo", typeof(string));
             lista.Columns.Add("Tabla", typeof(string));
+            lista.Columns.Add("Sensible", typeof(string));   // por qué es sensible; vacío si no lo es
 
             foreach (DataRow f in crudo.Rows)
             {
@@ -160,7 +161,8 @@ namespace TiendaUNNE
                     resumen,
                     anterior,
                     nuevo,
-                    tablaFila);
+                    tablaFila,
+                    ResumenAuditoria.Sensible(accion, tablaFila, anterior, nuevo));
             }
 
             return lista;

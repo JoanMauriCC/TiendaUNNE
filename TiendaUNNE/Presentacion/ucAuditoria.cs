@@ -14,12 +14,17 @@ namespace TiendaUNNE
         private static readonly Color ColorAntes = Color.FromArgb(180, 35, 24);
         private static readonly Color ColorDespues = Color.FromArgb(21, 128, 61);
 
+        // Movimientos sensibles (notas de crédito, restauraciones, diferencias de caja): fondo ámbar.
+        private static readonly Color FondoSensible = Color.FromArgb(254, 243, 199);
+        private static readonly Color TextoSensible = Color.FromArgb(120, 53, 15);
+
         // Panel de detalle, debajo de la lista: se arma por código.
         private readonly Panel panelDetalle = new Panel();
         private readonly Label lblDetalleTitulo = new Label();
         private readonly Label lblDetalleResumen = new Label();
         private readonly DataGridView dgvDetalle = new DataGridView();
         private readonly TextBox txtDetalle = new TextBox();
+        private readonly Label lblLeyenda = new Label();
 
         public ucAuditoria()
         {
@@ -30,10 +35,10 @@ namespace TiendaUNNE
         private void ArmarDetalle()
         {
             panelDetalle.Dock = DockStyle.Bottom;
-            panelDetalle.Height = 190;
+            panelDetalle.Height = 205;
             panelDetalle.Padding = new Padding(0, 6, 0, 0);
 
-            var encabezado = new Panel { Dock = DockStyle.Top, Height = 46 };
+            var encabezado = new Panel { Dock = DockStyle.Top, Height = 64 };
             lblDetalleTitulo.Font = new Font(Font, FontStyle.Bold);
             lblDetalleTitulo.AutoSize = false;
             lblDetalleTitulo.Dock = DockStyle.Top;
@@ -78,9 +83,32 @@ namespace TiendaUNNE
             panelDetalle.Controls.Add(encabezado);
             Controls.Add(panelDetalle);
 
+            // Leyenda de los movimientos resaltados, a la derecha del buscador.
+            lblLeyenda.Text = " Movimiento sensible ";
+            lblLeyenda.AutoSize = true;
+            lblLeyenda.BackColor = FondoSensible;
+            lblLeyenda.ForeColor = TextoSensible;
+            panelFiltros.Controls.Add(lblLeyenda);
+
+            dgvAuditoria.CellFormatting += dgvAuditoria_CellFormatting;
+
             // CurrentCellChanged y no SelectionChanged: este último salta antes de que la fila actual cambie.
             dgvAuditoria.CurrentCellChanged += (s, e) => MostrarDetalle();
             dgvAuditoria.DataSourceChanged += (s, e) => MostrarDetalle();
+        }
+
+        /// <summary>Los movimientos sensibles se pintan de ámbar (salvo el que está seleccionado, que mantiene el azul).</summary>
+        private void dgvAuditoria_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            var fila = dgvAuditoria.Rows[e.RowIndex].DataBoundItem as DataRowView;
+            if (fila == null || string.IsNullOrEmpty(Convert.ToString(fila["Sensible"]))) return;
+
+            e.CellStyle.BackColor = FondoSensible;
+            e.CellStyle.ForeColor = TextoSensible;
+            e.CellStyle.SelectionBackColor = Color.FromArgb(180, 83, 9);
+            e.CellStyle.SelectionForeColor = Color.White;
         }
 
         /// <summary>Muestra, debajo de la lista, el detalle del movimiento elegido.</summary>
@@ -98,8 +126,11 @@ namespace TiendaUNNE
             }
 
             lblDetalleTitulo.Text = Convert.ToString(fila["Resumen"]);
+            string sensible = Convert.ToString(fila["Sensible"]);
             lblDetalleResumen.Text = string.Format("{0:dd/MM/yyyy HH:mm:ss}  ·  {1}  ·  {2} · {3}",
-                fila["Fecha"], fila["Usuario"], fila["Modulo"], fila["Accion"]);
+                fila["Fecha"], fila["Usuario"], fila["Modulo"], fila["Accion"]) +
+                (sensible.Length > 0 ? "\r\nMovimiento sensible: " + sensible : string.Empty);
+            lblDetalleResumen.ForeColor = sensible.Length > 0 ? TextoSensible : Color.FromArgb(91, 98, 112);
 
             DetalleAuditoria detalle = NegocioAuditoria.Detalle(
                 Convert.ToString(fila["Accion"]), Convert.ToString(fila["Tabla"]),
@@ -134,6 +165,9 @@ namespace TiendaUNNE
             cboTabla.Items.AddRange(NegocioAuditoria.Modulos().ToArray());
             cboAccion.Items.AddRange(NegocioAuditoria.Acciones().ToArray());
             CargarUsuarios();
+
+            // La leyenda va pegada al buscador, con la escala real de la pantalla.
+            lblLeyenda.Location = new Point(txtBuscar.Right + 12, txtBuscar.Top + 3);
 
             // Los combos filtran al elegir; el buscador, con Enter; las fechas, con Filtrar o con los atajos.
             cboTabla.SelectionChangeCommitted += (s, ev) => CargarGrilla();
@@ -224,7 +258,7 @@ namespace TiendaUNNE
             SetHeader("Resumen", "Qué pasó");
 
             // Los textos completos y la tabla técnica quedan guardados en la fila, pero no se muestran.
-            foreach (string oculta in new[] { "ValorAnterior", "ValorNuevo", "Tabla" })
+            foreach (string oculta in new[] { "ValorAnterior", "ValorNuevo", "Tabla", "Sensible" })
                 if (dgvAuditoria.Columns.Contains(oculta))
                     dgvAuditoria.Columns[oculta].Visible = false;
 

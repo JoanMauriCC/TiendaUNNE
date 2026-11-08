@@ -61,6 +61,45 @@ namespace TiendaUNNE
         }
 
         // ---------------------------------------------------------------------
+        // Movimientos sensibles: los que conviene mirar con más atención
+        // ---------------------------------------------------------------------
+
+        /// <summary>
+        /// Si el movimiento es de los que merecen atención, por qué (para mostrarlo); si no, null.
+        /// Son los que mueven plata o ponen en juego toda la base: notas de crédito, ventas anuladas,
+        /// restauraciones de backup y aperturas o cierres de caja con diferencia.
+        /// </summary>
+        public static string Sensible(string accion, string tabla, string anterior, string nuevo)
+        {
+            nuevo = (nuevo ?? string.Empty).Trim();
+
+            switch (tabla)
+            {
+                case "Venta_cabecera":
+                    if (nuevo.StartsWith("Nota de crédito", StringComparison.OrdinalIgnoreCase))
+                        return "devuelve dinero y stock (nota de crédito)";
+                    if (nuevo.StartsWith("ANULADA", StringComparison.OrdinalIgnoreCase))
+                        return "venta anulada";
+                    return null;
+
+                case NegocioBackup.TablaAuditoria:
+                    return nuevo.IndexOf("RESTAURACIÓN", StringComparison.OrdinalIgnoreCase) >= 0
+                        ? "reemplaza toda la base de datos por una copia" : null;
+
+                case "Caja_sesion":
+                    string diferencia = Monto(nuevo, "diferencia");
+                    bool difiere = diferencia != null && !EsCero(diferencia);
+                    if (!difiere) return null;
+                    return nuevo.StartsWith("Cerrada", StringComparison.OrdinalIgnoreCase)
+                        ? "el cierre de caja tiene diferencia"
+                        : "la apertura no coincide con el cierre anterior";
+
+                default:
+                    return null;
+            }
+        }
+
+        // ---------------------------------------------------------------------
         // Detalle de un movimiento: solo lo que cambió
         // ---------------------------------------------------------------------
 
