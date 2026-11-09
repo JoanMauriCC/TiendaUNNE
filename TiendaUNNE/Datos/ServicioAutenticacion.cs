@@ -81,6 +81,59 @@ INNER JOIN  dbo.Perfil  pf ON pf.id_perfil = u.id_perfil
             }
         }
 
+        /// <summary>
+        /// Suma un intento fallido de contraseña y, si con este llega al límite, bloquea al usuario.
+        /// Las dos cosas van en un solo UPDATE, así dos intentos simultáneos no se pisan la cuenta.
+        /// Devuelve true solo si quedó bloqueado AHORA (no si ya lo estaba); en ese caso el bloqueo
+        /// se graba en la auditoría en la misma transacción, sin usuario (no se sabe quién lo intentó).
+        /// </summary>
+        public static bool RegistrarIntentoFallido(int idUsuario, int limite,
+                                                   string resumenAnterior, string resumenBloqueo)
+        {
+            const string sql = @"
+UPDATE dbo.Usuario
+SET    intentos_fallidos = CASE WHEN intentos_fallidos < 255 THEN intentos_fallidos + 1 ELSE 255 END,
+       bloqueado         = CASE WHEN intentos_fallidos + 1 >= @limite THEN 1 ELSE bloqueado END
+OUTPUT deleted.bloqueado AS antes, inserted.bloqueado AS ahora
+WHERE  id_usuario = @id;";
+
+            using (var cn = Db.AbrirConexion())
+            using (var tx = cn.BeginTransaction())
+            {
+                try
+                {
+                    bool seBloqueo = false;
+                    using (var cmd = new SqlCommand(sql, cn, tx))
+                    {
+                        cmd.Parameters.Add("@id", SqlDbType.Int).Value = idUsuario;
+                        cmd.Parameters.Add("@limite", SqlDbType.Int).Value = limite;
+
+                        using (var dr = cmd.ExecuteReader(CommandBehavior.SingleRow))
+                        {
+                            if (dr.Read())
+                                seBloqueo = !(bool)dr["antes"] && (bool)dr["ahora"];
+                        }
+                    }
+
+                    if (seBloqueo)
+                    {
+                        ServicioAuditoria.Registrar(
+                            "MODIFICACION", "Usuario", idUsuario,
+                            resumenAnterior, resumenBloqueo,
+                            idUsuario: null, cn: cn, tx: tx);
+                    }
+
+                    tx.Commit();
+                    return seBloqueo;
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
+                }
+            }
+        }
+
         /// <summary>Marca la fecha del último acceso y limpia el contador de intentos fallidos.</summary>
         public static void RegistrarAccesoExitoso(int idUsuario)
         {

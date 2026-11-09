@@ -34,6 +34,8 @@ namespace TiendaUNNE
                 { "Perfil", "perfil" },
                 { "Activo", "activo" },
                 { "Usuario", "usuario" },
+                { "Bloqueado", "bloqueo" },
+                { "Motivo", "motivo" },
                 { Contrasena, "contraseña" }
             };
 
@@ -85,6 +87,10 @@ namespace TiendaUNNE
                 case NegocioBackup.TablaAuditoria:
                     return nuevo.IndexOf("RESTAURACIÓN", StringComparison.OrdinalIgnoreCase) >= 0
                         ? "reemplaza toda la base de datos por una copia" : null;
+
+                case "Usuario":
+                    return EsSi(Valor(Campos(nuevo), "Bloqueado"))
+                        ? "usuario bloqueado por intentos fallidos de contraseña" : null;
 
                 case "Caja_sesion":
                     string diferencia = Monto(nuevo, "diferencia");
@@ -219,6 +225,10 @@ namespace TiendaUNNE
                     return "Baja de " + sustantivo + ": " + quien;
 
                 default:
+                    string bloqueo = Valor(campoNuevo, "Bloqueado");
+                    if (bloqueo != null && bloqueo != Valor(campoAnterior, "Bloqueado"))
+                        return (EsSi(bloqueo) ? "Bloqueo de " : "Desbloqueo de ") + sustantivo + ": " + quien;
+
                     if (nuevo.IndexOf("reactivad", StringComparison.OrdinalIgnoreCase) >= 0)
                         return "Reactivación de " + sustantivo + ": " + quien;
 
@@ -355,6 +365,11 @@ namespace TiendaUNNE
         {
             string etiqueta;
             return Etiquetas.TryGetValue(clave, out etiqueta) ? etiqueta : clave;
+        }
+
+        private static bool EsSi(string valor)
+        {
+            return valor != null && valor.StartsWith("S", StringComparison.OrdinalIgnoreCase);
         }
 
         private static string Valor(List<KeyValuePair<string, string>> campos, string clave)
