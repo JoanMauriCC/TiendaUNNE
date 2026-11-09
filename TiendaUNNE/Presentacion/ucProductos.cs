@@ -13,7 +13,7 @@ namespace TiendaUNNE
     /// Las filas se pintan como semáforo (amarillo = stock bajo, rojo = sin stock), pero qué
     /// significa cada nivel lo decide NegocioProducto.EstadoDeStock: acá solo se muestra.
     /// </summary>
-    public partial class ucProductos : UserControl
+    public partial class ucProductos : UserControl, IPantallaConGuia
     {
         private static readonly Color ColorStockBajo = Color.FromArgb(255, 243, 205);
         private static readonly Color ColorSinStock = Color.FromArgb(253, 228, 228);
@@ -710,5 +710,23 @@ namespace TiendaUNNE
             ActualizarBotones();
             CargarSeleccionEnFormulario();
         }
+
+        // -----------------------------------------------------------------
+        // Ayuda: el control de cada parte que señala la guía (NegocioGuia)
+        // -----------------------------------------------------------------
+
+        public Control Ancla(string clave)
+        {
+            switch (clave)
+            {
+                case AnclaGuia.ProductosFormulario: return txtNombre;
+                case AnclaGuia.ProductosBuscar: return txtBuscar;
+                case AnclaGuia.ProductosLista: return dgvProductos;
+                case AnclaGuia.ProductosInactivos: return tarjetaVerInactivos;
+                case AnclaGuia.ProductosBaja: return tarjetaBaja;
+                default: return null;
+            }
+        }
+
     }
 }

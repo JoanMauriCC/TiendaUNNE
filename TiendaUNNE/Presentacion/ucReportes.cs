@@ -20,7 +20,7 @@ namespace TiendaUNNE
     /// que elige el usuario (Desde/Hasta). Los tres reportes los arma NegocioReporte con
     /// datos de la base: acá solo se elige cuál mostrar y se dibuja el resultado.
     /// </summary>
-    public partial class ucReportes : UserControl
+    public partial class ucReportes : UserControl, IPantallaConGuia
     {
         private enum TipoReporte { Ventas, Productos, Recaudacion, Clientes }
 
@@ -471,5 +471,24 @@ namespace TiendaUNNE
             boton.ForeColor = activo ? ColorAcento : ColorTexto;
             boton.FlatAppearance.BorderColor = activo ? ColorAcento : Color.FromArgb(214, 216, 220);
         }
+
+        // -----------------------------------------------------------------
+        // Ayuda: el control de cada parte que señala la guía (NegocioGuia)
+        // -----------------------------------------------------------------
+
+        public Control Ancla(string clave)
+        {
+            switch (clave)
+            {
+                case AnclaGuia.ReportesTipos: return btnVentas;
+                case AnclaGuia.ReportesFechas: return dtpDesde;
+                case AnclaGuia.ReportesIndicadores: return tblIndicadores;
+                case AnclaGuia.ReportesTipoGrafico: return cboTipoGrafico;
+                case AnclaGuia.ReportesDetalle: return dgvDetalle;
+                case AnclaGuia.ReportesPdf: return btnExportarPdf;
+                default: return null;
+            }
+        }
+
     }
 }

@@ -33,5 +33,63 @@ namespace TiendaUNNE
         public const string Ayuda = "Principal.Ayuda";
         public const string Sesion = "Principal.Sesion";
         public const string Contenido = "Principal.Contenido";
+
+        // Caja cerrada (apertura del turno)
+        public const string CajaApertura = "Caja.Apertura";
+        public const string CajaContarBilletes = "Caja.ContarBilletes";
+        public const string CajaAbrir = "Caja.Abrir";
+
+        // Caja abierta (venta)
+        public const string CajaBuscador = "Caja.Buscador";
+        public const string CajaCategorias = "Caja.Categorias";
+        public const string CajaCatalogo = "Caja.Catalogo";
+        public const string CajaTicket = "Caja.Ticket";
+        public const string CajaCliente = "Caja.Cliente";
+        public const string CajaCobrar = "Caja.Cobrar";
+        public const string CajaHistorial = "Caja.Historial";
+        public const string CajaCerrar = "Caja.Cerrar";
+
+        // Productos
+        public const string ProductosFormulario = "Productos.Formulario";
+        public const string ProductosBuscar = "Productos.Buscar";
+        public const string ProductosLista = "Productos.Lista";
+        public const string ProductosInactivos = "Productos.Inactivos";
+        public const string ProductosBaja = "Productos.Baja";
+
+        // Categorías
+        public const string CategoriasFormulario = "Categorias.Formulario";
+        public const string CategoriasBuscar = "Categorias.Buscar";
+        public const string CategoriasFiltro = "Categorias.Filtro";
+        public const string CategoriasLista = "Categorias.Lista";
+        public const string CategoriasBaja = "Categorias.Baja";
+
+        // Usuarios
+        public const string UsuariosFormulario = "Usuarios.Formulario";
+        public const string UsuariosBuscar = "Usuarios.Buscar";
+        public const string UsuariosLista = "Usuarios.Lista";
+        public const string UsuariosBaja = "Usuarios.Baja";
+        public const string UsuariosDesbloquear = "Usuarios.Desbloquear";
+
+        // Reportes
+        public const string ReportesTipos = "Reportes.Tipos";
+        public const string ReportesFechas = "Reportes.Fechas";
+        public const string ReportesIndicadores = "Reportes.Indicadores";
+        public const string ReportesTipoGrafico = "Reportes.TipoGrafico";
+        public const string ReportesDetalle = "Reportes.Detalle";
+        public const string ReportesPdf = "Reportes.Pdf";
+
+        // Auditoría
+        public const string AuditoriaFiltros = "Auditoria.Filtros";
+        public const string AuditoriaRapidos = "Auditoria.Rapidos";
+        public const string AuditoriaLista = "Auditoria.Lista";
+        public const string AuditoriaDetalle = "Auditoria.Detalle";
+
+        // Backup
+        public const string BackupResumen = "Backup.Resumen";
+        public const string BackupLista = "Backup.Lista";
+        public const string BackupCrear = "Backup.Crear";
+        public const string BackupRestaurar = "Backup.Restaurar";
+        public const string BackupCopiar = "Backup.Copiar";
+        public const string BackupDetalle = "Backup.Detalle";
     }
 }

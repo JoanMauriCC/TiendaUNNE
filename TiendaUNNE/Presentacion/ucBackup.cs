@@ -12,7 +12,7 @@ namespace TiendaUNNE
     /// archivos y qué se valida lo resuelve NegocioBackup. La pantalla nunca maneja rutas:
     /// le pasa a Negocio solo el nombre de la copia elegida.
     /// </summary>
-    public partial class ucBackup : UserControl
+    public partial class ucBackup : UserControl, IPantallaConGuia
     {
         private static readonly Color ColorPrevio = Color.FromArgb(255, 243, 205);
 
@@ -324,5 +324,24 @@ namespace TiendaUNNE
         {
             CargarListado();
         }
+
+        // -----------------------------------------------------------------
+        // Ayuda: el control de cada parte que señala la guía (NegocioGuia)
+        // -----------------------------------------------------------------
+
+        public Control Ancla(string clave)
+        {
+            switch (clave)
+            {
+                case AnclaGuia.BackupResumen: return panelResumen;
+                case AnclaGuia.BackupLista: return dgvBackups;
+                case AnclaGuia.BackupCrear: return tarjetaCrear;
+                case AnclaGuia.BackupRestaurar: return tarjetaRestaurar;
+                case AnclaGuia.BackupCopiar: return tarjetaCopiar;
+                case AnclaGuia.BackupDetalle: return panelDetalle;
+                default: return null;
+            }
+        }
+
     }
 }

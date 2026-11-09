@@ -15,7 +15,7 @@ namespace TiendaUNNE
     /// El formulario solo muestra datos y recoge lo tipeado: validar, recortar espacios,
     /// hashear la contraseña y decidir alta/edición es trabajo de NegocioUsuario.
     /// </summary>
-    public partial class ucUsuarios : UserControl
+    public partial class ucUsuarios : UserControl, IPantallaConGuia
     {
         private UsuarioEditModel _original;   // distinto de null = editando ese usuario
         private bool _actualizandoGrilla;      // true mientras CargarGrilla() reacomoda la selección
@@ -891,5 +891,23 @@ namespace TiendaUNNE
             ActualizarBotones();
             CargarSeleccionEnFormulario();
         }
+
+        // -----------------------------------------------------------------
+        // Ayuda: el control de cada parte que señala la guía (NegocioGuia)
+        // -----------------------------------------------------------------
+
+        public Control Ancla(string clave)
+        {
+            switch (clave)
+            {
+                case AnclaGuia.UsuariosFormulario: return txtDniCuit;
+                case AnclaGuia.UsuariosBuscar: return txtBuscar;
+                case AnclaGuia.UsuariosLista: return dgvUsuarios;
+                case AnclaGuia.UsuariosBaja: return tarjetaBaja;
+                case AnclaGuia.UsuariosDesbloquear: return tarjetaDesbloquear;
+                default: return null;
+            }
+        }
+
     }
 }

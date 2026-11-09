@@ -16,7 +16,7 @@ namespace TiendaUNNE
     ///   F2 / Ctrl+F  ir al buscador        F3  elegir cliente    F4  cobrar    F5  actualizar el catálogo    F6  historial de ventas
     ///   Esc          limpiar la búsqueda   Enter (en el buscador) agrega si queda un solo producto
     /// </summary>
-    public partial class ucCaja : UserControl
+    public partial class ucCaja : UserControl, IPantallaConGuia
     {
         private static readonly Color ColorAcento = Color.FromArgb(47, 111, 237);
         private static readonly Color ColorBordeChip = Color.FromArgb(214, 216, 220);
@@ -542,5 +542,29 @@ namespace TiendaUNNE
                 txtBuscar.Focus();
             }
         }
+
+        // -----------------------------------------------------------------
+        // Ayuda: el control de cada parte que señala la guía (NegocioGuia)
+        // -----------------------------------------------------------------
+
+        public Control Ancla(string clave)
+        {
+            switch (clave)
+            {
+                case AnclaGuia.CajaApertura: return panelCerrada;
+                case AnclaGuia.CajaContarBilletes: return btnModoBilletes;
+                case AnclaGuia.CajaAbrir: return btnAbrirCaja;
+                case AnclaGuia.CajaBuscador: return txtBuscar;
+                case AnclaGuia.CajaCategorias: return flowCategorias;
+                case AnclaGuia.CajaCatalogo: return flowProductos;
+                case AnclaGuia.CajaTicket: return dgvTicket;
+                case AnclaGuia.CajaCliente: return panelCliente;
+                case AnclaGuia.CajaCobrar: return btnCobrar;
+                case AnclaGuia.CajaHistorial: return btnVentas;
+                case AnclaGuia.CajaCerrar: return btnCerrarCaja;
+                default: return null;
+            }
+        }
+
     }
 }

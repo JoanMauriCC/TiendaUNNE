@@ -12,7 +12,7 @@ namespace TiendaUNNE
     /// No hay botones "Nuevo"/"Editar": seleccionar una fila de la grilla carga esa categoría
     /// en el formulario; "Limpiar" lo deja listo para un alta.
     /// </summary>
-    public partial class ucCategorias : UserControl
+    public partial class ucCategorias : UserControl, IPantallaConGuia
     {
         private CategoriaEditModel _original;   // distinto de null = editando esa categoría
         private bool _actualizandoGrilla;        // true mientras se reacomoda la selección
@@ -597,5 +597,23 @@ namespace TiendaUNNE
             ActualizarBotones();
             CargarSeleccionEnFormulario();
         }
+
+        // -----------------------------------------------------------------
+        // Ayuda: el control de cada parte que señala la guía (NegocioGuia)
+        // -----------------------------------------------------------------
+
+        public Control Ancla(string clave)
+        {
+            switch (clave)
+            {
+                case AnclaGuia.CategoriasFormulario: return txtNombre;
+                case AnclaGuia.CategoriasBuscar: return txtBuscar;
+                case AnclaGuia.CategoriasFiltro: return rdoActivas;
+                case AnclaGuia.CategoriasLista: return dgvCategorias;
+                case AnclaGuia.CategoriasBaja: return btnBaja;
+                default: return null;
+            }
+        }
+
     }
 }

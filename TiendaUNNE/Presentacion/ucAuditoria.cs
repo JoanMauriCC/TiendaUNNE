@@ -9,7 +9,7 @@ namespace TiendaUNNE
     /// Consulta de solo lectura de la tabla Auditoria (no se edita a mano). Es un
     /// UserControl: se muestra dentro del panel de contenido de frmPrincipal.
     /// </summary>
-    public partial class ucAuditoria : UserControl
+    public partial class ucAuditoria : UserControl, IPantallaConGuia
     {
         private static readonly Color ColorAntes = Color.FromArgb(180, 35, 24);
         private static readonly Color ColorDespues = Color.FromArgb(21, 128, 61);
@@ -322,5 +322,22 @@ namespace TiendaUNNE
             CargarUsuarios();   // por si alguien nuevo hizo algo desde que se abrió la pantalla
             CargarGrilla();
         }
+
+        // -----------------------------------------------------------------
+        // Ayuda: el control de cada parte que señala la guía (NegocioGuia)
+        // -----------------------------------------------------------------
+
+        public Control Ancla(string clave)
+        {
+            switch (clave)
+            {
+                case AnclaGuia.AuditoriaFiltros: return panelFiltros;
+                case AnclaGuia.AuditoriaRapidos: return btnHoy;
+                case AnclaGuia.AuditoriaLista: return dgvAuditoria;
+                case AnclaGuia.AuditoriaDetalle: return panelDetalle;
+                default: return null;
+            }
+        }
+
     }
 }
