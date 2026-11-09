@@ -31,7 +31,8 @@ SELECT  u.id_usuario                            AS IdUsuario,
         p.telefono                              AS Telefono,
         p.email                                 AS Email,
         pf.nombre                               AS Perfil,
-        u.activo                                AS Activo
+        u.activo                                AS Activo,
+        u.bloqueado                             AS Bloqueado
 FROM        dbo.Usuario u
 INNER JOIN  dbo.Persona p  ON p.id_persona = u.id_persona
 INNER JOIN  dbo.Perfil  pf ON pf.id_perfil = u.id_perfil
@@ -288,6 +289,47 @@ WHERE p.dni_cuit = @dni;";
         /// Baja lógica: UPDATE Usuario SET activo = 0 + Auditoria (BAJA). Persona.activo NO se toca.
         /// Devuelve la cantidad de filas afectadas; 0 significa que ya estaba inactivo.
         /// </summary>
+        /// <summary>
+        /// Saca el bloqueo por intentos fallidos y vuelve el contador a cero. Devuelve la cantidad de
+        /// filas afectadas; 0 significa que no estaba bloqueado. Si desbloqueó, la auditoría se graba
+        /// en la misma transacción.
+        /// </summary>
+        public static int Desbloquear(int idUsuario, int idUsuarioSesion,
+                                      string resumenAnterior, string resumenNuevo)
+        {
+            using (var cn = Db.AbrirConexion())
+            using (var tx = cn.BeginTransaction())
+            {
+                try
+                {
+                    int filas;
+                    using (var cmd = new SqlCommand(
+                        "UPDATE dbo.Usuario SET bloqueado = 0, intentos_fallidos = 0 WHERE id_usuario = @id AND bloqueado = 1;",
+                        cn, tx))
+                    {
+                        cmd.Parameters.Add("@id", SqlDbType.Int).Value = idUsuario;
+                        filas = cmd.ExecuteNonQuery();
+                    }
+
+                    if (filas > 0)
+                    {
+                        ServicioAuditoria.Registrar(
+                            "MODIFICACION", "Usuario", idUsuario,
+                            resumenAnterior, resumenNuevo, idUsuarioSesion,
+                            cn, tx);
+                    }
+
+                    tx.Commit();
+                    return filas;
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
+                }
+            }
+        }
+
         public static int DarDeBaja(int idUsuario, int idUsuarioSesion, string resumenAnterior)
         {
             using (var cn = Db.AbrirConexion())

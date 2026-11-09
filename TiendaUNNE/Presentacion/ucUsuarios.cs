@@ -41,6 +41,10 @@ namespace TiendaUNNE
         private readonly HashSet<Control> _camposIncompletos = new HashSet<Control>();
         private static readonly Color ColorCampoIncompleto = Color.FromArgb(220, 38, 38);
 
+        // Fila de un usuario bloqueado por intentos fallidos (los mismos tonos del aviso de Backup).
+        private static readonly Color ColorBloqueadoFondo = Color.FromArgb(253, 228, 228);
+        private static readonly Color ColorBloqueadoTexto = Color.FromArgb(163, 45, 45);
+
         public ucUsuarios()
         {
             InitializeComponent();
@@ -256,6 +260,7 @@ namespace TiendaUNNE
             tarjetaVerInactivos.Left = railX;
             tarjetaBaja.Left = railX;
             tarjetaActualizar.Left = railX;
+            tarjetaDesbloquear.Left = railX;
         }
 
         private static void UbicarColumna(Label etiqueta, Control campo, int x, int ancho)
@@ -564,6 +569,23 @@ namespace TiendaUNNE
             SetHeader("Email", "Email");
             SetHeader("Perfil", "Perfil");
             SetHeader("Activo", "Activo");
+            SetHeader("Bloqueado", "Bloqueado");
+        }
+
+        /// <summary>Las filas de los usuarios bloqueados se pintan en rojo claro para verlos de un vistazo.</summary>
+        private void dgvUsuarios_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            var drv = dgvUsuarios.Rows[e.RowIndex].DataBoundItem as DataRowView;
+            if (drv == null || !EstaBloqueado(drv)) return;
+
+            e.CellStyle.BackColor = ColorBloqueadoFondo;
+            e.CellStyle.ForeColor = ColorBloqueadoTexto;
+        }
+
+        private static bool EstaBloqueado(DataRowView drv)
+        {
+            return drv.Row.Table.Columns.Contains("Bloqueado")
+                   && drv["Bloqueado"] != DBNull.Value && (bool)drv["Bloqueado"];
         }
 
         private void SetHeader(string columna, string texto)
@@ -676,6 +698,11 @@ namespace TiendaUNNE
         {
             bool haySeleccion = UsuarioSeleccionadoId().HasValue;
             tarjetaBaja.Enabled = haySeleccion;
+
+            // Desbloquear solo tiene sentido con un usuario bloqueado elegido.
+            var drv = FilaSeleccionada() == null ? null : FilaSeleccionada().DataBoundItem as DataRowView;
+            tarjetaDesbloquear.Enabled = drv != null && EstaBloqueado(drv);
+            tarjetaDesbloquear.Invalidate();
         }
 
         /// <summary>Pone la tarjeta en modo "Dar de baja" o "Dar de alta" según lo que se está viendo.</summary>
@@ -792,6 +819,41 @@ namespace TiendaUNNE
         private void tarjetaActualizar_Click(object sender, EventArgs e)
         {
             CargarGrilla();
+        }
+
+        private void tarjetaDesbloquear_Click(object sender, EventArgs e)
+        {
+            int? id = UsuarioSeleccionadoId();
+            if (!id.HasValue) return;
+
+            var r = MessageBox.Show(
+                "¿Desbloquear a " + UsuarioSeleccionadoDescripcion() + "?\n\n" +
+                "Va a poder volver a entrar con su contraseña de siempre.",
+                "Confirmar desbloqueo", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+                MessageBoxDefaultButton.Button2);
+
+            if (r != DialogResult.Yes) return;
+
+            try
+            {
+                Cursor = Cursors.WaitCursor;
+                NegocioUsuario.Desbloquear(id.Value, SesionActual.Usuario.IdUsuario);
+                CargarGrilla();
+            }
+            catch (ReglaNegocioException ex)
+            {
+                MessageBox.Show(ex.Message, "No se pudo desbloquear",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("No se pudo desbloquear el usuario.",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                Cursor = Cursors.Default;
+            }
         }
 
         /// <summary>Alterna entre ver los usuarios activos o los dados de baja.</summary>

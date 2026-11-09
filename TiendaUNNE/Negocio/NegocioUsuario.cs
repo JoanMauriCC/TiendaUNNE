@@ -133,6 +133,25 @@ namespace TiendaUNNE
         // Baja lógica
         // ---------------------------------------------------------------------
 
+        /// <summary>
+        /// Desbloquea a un usuario que quedó bloqueado por intentos fallidos de contraseña: vuelve a
+        /// poder entrar con su contraseña de siempre y el contador de intentos arranca de cero.
+        /// </summary>
+        public static void Desbloquear(int idUsuario, int idUsuarioSesion)
+        {
+            var usuario = ServicioUsuario.Obtener(idUsuario);
+            if (usuario == null)
+                throw new ReglaNegocioException("El usuario ya no existe.");
+
+            string datos = string.Format("DNI={0}; Nombre={1}, {2}", usuario.DniCuit, usuario.Apellido, usuario.Nombre);
+
+            int filas = ServicioUsuario.Desbloquear(idUsuario, idUsuarioSesion,
+                datos + "; Bloqueado=Sí", datos + "; Bloqueado=No");
+
+            if (filas == 0)
+                throw new ReglaNegocioException("El usuario no estaba bloqueado.");
+        }
+
         public static void DarDeBaja(int idUsuario, int idUsuarioSesion)
         {
             if (idUsuario == idUsuarioSesion)

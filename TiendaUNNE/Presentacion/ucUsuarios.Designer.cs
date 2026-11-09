@@ -45,6 +45,7 @@ namespace TiendaUNNE
             this.tarjetaVerInactivos = new TiendaUNNE.TarjetaAccion();
             this.tarjetaBaja = new TiendaUNNE.TarjetaAccion();
             this.tarjetaActualizar = new TiendaUNNE.TarjetaAccion();
+            this.tarjetaDesbloquear = new TiendaUNNE.TarjetaAccion();
             this.dgvUsuarios = new System.Windows.Forms.DataGridView();
             this.panelFormulario.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvUsuarios)).BeginInit();
@@ -80,10 +81,11 @@ namespace TiendaUNNE
             this.panelFormulario.Controls.Add(this.tarjetaVerInactivos);
             this.panelFormulario.Controls.Add(this.tarjetaBaja);
             this.panelFormulario.Controls.Add(this.tarjetaActualizar);
+            this.panelFormulario.Controls.Add(this.tarjetaDesbloquear);
             this.panelFormulario.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelFormulario.Location = new System.Drawing.Point(0, 0);
             this.panelFormulario.Name = "panelFormulario";
-            this.panelFormulario.Size = new System.Drawing.Size(844, 258);
+            this.panelFormulario.Size = new System.Drawing.Size(844, 266);
             this.panelFormulario.TabIndex = 0;
             //
             // lblTituloForm
@@ -354,6 +356,18 @@ namespace TiendaUNNE
             this.tarjetaActualizar.TabIndex = 26;
             this.tarjetaActualizar.Click += new System.EventHandler(this.tarjetaActualizar_Click);
             //
+            // tarjetaDesbloquear
+            //
+            this.tarjetaDesbloquear.Enabled = false;
+            this.tarjetaDesbloquear.Icono = TiendaUNNE.IconoAccion.Desbloquear;
+            this.tarjetaDesbloquear.Titulo = "Desbloquear";
+            this.tarjetaDesbloquear.Descripcion = "Al usuario bloqueado por intentos";
+            this.tarjetaDesbloquear.Location = new System.Drawing.Point(560, 214);
+            this.tarjetaDesbloquear.Name = "tarjetaDesbloquear";
+            this.tarjetaDesbloquear.Size = new System.Drawing.Size(260, 44);
+            this.tarjetaDesbloquear.TabIndex = 27;
+            this.tarjetaDesbloquear.Click += new System.EventHandler(this.tarjetaDesbloquear_Click);
+            //
             // dgvUsuarios
             //
             this.dgvUsuarios.AllowUserToAddRows = false;
@@ -371,6 +385,7 @@ namespace TiendaUNNE
             this.dgvUsuarios.Size = new System.Drawing.Size(844, 257);
             this.dgvUsuarios.TabIndex = 1;
             this.dgvUsuarios.SelectionChanged += new System.EventHandler(this.dgvUsuarios_SelectionChanged);
+            this.dgvUsuarios.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dgvUsuarios_CellFormatting);
             //
             // ucUsuarios
             //
@@ -417,6 +432,7 @@ namespace TiendaUNNE
         private TarjetaAccion tarjetaVerInactivos;
         private TarjetaAccion tarjetaBaja;
         private TarjetaAccion tarjetaActualizar;
+        private TarjetaAccion tarjetaDesbloquear;
         private System.Windows.Forms.DataGridView dgvUsuarios;
     }
 }

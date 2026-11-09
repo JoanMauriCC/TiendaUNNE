@@ -16,7 +16,8 @@ namespace TiendaUNNE
         Actualizar,
         BackupCrear,
         BackupRestaurar,
-        BackupCopiar
+        BackupCopiar,
+        Desbloquear
     }
 
     /// <summary>
@@ -202,6 +203,15 @@ namespace TiendaUNNE
                         });
                         g.DrawLine(pen, r.X + 12, r.Y + 11, r.X + 12, r.Y + 18);
                         g.DrawLines(pen, new[] { new Point(r.X + 9, r.Y + 15), new Point(r.X + 12, r.Y + 18), new Point(r.X + 15, r.Y + 15) });
+                        break;
+
+                    case IconoAccion.Desbloquear:
+                        // candado abierto: el arco queda levantado de un lado
+                        g.DrawRectangle(pen, r.X + 1, r.Y + 11, 16, 11);
+                        g.DrawArc(pen, r.X + 11, r.Y + 1, 12, 12, 180, 180);
+                        g.DrawLine(pen, r.X + 11, r.Y + 7, r.X + 11, r.Y + 11);
+                        g.DrawLine(pen, r.X + 23, r.Y + 7, r.X + 23, r.Y + 9);
+                        g.FillEllipse(brush, r.X + 7, r.Y + 14, 4, 4);
                         break;
                 }
             }
