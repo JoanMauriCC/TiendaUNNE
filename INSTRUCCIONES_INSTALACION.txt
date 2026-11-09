@@ -14,8 +14,12 @@ Abrir SQL Server Management Studio, conectarse a la instancia local
 (por defecto: ".\SQLEXPRESS", con Windows Authentication) y ejecutar,
 EN ESTE ORDEN, los siguientes archivos (Archivo > Abrir > Archivo... y F5):
 
-  1. TiendaUNNE_CreateTables.sql        (crea la base "TiendaUNNE" y las 15 tablas)
-  2. TiendaUNNE_StoredProcedures.sql    (crea el stored procedure sp_ExisteEmailPersona)
+  1. TiendaUNNE_CreateTables.sql        (crea la base "TiendaUNNE" y las 16 tablas)
+  2. TiendaUNNE_StoredProcedures.sql    (crea los 12 procedimientos almacenados)
+
+El paso 2 es opcional: la aplicación instala sola los procedimientos almacenados
+(y la migración de clientes) cada vez que arranca. Se puede correr igual, por
+ejemplo para verlos en SSMS antes de abrir el programa.
 
 Opcional, solo si querés ver productos y categorías de ejemplo para probar
 la pantalla de Caja:
@@ -36,10 +40,12 @@ Para llevar la base a la versión actual SIN perder nada, ejecutar en SSMS, en o
 
   1. TiendaUNNE_ActualizarBase.sql      (junta todas las migraciones; se puede
                                          correr las veces que haga falta)
-  2. TiendaUNNE_StoredProcedures.sql
-  3. (opcional) TiendaUNNE_DatosDePrueba.sql   (categorías y productos de ejemplo)
+  2. (opcional) TiendaUNNE_DatosDePrueba.sql   (categorías y productos de ejemplo)
 
-Ese script también crea la tabla Reserva_stock (stock apartado por los tickets
+Lo demás (la migración de clientes y los procedimientos almacenados) lo aplica
+la aplicación sola al arrancar.
+
+El paso 1 también crea la tabla Reserva_stock (stock apartado por los tickets
 en curso). Si no se corre, Productos y Caja fallan con "Invalid object name
 'dbo.Reserva_stock'".
 
@@ -83,6 +89,23 @@ la aplicación crea sola un usuario administrador inicial:
   Contraseña:  Admin.1234
 
 Con eso ya se puede entrar y usar el sistema completo.
+
+
+OPCIONAL: VENTAS DE PRUEBA PARA VER LOS REPORTES
+----------------------------------------------------
+Para que Reportes tenga datos sin cobrar a mano. Requiere haber abierto la
+aplicación una vez (crea el administrador, la caja y los comprobantes) y haber
+cargado los productos (TiendaUNNE_DatosDePrueba.sql). En SSMS, en este orden:
+
+  1. TiendaUNNE_DatosDePrueba_Clientes.sql   (12 clientes, de todas las
+                                              condiciones frente al IVA)
+  2. TiendaUNNE_DatosDePrueba_Ventas.sql     (120 ventas de los últimos 60 días,
+                                              con Ticket, Factura A y Factura B)
+
+No tocan el stock ni la caja que esté abierta, y no duplican si se corren dos
+veces. Para sacar las ventas de prueba:
+
+  TiendaUNNE_DatosDePrueba_Ventas_Borrar.sql
 
 
 PROBLEMAS COMUNES
