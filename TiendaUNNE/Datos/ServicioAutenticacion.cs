@@ -19,6 +19,7 @@ SELECT  u.id_usuario,
         u.salt,
         u.activo,
         u.bloqueado,
+        u.ultimo_acceso,
         (p.apellido + N', ' + p.nombre) AS nombre_completo,
         p.nombre                        AS nombre,
         pf.nombre                       AS rol
@@ -68,6 +69,7 @@ INNER JOIN  dbo.Perfil  pf ON pf.id_perfil = u.id_perfil
                     Salt = dr["salt"] == DBNull.Value ? null : (byte[])dr["salt"],
                     Activo = (bool)dr["activo"],
                     Bloqueado = (bool)dr["bloqueado"],
+                    UltimoAcceso = dr["ultimo_acceso"] == DBNull.Value ? (DateTime?)null : (DateTime)dr["ultimo_acceso"],
                     Usuario = new UsuarioLogueado
                     {
                         IdUsuario = (int)dr["id_usuario"],

@@ -72,6 +72,7 @@
     <Compile Include="Entidades\ModelosUsuario.cs" />
     <Compile Include="Entidades\ModelosVenta.cs" />
     <Compile Include="Entidades\ModelosBackup.cs" />
+    <Compile Include="Entidades\ModelosGuia.cs" />
     <Compile Include="Entidades\UsuarioLogueado.cs" />
     <!-- ================= Capa Datos ================= -->
     <Compile Include="Datos\Db.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="Negocio\NegocioAuditoria.cs" />
     <Compile Include="Negocio\NegocioAutenticacion.cs" />
     <Compile Include="Negocio\NegocioBackup.cs" />
+    <Compile Include="Negocio\NegocioGuia.cs" />
     <Compile Include="Negocio\NegocioCaja.cs" />
     <Compile Include="Negocio\NegocioHistorial.cs" />
     <Compile Include="Negocio\NegocioNotaCredito.cs" />
@@ -121,6 +123,14 @@
     <!-- ================= Capa Presentacion ================= -->
     <Compile Include="Presentacion\TarjetaMenu.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Presentacion\IPantallaConGuia.cs" />
+    <Compile Include="Presentacion\VisitaGuiada.cs" />
+    <Compile Include="Presentacion\MarcoGuia.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Presentacion\GloboGuia.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Presentacion\TarjetaAccion.cs">
       <SubType>Component</SubType>

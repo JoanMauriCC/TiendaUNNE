@@ -11,5 +11,8 @@ namespace TiendaUNNE
         public string Nombre { get; set; }
         public int IdPerfil { get; set; }
         public string Rol { get; set; }        // "Administrador", "Supervisor", "Cajero"
+
+        /// <summary>True si este es su primer ingreso al sistema (se le muestra la Bienvenida).</summary>
+        public bool PrimerIngreso { get; set; }
     }
 }

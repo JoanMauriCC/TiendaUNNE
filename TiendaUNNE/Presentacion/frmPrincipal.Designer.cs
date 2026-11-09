@@ -29,6 +29,7 @@ namespace TiendaUNNE
             this.panelHost = new System.Windows.Forms.Panel();
             this.panelTitulo = new System.Windows.Forms.Panel();
             this.lblTituloSeccion = new System.Windows.Forms.Label();
+            this.btnAyuda = new System.Windows.Forms.Button();
             this.separadorTitulo = new System.Windows.Forms.Panel();
             this.panelLateral.SuspendLayout();
             this.panelPie.SuspendLayout();
@@ -147,6 +148,7 @@ namespace TiendaUNNE
             //
             this.panelTitulo.BackColor = System.Drawing.Color.White;
             this.panelTitulo.Controls.Add(this.lblTituloSeccion);
+            this.panelTitulo.Controls.Add(this.btnAyuda);
             this.panelTitulo.Controls.Add(this.separadorTitulo);
             this.panelTitulo.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelTitulo.Location = new System.Drawing.Point(0, 0);
@@ -164,6 +166,26 @@ namespace TiendaUNNE
             this.lblTituloSeccion.Size = new System.Drawing.Size(69, 23);
             this.lblTituloSeccion.TabIndex = 0;
             this.lblTituloSeccion.Text = "Inicio";
+            //
+            // btnAyuda
+            //
+            this.btnAyuda.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAyuda.BackColor = System.Drawing.Color.White;
+            this.btnAyuda.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnAyuda.FlatAppearance.BorderSize = 0;
+            this.btnAyuda.FlatAppearance.MouseDownBackColor = System.Drawing.Color.White;
+            this.btnAyuda.FlatAppearance.MouseOverBackColor = System.Drawing.Color.White;
+            this.btnAyuda.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnAyuda.Location = new System.Drawing.Point(772, 11);
+            this.btnAyuda.Name = "btnAyuda";
+            this.btnAyuda.Size = new System.Drawing.Size(34, 34);
+            this.btnAyuda.TabIndex = 2;
+            this.btnAyuda.TabStop = false;
+            this.btnAyuda.UseVisualStyleBackColor = false;
+            this.btnAyuda.Click += new System.EventHandler(this.btnAyuda_Click);
+            this.btnAyuda.Paint += new System.Windows.Forms.PaintEventHandler(this.btnAyuda_Paint);
+            this.btnAyuda.MouseEnter += new System.EventHandler(this.btnAyuda_MouseEnterLeave);
+            this.btnAyuda.MouseLeave += new System.EventHandler(this.btnAyuda_MouseEnterLeave);
             //
             // separadorTitulo
             //
@@ -189,6 +211,7 @@ namespace TiendaUNNE
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Text = "TiendaUNNE";
             this.Load += new System.EventHandler(this.frmPrincipal_Load);
+            this.Shown += new System.EventHandler(this.frmPrincipal_Shown);
             this.panelLateral.ResumeLayout(false);
             this.panelPie.ResumeLayout(false);
             this.panelMarca.ResumeLayout(false);
@@ -212,6 +235,7 @@ namespace TiendaUNNE
         private System.Windows.Forms.Panel panelContenido;
         private System.Windows.Forms.Panel panelTitulo;
         private System.Windows.Forms.Label lblTituloSeccion;
+        private System.Windows.Forms.Button btnAyuda;
         private System.Windows.Forms.Panel separadorTitulo;
         private System.Windows.Forms.Panel panelHost;
     }

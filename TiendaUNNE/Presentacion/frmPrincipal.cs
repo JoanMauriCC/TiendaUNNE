@@ -10,8 +10,9 @@ namespace TiendaUNNE
     /// Ventana única del sistema: menú lateral a la izquierda y, a la derecha, la sección
     /// activa. Cada sección es un UserControl que se muestra dentro de panelHost, así que
     /// navegar NO abre ventanas nuevas. Qué opciones ve cada rol lo decide NegocioSeguridad.
+    /// Arriba a la derecha está la ayuda (botón ? o F1), que recorre la pantalla abierta.
     /// </summary>
-    public partial class frmPrincipal : Form
+    public partial class frmPrincipal : Form, IPantallaConGuia
     {
         private static readonly Color ColorAcento = Color.FromArgb(59, 130, 246);
         private static readonly Color ColorAcentoFondo = Color.FromArgb(234, 242, 251);
@@ -20,6 +21,10 @@ namespace TiendaUNNE
 
         private readonly Dictionary<OpcionMenu, Button> _botonesMenu = new Dictionary<OpcionMenu, Button>();
         private OpcionMenu _seccionActual = OpcionMenu.Inicio;
+
+        private VisitaGuiada _visita;
+        private readonly ToolTip _tipAyuda = new ToolTip();
+        private bool _ayudaResaltada;
 
         public frmPrincipal()
         {
@@ -32,6 +37,8 @@ namespace TiendaUNNE
                 lblUsuario.Text = SesionActual.Usuario.NombreCompleto +
                                   Environment.NewLine + SesionActual.Usuario.Rol;
 
+            _tipAyuda.SetToolTip(btnAyuda, "Ayuda: recorrer esta pantalla (F1)");
+
             ConstruirMenu();
             MostrarSeccion(OpcionMenu.Inicio);
 
@@ -40,6 +47,13 @@ namespace TiendaUNNE
             TarjetaMenu primera = panelHost.Controls.Count == 0 ? null : PrimeraTarjeta(panelHost);
             if (primera != null)
                 ActiveControl = primera;
+        }
+
+        /// <summary>La primera vez que el usuario entra al sistema, la Bienvenida arranca sola.</summary>
+        private void frmPrincipal_Shown(object sender, EventArgs e)
+        {
+            if (NegocioGuia.DebeMostrarBienvenida(SesionActual.Usuario))
+                MostrarAyuda(NegocioGuia.Bienvenida());
         }
 
         private static TarjetaMenu PrimeraTarjeta(Control raiz)
@@ -162,6 +176,9 @@ namespace TiendaUNNE
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+
+            // La guía señala controles de la pantalla que se va: se cierra antes de cambiarla.
+            if (_visita != null) _visita.Cerrar();
 
             Control contenido = CrearContenido(opcion);
             contenido.Dock = DockStyle.Fill;
@@ -291,6 +308,12 @@ namespace TiendaUNNE
         /// </summary>
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
+            if (keyData == Keys.F1)
+            {
+                MostrarAyuda(NegocioGuia.CapituloDe(_seccionActual));
+                return true;
+            }
+
             var tarjeta = ActiveControl as TarjetaMenu;
             if (tarjeta != null && ManejarTeclaEnTarjeta(tarjeta, keyData))
                 return true;
@@ -347,6 +370,72 @@ namespace TiendaUNNE
                 .Where(t => t.Top == filaVecina)
                 .OrderBy(t => Math.Abs(t.Left - actual.Left))
                 .First();
+        }
+
+        // -----------------------------------------------------------------
+        // Ayuda: visita guiada de la pantalla abierta
+        // -----------------------------------------------------------------
+
+        private void btnAyuda_Click(object sender, EventArgs e)
+        {
+            MostrarAyuda(NegocioGuia.CapituloDe(_seccionActual));
+        }
+
+        private void MostrarAyuda(CapituloGuia capitulo)
+        {
+            if (_visita != null) _visita.Cerrar();
+
+            var visita = new VisitaGuiada(this, this, capitulo);
+            visita.Terminada += (s, e) => { if (_visita == s) _visita = null; };
+            _visita = visita;
+            visita.Iniciar();
+        }
+
+        /// <summary>
+        /// Las partes de la ventana principal las resuelve ella; las de cada módulo, la pantalla
+        /// que está abierta (si es una IPantallaConGuia).
+        /// </summary>
+        public Control Ancla(string clave)
+        {
+            switch (clave)
+            {
+                case AnclaGuia.Menu: return panelNav;
+                case AnclaGuia.Titulo: return lblTituloSeccion;
+                case AnclaGuia.Ayuda: return btnAyuda;
+                case AnclaGuia.Sesion: return panelPie;
+                case AnclaGuia.Contenido: return panelHost;
+            }
+
+            var pantalla = panelHost.Controls.Count > 0 ? panelHost.Controls[0] as IPantallaConGuia : null;
+            return pantalla == null ? null : pantalla.Ancla(clave);
+        }
+
+        // El botón es un círculo con un signo de pregunta, como en la mayoría de los sistemas.
+        private void btnAyuda_Paint(object sender, PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.Clear(btnAyuda.BackColor);
+
+            var circulo = new Rectangle(3, 3, btnAyuda.Width - 7, btnAyuda.Height - 7);
+            Color color = _ayudaResaltada ? ColorAcento : ColorTexto;
+
+            if (_ayudaResaltada)
+                using (var fondo = new SolidBrush(ColorAcentoFondo))
+                    g.FillEllipse(fondo, circulo);
+
+            using (var borde = new Pen(color, 1.8f))
+                g.DrawEllipse(borde, circulo);
+
+            using (var fuente = new Font("Segoe UI", 11f, FontStyle.Bold))
+                TextRenderer.DrawText(g, "?", fuente, circulo, color,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+        }
+
+        private void btnAyuda_MouseEnterLeave(object sender, EventArgs e)
+        {
+            _ayudaResaltada = btnAyuda.ClientRectangle.Contains(btnAyuda.PointToClient(Cursor.Position));
+            btnAyuda.Invalidate();
         }
 
         private void btnCerrarSesion_Click(object sender, EventArgs e)

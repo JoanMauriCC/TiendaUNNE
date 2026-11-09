@@ -12,5 +12,8 @@ namespace TiendaUNNE
         public byte[] Salt { get; set; }
         public bool Activo { get; set; }
         public bool Bloqueado { get; set; }
+
+        /// <summary>Último ingreso correcto; null si nunca entró.</summary>
+        public System.DateTime? UltimoAcceso { get; set; }
     }
 }

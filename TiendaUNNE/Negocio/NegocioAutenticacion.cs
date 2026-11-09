@@ -48,6 +48,9 @@ namespace TiendaUNNE
                 throw new ReglaNegocioException(seBloqueo ? UsuarioBloqueado : CredencialesInvalidas);
             }
 
+            // Se mira antes de registrar este acceso: después ya tendría fecha.
+            credenciales.Usuario.PrimerIngreso = !credenciales.UltimoAcceso.HasValue;
+
             ServicioAutenticacion.RegistrarAccesoExitoso(credenciales.Usuario.IdUsuario);
             SesionActual.Iniciar(credenciales.Usuario);
 
