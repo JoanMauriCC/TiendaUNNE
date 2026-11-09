@@ -117,3 +117,18 @@ PROBLEMAS COMUNES
 - Error de certificado SSL al conectar desde SSMS: en la pantalla de
   conexión, ir a "Options >>" > pestaña "Connection Properties" y tildar
   "Trust server certificate".
+
+- "Tu usuario está bloqueado por demasiados intentos fallidos": un usuario se
+  bloquea al equivocarse 5 veces seguidas con la contraseña. Un Administrador lo
+  desbloquea desde Usuarios > elegirlo en la lista > "Desbloquear".
+
+  Si quedaron bloqueados TODOS los administradores (nadie puede entrar a
+  desbloquearlos), ejecutar esto en SSMS, cambiando XXXXXXXX por el DNI del
+  administrador a desbloquear:
+
+    USE TiendaUNNE;
+    UPDATE dbo.Usuario SET bloqueado = 0, intentos_fallidos = 0
+    WHERE id_persona = (SELECT id_persona FROM dbo.Persona WHERE dni_cuit = 'XXXXXXXX');
+
+  Ese administrador vuelve a entrar con su contraseña de siempre. Este
+  desbloqueo no queda en la Auditoría, porque se hace por fuera del sistema.
