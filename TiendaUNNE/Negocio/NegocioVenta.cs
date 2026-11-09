@@ -151,7 +151,7 @@ namespace TiendaUNNE
             if (cantidadFinal > producto.Stock)
                 throw new ReglaNegocioException(string.Format(CultureInfo.CurrentCulture,
                     "No hay stock suficiente de {0}. Disponible: {1}.",
-                    producto.Nombre, producto.Stock.ToString(FormatoCantidad)));
+                    producto.Nombre, producto.Stock.ToString(FormatoCantidadTicket)));
 
             // La reserva es la que decide: si otra caja se llevó el stock después de la búsqueda, falla acá.
             try
@@ -162,7 +162,7 @@ namespace TiendaUNNE
             {
                 throw new ReglaNegocioException(string.Format(CultureInfo.CurrentCulture,
                     "No hay stock suficiente de {0}. Disponible: {1}.",
-                    producto.Nombre, ex.Disponible.ToString(FormatoCantidad)));
+                    producto.Nombre, ex.Disponible.ToString(FormatoCantidadTicket)));
             }
 
             if (existente != null)
@@ -201,12 +201,14 @@ namespace TiendaUNNE
         }
 
         /// <summary>
-        /// Suelta las reservas del ticket (al cancelarlo o cerrar la pantalla). Si no se puede,
-        /// no pasa nada grave: las reservas vencen solas a los 30 minutos.
+        /// Suelta las reservas del ticket (al cancelarlo o cerrar la pantalla) y, de paso, borra
+        /// las vencidas de cualquier ticket. Corre aunque el ticket esté vacío: así la limpieza
+        /// pasa cada vez que empieza un ticket nuevo y la tabla no junta reservas vencidas.
+        /// Si no se puede, no pasa nada grave: las reservas vencen solas a los 30 minutos.
         /// </summary>
         public static void LiberarReservas(VentaEditModel venta)
         {
-            if (venta == null || venta.EstaVacia) return;
+            if (venta == null) return;
 
             try { ServicioReserva.LiberarTodas(venta.Token); }
             catch (Exception) { }
@@ -283,7 +285,7 @@ namespace TiendaUNNE
 
                 throw new ReglaNegocioException(string.Format(CultureInfo.CurrentCulture,
                     "No hay stock suficiente de {0}. Disponible: {1}. Ajustá el ticket y volvé a cobrar.",
-                    nombre, ex.Disponible.ToString(FormatoCantidad)));
+                    nombre, ex.Disponible.ToString(FormatoCantidadTicket)));
             }
         }
 
