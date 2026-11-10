@@ -91,5 +91,11 @@ namespace TiendaUNNE
         public const string BackupRestaurar = "Backup.Restaurar";
         public const string BackupCopiar = "Backup.Copiar";
         public const string BackupDetalle = "Backup.Detalle";
+
+        // Asistente
+        public const string AsistenteConversacion = "Asistente.Conversacion";
+        public const string AsistenteSugerencias = "Asistente.Sugerencias";
+        public const string AsistentePregunta = "Asistente.Pregunta";
+        public const string AsistenteNueva = "Asistente.Nueva";
     }
 }

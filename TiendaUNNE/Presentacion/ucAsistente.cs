@@ -10,7 +10,7 @@ namespace TiendaUNNE
     /// Gemini. La pantalla solo muestra la conversación y manda la pregunta; qué se le pregunta a
     /// Gemini y cómo se interpretan los errores lo decide NegocioAsistente.
     /// </summary>
-    public partial class ucAsistente : UserControl
+    public partial class ucAsistente : UserControl, IPantallaConGuia
     {
         private enum TipoBurbuja { Usuario, Asistente, Aviso, Error }
 
@@ -25,9 +25,11 @@ namespace TiendaUNNE
         private const int SeparacionBurbujas = 10;
         private const double AnchoMaximoBurbuja = 0.75;   // proporción del ancho del chat
 
-        /// <summary>Lo que se habló en esta sesión: se manda entero en cada pregunta para que tenga contexto.</summary>
+        /// <summary>Lo que se habló en esta sesión: es la memoria que se le manda en cada pregunta.</summary>
         private readonly List<MensajeChat> _conversacion = new List<MensajeChat>();
         private Control _pensando;
+        private bool _configurado;
+        private readonly ToolTip _tips = new ToolTip();
 
         public ucAsistente()
         {
@@ -36,19 +38,67 @@ namespace TiendaUNNE
 
         private void ucAsistente_Load(object sender, EventArgs e)
         {
-            if (NegocioAsistente.EstaConfigurado())
-            {
-                AgregarBurbuja(TipoBurbuja.Asistente,
-                    "¡Hola! Soy tu asistente de ventas. Preguntame lo que quieras: qué promociones armar, " +
-                    "qué productos conviene sumar para la temporada o cómo mover lo que no se vende.");
-            }
-            else
-            {
-                AgregarBurbuja(TipoBurbuja.Aviso, NegocioAsistente.AyudaConfiguracion);
-                txtPregunta.Enabled = false;
-                btnEnviar.Enabled = false;
-            }
+            _configurado = NegocioAsistente.EstaConfigurado();
+            CrearSugerencias();
+            Saludar();
+            Ocupado(false);
+            txtPregunta.Focus();
+        }
 
+        private void Saludar()
+        {
+            if (_configurado)
+                AgregarBurbuja(TipoBurbuja.Asistente,
+                    "¡Hola! Soy tu asistente de ventas. Conozco las ventas y el catálogo del local: preguntame " +
+                    "qué promociones armar, qué conviene reponer o sumar para la temporada, o cómo mover lo que " +
+                    "no se vende. Abajo tenés algunas preguntas para empezar.");
+            else
+                AgregarBurbuja(TipoBurbuja.Aviso, NegocioAsistente.AyudaConfiguracion);
+        }
+
+        /// <summary>Un botón por cada pregunta sugerida (las define NegocioAsistente): tocarlo la manda.</summary>
+        private void CrearSugerencias()
+        {
+            foreach (PreguntaSugerida sugerida in NegocioAsistente.PreguntasSugeridas())
+            {
+                string pregunta = sugerida.Pregunta;
+                var boton = new Button
+                {
+                    Text = sugerida.Titulo,
+                    AutoSize = true,
+                    Height = 30,
+                    FlatStyle = FlatStyle.Flat,
+                    BackColor = Color.White,
+                    ForeColor = ColorUsuario,
+                    Cursor = Cursors.Hand,
+                    Margin = new Padding(3, 0, 3, 6),
+                    UseMnemonic = false,
+                    UseVisualStyleBackColor = false
+                };
+                boton.FlatAppearance.BorderColor = ColorBorde;
+                _tips.SetToolTip(boton, pregunta);
+                boton.Click += (s, e) =>
+                {
+                    txtPregunta.Text = pregunta;
+                    btnEnviar.PerformClick();
+                };
+                flowSugerencias.Controls.Add(boton);
+            }
+        }
+
+        /// <summary>Borra el chat y la memoria: la próxima pregunta arranca de cero.</summary>
+        private void btnNueva_Click(object sender, EventArgs e)
+        {
+            if (_pensando != null) return;   // no se corta una respuesta en camino
+
+            flowConversacion.SuspendLayout();
+            while (flowConversacion.Controls.Count > 0)
+                flowConversacion.Controls[0].Dispose();
+            flowConversacion.ResumeLayout();
+
+            _conversacion.Clear();
+            Saludar();
+            txtPregunta.Clear();
             txtPregunta.Focus();
         }
 
@@ -107,10 +157,15 @@ namespace TiendaUNNE
             }
         }
 
+        /// <summary>Mientras espera la respuesta (o si falta la clave) no se puede preguntar otra cosa.</summary>
         private void Ocupado(bool ocupado)
         {
-            txtPregunta.Enabled = !ocupado;
-            btnEnviar.Enabled = !ocupado;
+            bool habilitado = _configurado && !ocupado;
+            txtPregunta.Enabled = habilitado;
+            btnEnviar.Enabled = habilitado;
+            btnNueva.Enabled = !ocupado;
+            foreach (Control sugerencia in flowSugerencias.Controls)
+                sugerencia.Enabled = habilitado;
             Cursor = ocupado ? Cursors.AppStarting : Cursors.Default;
 
             if (ocupado)
@@ -157,6 +212,16 @@ namespace TiendaUNNE
             var burbuja = new Panel { AutoSize = true, BackColor = fondo, Padding = new Padding(12, 9, 12, 9) };
             etiqueta.Location = new Point(burbuja.Padding.Left, burbuja.Padding.Top);
             burbuja.Controls.Add(etiqueta);
+
+            // Clic derecho sobre una respuesta: copiarla (para pegarla en un mensaje, un cartel, etc.).
+            if (tipo == TipoBurbuja.Asistente)
+            {
+                var menu = new ContextMenuStrip();
+                menu.Items.Add("Copiar respuesta", null, (s, e) => Clipboard.SetText(texto));
+                burbuja.ContextMenuStrip = menu;
+                etiqueta.ContextMenuStrip = menu;
+                burbuja.Disposed += (s, e) => menu.Dispose();
+            }
             if (tipo == TipoBurbuja.Asistente)
                 burbuja.Paint += (s, e) =>
                 {
@@ -196,5 +261,22 @@ namespace TiendaUNNE
                 AcomodarFila(fila);
             flowConversacion.ResumeLayout();
         }
+
+        // -----------------------------------------------------------------
+        // Ayuda: el control de cada parte que señala la guía (NegocioGuia)
+        // -----------------------------------------------------------------
+
+        public Control Ancla(string clave)
+        {
+            switch (clave)
+            {
+                case AnclaGuia.AsistenteConversacion: return flowConversacion;
+                case AnclaGuia.AsistenteSugerencias: return flowSugerencias;
+                case AnclaGuia.AsistentePregunta: return txtPregunta;
+                case AnclaGuia.AsistenteNueva: return btnNueva;
+                default: return null;
+            }
+        }
+
     }
 }

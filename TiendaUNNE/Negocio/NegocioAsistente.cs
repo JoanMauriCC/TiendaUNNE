@@ -22,7 +22,30 @@ namespace TiendaUNNE
         /// <summary>Tope de productos del catálogo que se le pasan (los activos, ordenados por nombre).</summary>
         private const int MaximoProductosCatalogo = 150;
 
+        /// <summary>
+        /// Cuántos mensajes anteriores se mandan como memoria de la charla. Los más viejos se dejan
+        /// afuera: una conversación muy larga haría cada consulta más lenta y más pesada.
+        /// </summary>
+        public const int MaximoMensajesDeMemoria = 20;
+
         private static readonly CultureInfo Argentina = CultureInfo.GetCultureInfo("es-AR");
+
+        /// <summary>Preguntas listas para tocar, para empezar sin tener que pensar qué escribir.</summary>
+        public static PreguntaSugerida[] PreguntasSugeridas()
+        {
+            return new[]
+            {
+                Sugerida("Lo más vendido del mes", "¿Qué se vendió más este mes y cuánta plata dejó?"),
+                Sugerida("Promos para la temporada", "Sugerime promociones para la temporada con lo que menos se vende."),
+                Sugerida("Qué reponer primero", "¿Qué productos conviene reponer primero?"),
+                Sugerida("Un producto nuevo para sumar", "¿Qué producto nuevo convendría incorporar al catálogo?")
+            };
+        }
+
+        private static PreguntaSugerida Sugerida(string titulo, string pregunta)
+        {
+            return new PreguntaSugerida { Titulo = titulo, Pregunta = pregunta };
+        }
 
         /// <summary>¿Está cargada la clave de Gemini en esta computadora?</summary>
         public static bool EstaConfigurado()
@@ -48,7 +71,13 @@ namespace TiendaUNNE
             if (pregunta.Length > LargoMaximoPregunta)
                 throw new ReglaNegocioException("La pregunta no puede superar los " + LargoMaximoPregunta + " caracteres.");
 
-            var mensajes = new List<MensajeChat>(conversacion ?? new List<MensajeChat>());
+            var mensajes = new List<MensajeChat>();
+            if (conversacion != null)
+            {
+                int desde = Math.Max(0, conversacion.Count - MaximoMensajesDeMemoria);
+                for (int i = desde; i < conversacion.Count; i++)
+                    mensajes.Add(conversacion[i]);
+            }
             mensajes.Add(new MensajeChat { Rol = RolMensaje.Usuario, Texto = pregunta });
 
             // Los datos del local se leen en cada pregunta (siempre al día) y fuera de la pantalla,

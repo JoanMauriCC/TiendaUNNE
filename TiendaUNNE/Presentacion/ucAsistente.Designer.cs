@@ -20,6 +20,8 @@ namespace TiendaUNNE
             this.panelEncabezado = new System.Windows.Forms.Panel();
             this.lblSubtitulo = new System.Windows.Forms.Label();
             this.lblTitulo = new System.Windows.Forms.Label();
+            this.btnNueva = new System.Windows.Forms.Button();
+            this.flowSugerencias = new System.Windows.Forms.FlowLayoutPanel();
             this.flowConversacion = new System.Windows.Forms.FlowLayoutPanel();
             this.panelEntrada = new System.Windows.Forms.Panel();
             this.lblAyudaEntrada = new System.Windows.Forms.Label();
@@ -34,6 +36,7 @@ namespace TiendaUNNE
             //
             this.panelEncabezado.Controls.Add(this.lblSubtitulo);
             this.panelEncabezado.Controls.Add(this.lblTitulo);
+            this.panelEncabezado.Controls.Add(this.btnNueva);
             this.panelEncabezado.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelEncabezado.Location = new System.Drawing.Point(0, 0);
             this.panelEncabezado.Name = "panelEncabezado";
@@ -60,6 +63,31 @@ namespace TiendaUNNE
             this.lblSubtitulo.TabIndex = 1;
             this.lblSubtitulo.Text = "Preguntale en lenguaje natural sobre ventas, promociones o productos. Funciona con Google Gemini.";
             this.lblSubtitulo.UseMnemonic = false;
+            //
+            // btnNueva
+            //
+            this.btnNueva.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnNueva.BackColor = System.Drawing.Color.White;
+            this.btnNueva.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(214)))), ((int)(((byte)(216)))), ((int)(((byte)(220)))));
+            this.btnNueva.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnNueva.Location = new System.Drawing.Point(632, 14);
+            this.btnNueva.Name = "btnNueva";
+            this.btnNueva.Size = new System.Drawing.Size(156, 32);
+            this.btnNueva.TabIndex = 2;
+            this.btnNueva.Text = "&Nueva conversación";
+            this.btnNueva.UseVisualStyleBackColor = false;
+            this.btnNueva.Click += new System.EventHandler(this.btnNueva_Click);
+            //
+            // flowSugerencias
+            //
+            this.flowSugerencias.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.flowSugerencias.Name = "flowSugerencias";
+            this.flowSugerencias.Padding = new System.Windows.Forms.Padding(9, 8, 9, 0);
+            this.flowSugerencias.AutoSize = true;
+            this.flowSugerencias.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.flowSugerencias.Size = new System.Drawing.Size(800, 44);
+            this.flowSugerencias.TabIndex = 3;
+            this.flowSugerencias.WrapContents = true;
             //
             // flowConversacion
             //
@@ -133,7 +161,7 @@ namespace TiendaUNNE
             this.lblAyudaEntrada.Location = new System.Drawing.Point(12, 90);
             this.lblAyudaEntrada.Name = "lblAyudaEntrada";
             this.lblAyudaEntrada.TabIndex = 3;
-            this.lblAyudaEntrada.Text = "Enter envía · Shift+Enter agrega una línea";
+            this.lblAyudaEntrada.Text = "Enter envía · Shift+Enter agrega una línea · Clic derecho sobre una respuesta para copiarla";
             this.lblAyudaEntrada.UseMnemonic = false;
             //
             // ucAsistente
@@ -141,6 +169,7 @@ namespace TiendaUNNE
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.flowConversacion);
+            this.Controls.Add(this.flowSugerencias);
             this.Controls.Add(this.panelEntrada);
             this.Controls.Add(this.panelEncabezado);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -159,6 +188,8 @@ namespace TiendaUNNE
         private System.Windows.Forms.Panel panelEncabezado;
         private System.Windows.Forms.Label lblTitulo;
         private System.Windows.Forms.Label lblSubtitulo;
+        private System.Windows.Forms.Button btnNueva;
+        private System.Windows.Forms.FlowLayoutPanel flowSugerencias;
         private System.Windows.Forms.FlowLayoutPanel flowConversacion;
         private System.Windows.Forms.Panel panelEntrada;
         private System.Windows.Forms.Label lblPregunta;

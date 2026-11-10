@@ -28,6 +28,7 @@ namespace TiendaUNNE
                 case OpcionMenu.Reportes: return Reportes();
                 case OpcionMenu.Auditoria: return Auditoria();
                 case OpcionMenu.Backup: return Backup();
+                case OpcionMenu.Asistente: return Asistente();
                 default: return Bienvenida();
             }
         }
@@ -228,6 +229,24 @@ namespace TiendaUNNE
                 "Copia el archivo elegido a otra carpeta o a un pendrive.");
             Paso(c, AnclaGuia.BackupDetalle, "El detalle",
                 "Los datos de la copia elegida.");
+            return c;
+        }
+
+        private static CapituloGuia Asistente()
+        {
+            var c = new CapituloGuia { Nombre = "Asistente" };
+
+            Paso(c, AnclaGuia.AsistenteConversacion, "El asistente de ventas",
+                "Un chat con inteligencia artificial (Google Gemini) que conoce las ventas y el catálogo del " +
+                "local. Responde con los números reales y sugiere promociones, reposiciones y productos nuevos.");
+            Paso(c, AnclaGuia.AsistenteSugerencias, "Preguntas para empezar",
+                "Tocá una y se manda sola. Clic derecho sobre una respuesta para copiarla.");
+            Paso(c, AnclaGuia.AsistentePregunta, "Tu pregunta",
+                "Escribila como se la dirías a una persona. Enter envía; recuerda lo que se habló, así que " +
+                "podés repreguntar («¿y para el invierno?»).");
+            Paso(c, AnclaGuia.AsistenteNueva, "Nueva conversación",
+                "Borra el chat y empieza de cero. A Gemini solo le llegan productos, cantidades y montos: " +
+                "nunca datos de clientes ni de usuarios.");
             return c;
         }
 

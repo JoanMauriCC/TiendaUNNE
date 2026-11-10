@@ -7,6 +7,13 @@ namespace TiendaUNNE
         Asistente
     }
 
+    /// <summary>Una pregunta lista para tocar: el título corto del botón y la pregunta que manda.</summary>
+    public sealed class PreguntaSugerida
+    {
+        public string Titulo { get; set; }
+        public string Pregunta { get; set; }
+    }
+
     /// <summary>Un mensaje de la conversación con el asistente de ventas. Solo datos.</summary>
     public sealed class MensajeChat
     {
