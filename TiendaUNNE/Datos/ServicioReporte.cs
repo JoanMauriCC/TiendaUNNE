@@ -124,6 +124,45 @@ ORDER BY SUM(d.cantidad * tc.signo) DESC, p.nombre;",
         }
 
         /// <summary>Una fila: Total cobrado (neto de devoluciones) y cuánto de eso fue Efectivo.</summary>
+        /// <summary>
+        /// Los productos más vendidos con su categoría: Producto, Categoria, Unidades e Importe (netos de
+        /// notas de crédito). Para el asistente de ventas, que necesita también la plata, no solo las unidades.
+        /// </summary>
+        public static DataTable VentasPorProducto(DateTime desde, DateTime hasta, int cantidad)
+        {
+            return Consultar(@"
+SELECT TOP (@cantidad) p.nombre AS Producto, c.nombre AS Categoria,
+       SUM(d.cantidad * tc.signo) AS Unidades, SUM(d.subtotal * tc.signo) AS Importe
+FROM        dbo.Venta_detalle    d
+INNER JOIN  dbo.Venta_cabecera   vc ON vc.id_venta    = d.id_venta
+INNER JOIN  dbo.Tipo_comprobante tc ON tc.id_tipo_comprobante = vc.id_tipo_comprobante
+INNER JOIN  dbo.Producto         p  ON p.id_producto  = d.id_producto
+INNER JOIN  dbo.Categoria        c  ON c.id_categoria = p.id_categoria
+WHERE vc.estado = 'EMITIDA' AND vc.fecha_hora >= @desde AND vc.fecha_hora < @hasta
+GROUP BY p.id_producto, p.nombre, c.nombre
+HAVING SUM(d.cantidad * tc.signo) > 0
+ORDER BY SUM(d.cantidad * tc.signo) DESC, p.nombre;",
+                desde, hasta,
+                new SqlParameter("@cantidad", SqlDbType.Int) { Value = cantidad });
+        }
+
+        /// <summary>Categoria, Unidades e Importe vendidos en el rango (netos de notas de crédito).</summary>
+        public static DataTable VentasPorCategoria(DateTime desde, DateTime hasta)
+        {
+            return Consultar(@"
+SELECT c.nombre AS Categoria, SUM(d.cantidad * tc.signo) AS Unidades, SUM(d.subtotal * tc.signo) AS Importe
+FROM        dbo.Venta_detalle    d
+INNER JOIN  dbo.Venta_cabecera   vc ON vc.id_venta    = d.id_venta
+INNER JOIN  dbo.Tipo_comprobante tc ON tc.id_tipo_comprobante = vc.id_tipo_comprobante
+INNER JOIN  dbo.Producto         p  ON p.id_producto  = d.id_producto
+INNER JOIN  dbo.Categoria        c  ON c.id_categoria = p.id_categoria
+WHERE vc.estado = 'EMITIDA' AND vc.fecha_hora >= @desde AND vc.fecha_hora < @hasta
+GROUP BY c.nombre
+HAVING SUM(d.cantidad * tc.signo) > 0
+ORDER BY SUM(d.subtotal * tc.signo) DESC;",
+                desde, hasta);
+        }
+
         public static DataTable ResumenRecaudacion(DateTime desde, DateTime hasta)
         {
             return Consultar(@"
