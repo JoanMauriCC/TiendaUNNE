@@ -10,7 +10,8 @@ namespace TiendaUNNE
         Auditoria,
         Reportes,
         Caja,
-        Backup
+        Backup,
+        Asistente
     }
 
     /// <summary>
@@ -44,6 +45,7 @@ namespace TiendaUNNE
                 case OpcionMenu.Categorias:
                 case OpcionMenu.Auditoria:
                 case OpcionMenu.Backup:   // una copia contiene toda la base: solo el administrador
+                case OpcionMenu.Asistente:   // analiza las ventas de todo el negocio
                     return SesionActual.EsAdministrador;
 
                 default:
@@ -63,7 +65,8 @@ namespace TiendaUNNE
                 OpcionMenu.Auditoria,
                 OpcionMenu.Reportes,
                 OpcionMenu.Caja,
-                OpcionMenu.Backup
+                OpcionMenu.Backup,
+                OpcionMenu.Asistente
             };
         }
 

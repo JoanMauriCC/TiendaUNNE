@@ -152,6 +152,7 @@ namespace TiendaUNNE
                 case OpcionMenu.Reportes: return "Reportes";
                 case OpcionMenu.Caja: return "Caja";
                 case OpcionMenu.Backup: return "Backup";
+                case OpcionMenu.Asistente: return "Asistente";
                 default: return opcion.ToString();
             }
         }
@@ -206,6 +207,7 @@ namespace TiendaUNNE
                 case OpcionMenu.Reportes: return new ucReportes();
                 case OpcionMenu.Caja: return new ucCaja();
                 case OpcionMenu.Backup: return new ucBackup();
+                case OpcionMenu.Asistente: return new ucAsistente();
                 default: return CrearPanelInicio();
             }
         }
@@ -230,6 +232,7 @@ namespace TiendaUNNE
             AgregarTarjetaInicio(panel, OpcionMenu.Reportes, IconoTarjeta.Reportes, "Ventas y recaudación");
             AgregarTarjetaInicio(panel, OpcionMenu.Caja, IconoTarjeta.Caja, "Cobrar productos");
             AgregarTarjetaInicio(panel, OpcionMenu.Backup, IconoTarjeta.Backup, "Copias de seguridad");
+            AgregarTarjetaInicio(panel, OpcionMenu.Asistente, IconoTarjeta.Asistente, "Ideas de ventas con IA");
 
             panel.Dock = DockStyle.Fill;
 

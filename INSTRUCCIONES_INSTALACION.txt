@@ -108,6 +108,26 @@ veces. Para sacar las ventas de prueba:
   TiendaUNNE_DatosDePrueba_Ventas_Borrar.sql
 
 
+OPCIONAL: ASISTENTE DE VENTAS CON INTELIGENCIA ARTIFICIAL
+------------------------------------------------------------
+La sección "Asistente" (solo Administrador) es un chat que responde con Google
+Gemini. Necesita una clave de la API de Gemini, gratuita:
+
+  1. Entrar a https://aistudio.google.com/apikey con una cuenta de Google.
+     Si no aparece ninguna clave, tocar "Create API key".
+  2. Copiar la clave.
+  3. En Windows, buscar "variables de entorno" > "Editar las variables de
+     entorno de esta cuenta" > Variables de usuario > "Nueva...":
+       Nombre: GEMINI_API_KEY
+       Valor:  la clave copiada
+  4. Cerrar y volver a abrir Visual Studio.
+
+La clave NO va en App.config ni en el código: ese archivo está en GitHub y
+cualquiera podría usarla. En App.config solo se elige el modelo (GeminiModelo y
+GeminiModeloRespaldo, que se usa si el principal está saturado). Sin clave, el
+resto del sistema funciona igual: solo el Asistente avisa que falta.
+
+
 PROBLEMAS COMUNES
 --------------------
 - "No se pudo conectar con la base de datos": revisar que SQL Server Express

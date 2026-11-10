@@ -43,6 +43,7 @@
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -73,6 +74,7 @@
     <Compile Include="Entidades\ModelosVenta.cs" />
     <Compile Include="Entidades\ModelosBackup.cs" />
     <Compile Include="Entidades\ModelosGuia.cs" />
+    <Compile Include="Entidades\ModelosAsistente.cs" />
     <Compile Include="Entidades\UsuarioLogueado.cs" />
     <!-- ================= Capa Datos ================= -->
     <Compile Include="Datos\Db.cs" />
@@ -86,6 +88,8 @@
     <Compile Include="Datos\ServicioBackup.cs" />
     <Compile Include="Datos\ErrorBackupException.cs" />
     <Compile Include="Datos\ServicioCaja.cs" />
+    <Compile Include="Datos\ServicioGemini.cs" />
+    <Compile Include="Datos\ErrorAsistenteException.cs" />
     <Compile Include="Datos\ServicioCategoria.cs" />
     <Compile Include="Datos\ServicioCliente.cs" />
     <Compile Include="Datos\ServicioMedioPago.cs" />
@@ -103,6 +107,7 @@
     <Compile Include="Negocio\NegocioAutenticacion.cs" />
     <Compile Include="Negocio\NegocioBackup.cs" />
     <Compile Include="Negocio\NegocioGuia.cs" />
+    <Compile Include="Negocio\NegocioAsistente.cs" />
     <Compile Include="Negocio\NegocioCaja.cs" />
     <Compile Include="Negocio\NegocioHistorial.cs" />
     <Compile Include="Negocio\NegocioNotaCredito.cs" />
@@ -125,6 +130,12 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Presentacion\IPantallaConGuia.cs" />
+    <Compile Include="Presentacion\ucAsistente.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Presentacion\ucAsistente.Designer.cs">
+      <DependentUpon>ucAsistente.cs</DependentUpon>
+    </Compile>
     <Compile Include="Presentacion\VisitaGuiada.cs" />
     <Compile Include="Presentacion\MarcoGuia.cs">
       <SubType>Form</SubType>

@@ -15,7 +15,8 @@ namespace TiendaUNNE
         Caja,
         Etiqueta,
         Reportes,
-        Backup
+        Backup,
+        Asistente
     }
 
     /// <summary>
@@ -95,6 +96,7 @@ namespace TiendaUNNE
                     case IconoTarjeta.Etiqueta: return Color.FromArgb(220, 38, 38);    // rojo
                     case IconoTarjeta.Reportes: return Color.FromArgb(217, 119, 6);    // ámbar
                     case IconoTarjeta.Backup: return Color.FromArgb(79, 70, 229);      // índigo
+                    case IconoTarjeta.Asistente: return Color.FromArgb(219, 39, 119);  // fucsia
                     default: return Color.FromArgb(74, 130, 200);
                 }
             }
@@ -264,6 +266,19 @@ namespace TiendaUNNE
                         g.DrawLine(pen, r.X + 34, r.Y + 8, r.X + 34, r.Y + 32);
                         g.DrawArc(pen, r.X + 6, r.Y + 15, 28, 10, 0, 180);
                         g.DrawArc(pen, r.X + 6, r.Y + 27, 28, 10, 0, 180);
+                        break;
+
+                    case IconoTarjeta.Asistente:
+                        // Globo de chat con una chispa: la conversación con la IA.
+                        g.DrawLines(pen, new[]
+                        {
+                            new Point(r.X + 10, r.Y + 30), new Point(r.X + 4, r.Y + 36), new Point(r.X + 6, r.Y + 28),
+                            new Point(r.X + 3, r.Y + 28), new Point(r.X + 3, r.Y + 8), new Point(r.X + 31, r.Y + 8),
+                            new Point(r.X + 31, r.Y + 28), new Point(r.X + 10, r.Y + 28)
+                        });
+                        g.DrawLine(pen, r.X + 17, r.Y + 12, r.X + 17, r.Y + 24);
+                        g.DrawLine(pen, r.X + 11, r.Y + 18, r.X + 23, r.Y + 18);
+                        g.FillEllipse(brush, r.X + 31, r.Y + 2, 6, 6);
                         break;
                 }
             }
