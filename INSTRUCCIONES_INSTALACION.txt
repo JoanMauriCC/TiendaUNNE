@@ -15,7 +15,7 @@ Abrir SQL Server Management Studio, conectarse a la instancia local
 EN ESTE ORDEN, los siguientes archivos (Archivo > Abrir > Archivo... y F5):
 
   1. TiendaUNNE_CreateTables.sql        (crea la base "TiendaUNNE" y las 16 tablas)
-  2. TiendaUNNE_StoredProcedures.sql    (crea los 12 procedimientos almacenados)
+  2. TiendaUNNE_StoredProcedures.sql    (crea los 11 procedimientos almacenados)
 
 El paso 2 es opcional: la aplicación instala sola los procedimientos almacenados
 (y la migración de clientes) cada vez que arranca. Se puede correr igual, por
